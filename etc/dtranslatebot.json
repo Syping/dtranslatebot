@@ -1,0 +1,24 @@
+{
+    "token": "bot_token",
+    "guilds": {
+        "guild_1": {
+            "channel_1": {
+                "source": "en",
+                "target": "de",
+                "webhook": "https://..."
+            },
+            "channel_2": {
+                "source": "de",
+                "target": "en",
+                "webhook": "https://..."
+            }
+        }
+    },
+    "translate": {
+        "hostname": "127.0.0.1",
+        "port": 80,
+        "url": "/translate",
+        "tls": false,
+        "apiKey": ""
+    }
+}
