@@ -29,11 +29,8 @@ namespace bot {
         std::string author;
         std::string avatar;
         std::string message;
-        /* Webhook URL */
-        std::string webhook;
-        /* Translation Parameters */
         std::string source;
-        std::string target;
+        std::vector<std::pair<std::string,std::string>> targets;
     };
 
     class message_queue {

@@ -5,12 +5,22 @@
             "channel_1": {
                 "source": "en",
                 "target": "de",
-                "webhook": "https://..."
+                "webhook": "https://german.webhook"
             },
             "channel_2": {
                 "source": "de",
                 "target": "en",
-                "webhook": "https://..."
+                "webhook": "https://english.webhook"
+            }
+        },
+        "guild_2": {
+            "channel_1": {
+                "source": "en",
+                "target": {
+                    "de": "https://german.webhook",
+                    "fr": "https://french.webhook",
+                    "ru": "https://russian.webhook"
+                }
             }
         }
     },

@@ -40,45 +40,47 @@ void bot::message_queue::run(dpp::cluster *bot, bot::settings::settings *setting
 
             settings->lock();
             bot::settings::translate *translate = settings->get_translate();
-
-            dpp::json body = {
-                {"q", message.message},
-                {"source", message.source},
-                {"target", message.target},
-                {"format", "text"},
-            };
-
-            if (!translate->apiKey.empty())
-                body.emplace("apiKey", translate->apiKey);
-
+            const std::string tr_apiKey = translate->apiKey;
             const std::string tr_hostname = translate->hostname;
             const uint16_t tr_port = translate->port;
             const std::string tr_url = translate->url;
             const bool tr_tls = translate->tls;
             settings->unlock();
 
-            dpp::http_headers http_headers;
-            http_headers.emplace("Content-Type", "application/json");
+            for (auto target = message.targets.begin(); target != message.targets.end(); target++) {
+                dpp::json json_body = {
+                    {"q", message.message},
+                    {"source", message.source},
+                    {"target", target->first},
+                    {"format", "text"},
+                };
 
-            std::string tr_message = message.message;
-            dpp::https_client http_request(tr_hostname, tr_port, tr_url, "POST", body.dump(), http_headers, !tr_tls);
-            if (http_request.get_status() == 200) {
-                dpp::json response = dpp::json::parse(http_request.get_content());
-                if (response.is_object()) {
-                    auto tr_text = response.find("translatedText");
-                    if (tr_text != response.end())
-                        tr_message = tr_text.value();
+                if (!tr_apiKey.empty())
+                    json_body.emplace("apiKey", tr_apiKey);
+
+                dpp::http_headers http_headers;
+                http_headers.emplace("Content-Type", "application/json");
+
+                std::string tr_message = message.message;
+                dpp::https_client http_request(tr_hostname, tr_port, tr_url, "POST", json_body.dump(), http_headers, !tr_tls);
+                if (http_request.get_status() == 200) {
+                    dpp::json response = dpp::json::parse(http_request.get_content());
+                    if (response.is_object()) {
+                        auto tr_text = response.find("translatedText");
+                        if (tr_text != response.end())
+                            tr_message = tr_text.value();
+                    }
                 }
-            }
 
-            dpp::webhook webhook(message.webhook);
-            webhook.name = message.author;
+                dpp::webhook webhook(target->second);
+                webhook.name = message.author;
 
-            try {
-                bot->execute_webhook_sync(webhook, dpp::message(tr_message));
-            }
-            catch (dpp::rest_exception exception) {
-                std::cerr << "REST Error: " << exception.what() << std::endl;
+                try {
+                    bot->execute_webhook_sync(webhook, dpp::message(tr_message));
+                }
+                catch (dpp::rest_exception &exception) {
+                    std::cerr << "REST Error: " << exception.what() << std::endl;
+                }
             }
 
             std::this_thread::yield();

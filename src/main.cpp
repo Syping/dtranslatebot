@@ -52,9 +52,8 @@ int main(int argc, char* argv[]) {
                 message.author = event.msg.author.format_username();
                 message.avatar = event.msg.author.avatar.to_string();
                 message.message = event.msg.content;
-                message.webhook = channel->webhook;
                 message.source = channel->source;
-                message.target = channel->target;
+                message.targets = channel->targets;
                 message_queue.add(message);
             }
         }

@@ -19,6 +19,7 @@
 #include <dpp/dpp.h>
 #include <mutex>
 #include <iostream>
+#include <utility>
 #include "settings.h"
 
 bot::settings::channel* bot::settings::settings::get_channel(bot::settings::guild *guild, uint64_t channel_id)
@@ -87,6 +88,11 @@ bool bot::settings::settings::parse(const std::string &filename)
             return false;
         }
 
+        if (!json_translate->is_object()) {
+            std::cerr << "Translate settings needs to be in a object" << std::endl;
+            return false;
+        }
+
         auto json_translate_hostname = json_translate.value().find("hostname");
         if (json_translate_hostname == json_translate.value().end()) {
             std::cerr << "\"hostname\" can not be found in Translate settings" << std::endl;
@@ -135,14 +141,20 @@ bool bot::settings::settings::parse(const std::string &filename)
                             channel.source = json_channel_source.value();
 
                         auto json_channel_target = json_channel.value().find("target");
-                        if (json_channel_target != json_channel.value().end())
-                            channel.target = json_channel_target.value();
+                        if (json_channel_target != json_channel.value().end()) {
+                            if (json_channel_target.value().is_string()) {
+                                const std::string target = json_channel_target.value();
+                                const std::string webhook = json_channel->at("webhook");
+                                channel.targets.push_back(std::make_pair(target, webhook));
+                            }
+                            else if (json_channel_target.value().is_object()) {
+                                for (auto json_target = json_channel_target.value().begin(); json_target != json_channel_target.value().end(); json_target++) {
+                                    channel.targets.push_back(std::make_pair(json_target.key(), json_target.value()));
+                                }
+                            }
+                        }
 
-                        auto json_channel_webhook = json_channel.value().find("webhook");
-                        if (json_channel_webhook != json_channel.value().end())
-                            channel.webhook = json_channel_webhook.value();
-
-                        if (!channel.source.empty() && !channel.target.empty() && !channel.webhook.empty())
+                        if (!channel.source.empty() && !channel.targets.empty())
                             guild.channel.push_back(channel);
                     }
                     m_guilds.push_back(guild);

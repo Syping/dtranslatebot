@@ -28,8 +28,7 @@ namespace bot {
         struct channel {
             uint64_t id;
             std::string source;
-            std::string target;
-            std::string webhook;
+            std::vector<std::pair<std::string,std::string>> targets;
         };
         struct guild {
             uint64_t id;
