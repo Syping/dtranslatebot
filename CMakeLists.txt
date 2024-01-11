@@ -19,12 +19,14 @@
 cmake_minimum_required(VERSION 3.16)
 project(dtranslatebot VERSION 0.1 DESCRIPTION "Discord Translation Bot")
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 add_executable(${PROJECT_NAME}
     src/main.cpp
-    src/queue.cpp
+    src/message_queue.cpp
+    src/message_queue.h
     src/settings.cpp
+    src/settings.h
 )
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)

@@ -20,6 +20,7 @@
 #define SETTINGS_H
 #include <cstdint>
 #include <mutex>
+#include <string>
 #include <vector>
 
 namespace bot {

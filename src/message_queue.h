@@ -16,8 +16,8 @@
 * responsible for anything with use of the software, you are self responsible.
 *****************************************************************************/
 
-#ifndef QUEUE_H
-#define QUEUE_H
+#ifndef MESSAGE_QUEUE_H
+#define MESSAGE_QUEUE_H
 #include <dpp/dpp.h>
 #include <mutex>
 #include <string>
@@ -36,7 +36,7 @@ namespace bot {
         std::string target;
     };
 
-    class queue {
+    class message_queue {
     public:
         void add(const bot::message &message);
         void run(dpp::cluster *bot, bot::settings::settings *settings);
@@ -47,4 +47,4 @@ namespace bot {
     };
 }
 
-#endif //QUEUE_H
+#endif //MESSAGE_QUEUE_H

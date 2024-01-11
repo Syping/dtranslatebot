@@ -18,18 +18,18 @@
 
 #include <iostream>
 #include <thread>
-#include "queue.h"
+#include "message_queue.h"
 #include "settings.h"
 using namespace std::chrono_literals;
 
-void bot::queue::add(const bot::message &message)
+void bot::message_queue::add(const bot::message &message)
 {
     m_mutex.lock();
     m_queue.push_back(message);
     m_mutex.unlock();
 }
 
-void bot::queue::run(dpp::cluster *bot, bot::settings::settings *settings)
+void bot::message_queue::run(dpp::cluster *bot, bot::settings::settings *settings)
 {
     while (true) {
         m_mutex.lock();

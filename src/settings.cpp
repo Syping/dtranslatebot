@@ -17,6 +17,7 @@
 *****************************************************************************/
 
 #include <dpp/dpp.h>
+#include <mutex>
 #include <iostream>
 #include "settings.h"
 
@@ -76,84 +77,87 @@ bool bot::settings::settings::parse(const std::string &filename)
         return false;
     }
 
-    m_mutex.lock();
-    m_token = json_token.value();
+    const std::lock_guard<std::recursive_mutex> guard(m_mutex);
+    try {
+        m_token = json_token.value();
 
-    auto json_translate = json.find("translate");
-    if (json_translate == json.end()) {
-        std::cerr << "Translate settings can not be found" << std::endl;
-        m_mutex.unlock();
-        return false;
-    }
+        auto json_translate = json.find("translate");
+        if (json_translate == json.end()) {
+            std::cerr << "Translate settings can not be found" << std::endl;
+            return false;
+        }
 
-    auto json_translate_hostname = json_translate.value().find("hostname");
-    if (json_translate_hostname == json_translate.value().end()) {
-        std::cerr << "\"hostname\" can not be found in Translate settings" << std::endl;
-        m_mutex.unlock();
-        return false;
-    }
-    m_translate_settings.hostname = json_translate_hostname.value();
+        auto json_translate_hostname = json_translate.value().find("hostname");
+        if (json_translate_hostname == json_translate.value().end()) {
+            std::cerr << "\"hostname\" can not be found in Translate settings" << std::endl;
+            return false;
+        }
+        m_translate_settings.hostname = json_translate_hostname.value();
 
-    auto json_translate_port = json_translate.value().find("port");
-    if (json_translate_port == json_translate.value().end()) {
-        std::cerr << "\"port\" can not be found in Translate settings" << std::endl;
-        m_mutex.unlock();
-        return false;
-    }
-    m_translate_settings.port = json_translate_port.value();
+        auto json_translate_port = json_translate.value().find("port");
+        if (json_translate_port == json_translate.value().end()) {
+            std::cerr << "\"port\" can not be found in Translate settings" << std::endl;
+            return false;
+        }
+        m_translate_settings.port = json_translate_port.value();
 
-    auto json_translate_url = json_translate.value().find("url");
-    if (json_translate_url == json_translate.value().end()) {
-        std::cerr << "\"url\" can not be found in Translate settings" << std::endl;
-        m_mutex.unlock();
-        return false;
-    }
-    m_translate_settings.url = json_translate_url.value();
+        auto json_translate_url = json_translate.value().find("url");
+        if (json_translate_url == json_translate.value().end()) {
+            std::cerr << "\"url\" can not be found in Translate settings" << std::endl;
+            return false;
+        }
+        m_translate_settings.url = json_translate_url.value();
 
-    auto json_translate_tls = json_translate.value().find("tls");
-    if (json_translate_tls != json_translate.value().end())
-        m_translate_settings.tls = json_translate_tls.value();
-    else
-        m_translate_settings.tls = false;
+        auto json_translate_tls = json_translate.value().find("tls");
+        if (json_translate_tls != json_translate.value().end())
+            m_translate_settings.tls = json_translate_tls.value();
+        else
+            m_translate_settings.tls = false;
 
-    auto json_translate_apiKey = json_translate.value().find("apiKey");
-    if (json_translate_apiKey != json_translate.value().end())
-        m_translate_settings.apiKey = json_translate_apiKey.value();
-    else
-        m_translate_settings.apiKey.clear();
+        auto json_translate_apiKey = json_translate.value().find("apiKey");
+        if (json_translate_apiKey != json_translate.value().end())
+            m_translate_settings.apiKey = json_translate_apiKey.value();
+        else
+            m_translate_settings.apiKey.clear();
 
-    auto json_guilds = json.find("guilds");
-    if (json_guilds != json.end()) {
-        for (auto json_guild = json_guilds.value().begin(); json_guild != json_guilds.value().end(); json_guild++) {
-            if (json_guild.value().is_object()) {
-                bot::settings::guild guild;
-                guild.id = std::stoull(json_guild.key());
-                for (auto json_channel = json_guild.value().begin(); json_channel != json_guild.value().end(); json_channel++) {
-                    bot::settings::channel channel;
-                    channel.id = std::stoull(json_channel.key());
+        auto json_guilds = json.find("guilds");
+        if (json_guilds != json.end()) {
+            for (auto json_guild = json_guilds.value().begin(); json_guild != json_guilds.value().end(); json_guild++) {
+                if (json_guild.value().is_object()) {
+                    bot::settings::guild guild;
+                    guild.id = std::stoull(json_guild.key());
+                    for (auto json_channel = json_guild.value().begin(); json_channel != json_guild.value().end(); json_channel++) {
+                        bot::settings::channel channel;
+                        channel.id = std::stoull(json_channel.key());
 
-                    auto json_channel_source = json_channel.value().find("source");
-                    if (json_channel_source != json_channel.value().end())
-                        channel.source = json_channel_source.value();
+                        auto json_channel_source = json_channel.value().find("source");
+                        if (json_channel_source != json_channel.value().end())
+                            channel.source = json_channel_source.value();
 
-                    auto json_channel_target = json_channel.value().find("target");
-                    if (json_channel_target != json_channel.value().end())
-                        channel.target = json_channel_target.value();
+                        auto json_channel_target = json_channel.value().find("target");
+                        if (json_channel_target != json_channel.value().end())
+                            channel.target = json_channel_target.value();
 
-                    auto json_channel_webhook = json_channel.value().find("webhook");
-                    if (json_channel_webhook != json_channel.value().end())
-                        channel.webhook = json_channel_webhook.value();
+                        auto json_channel_webhook = json_channel.value().find("webhook");
+                        if (json_channel_webhook != json_channel.value().end())
+                            channel.webhook = json_channel_webhook.value();
 
-                    if (!channel.source.empty() && !channel.target.empty() && !channel.webhook.empty())
-                        guild.channel.push_back(channel);
+                        if (!channel.source.empty() && !channel.target.empty() && !channel.webhook.empty())
+                            guild.channel.push_back(channel);
+                    }
+                    m_guilds.push_back(guild);
                 }
-                m_guilds.push_back(guild);
             }
         }
+        return true;
     }
-
-    m_mutex.unlock();
-    return true;
+    catch (const std::exception &exception) {
+        std::cerr << "Exception thrown while parsing configuration: " << exception.what() << std::endl;
+    }
+    catch (...) {
+        std::cerr << "Exception thrown while parsing configuration: unknown" << std::endl;
+    }
+    return false;
 }
 
 void bot::settings::settings::unlock()

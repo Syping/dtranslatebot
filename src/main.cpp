@@ -19,7 +19,7 @@
 #include <dpp/dpp.h>
 #include <iostream>
 #include <thread>
-#include "queue.h"
+#include "message_queue.h"
 #include "settings.h"
 
 int main(int argc, char* argv[]) {
@@ -36,10 +36,10 @@ int main(int argc, char* argv[]) {
 
     bot.on_log(dpp::utility::cout_logger());
 
-    bot::queue queue;
-    std::thread queue_loop(&bot::queue::run, &queue, &bot, &settings);
+    bot::message_queue message_queue;
+    std::thread message_queue_loop(&bot::message_queue::run, &message_queue, &bot, &settings);
 
-    bot.on_message_create([&bot, &queue, &settings](const dpp::message_create_t &event) {
+    bot.on_message_create([&bot, &message_queue, &settings](const dpp::message_create_t &event) {
         if (event.msg.author.is_bot())
             return;
 
@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
                 message.webhook = channel->webhook;
                 message.source = channel->source;
                 message.target = channel->target;
-                queue.add(message);
+                message_queue.add(message);
             }
         }
         settings.unlock();
