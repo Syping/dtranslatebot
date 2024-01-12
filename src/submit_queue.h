@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2023-2024 Syping
+* Copyright (C) 2024 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -16,36 +16,31 @@
 * responsible for anything with use of the software, you are self responsible.
 *****************************************************************************/
 
-#ifndef MESSAGE_QUEUE_H
-#define MESSAGE_QUEUE_H
+#ifndef SUBMIT_QUEUE_H
+#define SUBMIT_QUEUE_H
 #include <dpp/dpp.h>
 #include <mutex>
 #include <string>
 #include <vector>
-#include "settings.h"
-#include "submit_queue.h"
 
 namespace bot {
-    struct message {
-        uint64_t id;
+    struct translated_message {
         std::string author;
-        std::string avatar;
         std::string message;
-        std::string source;
-        std::vector<bot::settings::target> targets;
+        std::string webhook;
     };
 
-    class message_queue {
+    class submit_queue {
     public:
-        void add(const bot::message &message);
-        void run(bot::settings::settings *settings, bot::submit_queue *submit_queue);
+        void add(const bot::translated_message &message);
+        void run(dpp::cluster *bot);
         void terminate();
 
     private:
         bool m_running;
         std::mutex m_mutex;
-        std::vector<bot::message> m_queue;
+        std::vector<bot::translated_message> m_queue;
     };
 }
 
-#endif //MESSAGE_QUEUE_H
+#endif // SUBMIT_QUEUE_H

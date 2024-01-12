@@ -54,12 +54,21 @@ bot::settings::guild* bot::settings::settings::get_guild(uint64_t guild_id)
 
 bot::settings::translate* bot::settings::settings::get_translate()
 {
-    return &m_translate_settings;
+    return &m_translate;
 }
 
 const std::string bot::settings::settings::get_token()
 {
     return m_token;
+}
+
+bool bot::settings::settings::is_translatebot(uint64_t webhook_id)
+{
+    for (auto id = m_webhookIds.begin(); id != m_webhookIds.end(); id++) {
+        if (*id == webhook_id)
+            return true;
+    }
+    return false;
 }
 
 void bot::settings::settings::lock()
@@ -79,7 +88,7 @@ bool bot::settings::settings::parse(const std::string &filename)
     ifs.close();
 
     try {
-        dpp::json json = dpp::json::parse(sdata);
+        const dpp::json json = dpp::json::parse(sdata);
         if (!json.is_object()) {
             std::cerr << "JSON configuration file is corrupt" << std::endl;
             return false;
@@ -110,33 +119,36 @@ bool bot::settings::settings::parse(const std::string &filename)
             std::cerr << "\"hostname\" can not be found in Translate settings" << std::endl;
             return false;
         }
-        m_translate_settings.hostname = json_translate_hostname.value();
+        m_translate.hostname = json_translate_hostname.value();
 
         auto json_translate_port = json_translate.value().find("port");
         if (json_translate_port == json_translate.value().end()) {
             std::cerr << "\"port\" can not be found in Translate settings" << std::endl;
             return false;
         }
-        m_translate_settings.port = json_translate_port.value();
+        m_translate.port = json_translate_port.value();
 
         auto json_translate_url = json_translate.value().find("url");
         if (json_translate_url == json_translate.value().end()) {
             std::cerr << "\"url\" can not be found in Translate settings" << std::endl;
             return false;
         }
-        m_translate_settings.url = json_translate_url.value();
+        m_translate.url = json_translate_url.value();
 
         auto json_translate_tls = json_translate.value().find("tls");
         if (json_translate_tls != json_translate.value().end())
-            m_translate_settings.tls = json_translate_tls.value();
+            m_translate.tls = json_translate_tls.value();
         else
-            m_translate_settings.tls = false;
+            m_translate.tls = false;
 
         auto json_translate_apiKey = json_translate.value().find("apiKey");
         if (json_translate_apiKey != json_translate.value().end())
-            m_translate_settings.apiKey = json_translate_apiKey.value();
+            m_translate.apiKey = json_translate_apiKey.value();
         else
-            m_translate_settings.apiKey.clear();
+            m_translate.apiKey.clear();
+
+        m_guilds.clear();
+        m_webhookIds.clear();
 
         auto json_guilds = json.find("guilds");
         if (json_guilds != json.end()) {
@@ -183,6 +195,9 @@ bool bot::settings::settings::parse(const std::string &filename)
                                     target.target = json_channel_target.value();
                                     target.webhook = json_channel->at("webhook");
                                     channel.targets.push_back(target);
+
+                                    const dpp::webhook webhook(target.webhook);
+                                    m_webhookIds.push_back(webhook.id);
                                 }
                                 else if (json_channel_target.value().is_object()) {
                                     for (auto json_target = json_channel_target.value().begin(); json_target != json_channel_target.value().end(); json_target++) {
@@ -190,6 +205,9 @@ bool bot::settings::settings::parse(const std::string &filename)
                                         target.target = json_target.key();
                                         target.webhook = json_target.value();
                                         channel.targets.push_back(target);
+
+                                        const dpp::webhook webhook(target.webhook);
+                                        m_webhookIds.push_back(webhook.id);
                                     }
                                 }
                             }
@@ -202,6 +220,7 @@ bool bot::settings::settings::parse(const std::string &filename)
                 }
             }
         }
+
         return true;
     }
     catch (const dpp::json::exception &exception) {

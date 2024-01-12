@@ -27,6 +27,8 @@ add_executable(${PROJECT_NAME}
     src/message_queue.h
     src/settings.cpp
     src/settings.h
+    src/submit_queue.cpp
+    src/submit_queue.h
 )
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)

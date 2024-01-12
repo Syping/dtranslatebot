@@ -53,6 +53,7 @@ namespace bot {
             bot::settings::guild* get_guild(uint64_t guild_id);
             bot::settings::translate* get_translate();
             const std::string get_token();
+            bool is_translatebot(uint64_t webhook_id);
             void lock();
             bool parse(const std::string &filename);
             void unlock();
@@ -60,8 +61,9 @@ namespace bot {
         private:
             std::recursive_mutex m_mutex;
             std::vector<bot::settings::guild> m_guilds;
-            bot::settings::translate m_translate_settings;
+            bot::settings::translate m_translate;
             std::string m_token;
+            std::vector<uint64_t> m_webhookIds;
         };
     }
 }

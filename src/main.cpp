@@ -36,14 +36,22 @@ int main(int argc, char* argv[]) {
 
     bot.on_log(dpp::utility::cout_logger());
 
+    bot::submit_queue submit_queue;
+    std::thread submit_queue_loop(&bot::submit_queue::run, &submit_queue, &bot);
+
     bot::message_queue message_queue;
-    std::thread message_queue_loop(&bot::message_queue::run, &message_queue, &bot, &settings);
+    std::thread message_queue_loop(&bot::message_queue::run, &message_queue, &settings, &submit_queue);
 
     bot.on_message_create([&bot, &message_queue, &settings](const dpp::message_create_t &event) {
-        if (event.msg.author.is_bot())
-            return;
+        if (event.msg.webhook_id) {
+            const std::lock_guard<bot::settings::settings> guard(settings);
 
-        settings.lock();
+            // We will not translate messages from our own bot
+            if (settings.is_translatebot(event.msg.webhook_id))
+                return;
+        }
+
+        const std::lock_guard<bot::settings::settings> guard(settings);
         bot::settings::channel *channel = settings.get_channel(event.msg.guild_id, event.msg.channel_id);
         if (channel) {
             bot::message message;
@@ -55,10 +63,16 @@ int main(int argc, char* argv[]) {
             message.targets = channel->targets;
             message_queue.add(message);
         }
-        settings.unlock();
     });
 
     bot.start(dpp::st_wait);
+
+    // It's unneccessary, but we choose to exit clean anyway
+    message_queue.terminate();
+    message_queue_loop.join();
+
+    submit_queue.terminate();
+    submit_queue_loop.join();
 
     return 0;
 }

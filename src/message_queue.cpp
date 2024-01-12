@@ -16,11 +16,19 @@
 * responsible for anything with use of the software, you are self responsible.
 *****************************************************************************/
 
-#include <iostream>
 #include <thread>
 #include "message_queue.h"
 #include "settings.h"
 using namespace std::chrono_literals;
+
+inline bot::translated_message make_translated_message(const bot::message &message, const std::string &translated_message, const std::string &webhook)
+{
+    bot::translated_message tr_message;
+    tr_message.author = message.author;
+    tr_message.message = translated_message;
+    tr_message.webhook = webhook;
+    return tr_message;
+}
 
 void bot::message_queue::add(const bot::message &message)
 {
@@ -29,9 +37,10 @@ void bot::message_queue::add(const bot::message &message)
     m_mutex.unlock();
 }
 
-void bot::message_queue::run(dpp::cluster *bot, bot::settings::settings *settings)
+void bot::message_queue::run(bot::settings::settings *settings, bot::submit_queue *submit_queue)
 {
-    while (true) {
+    m_running = true;
+    while (m_running) {
         m_mutex.lock();
         if (!m_queue.empty()) {
             const bot::message message = m_queue.front();
@@ -62,25 +71,29 @@ void bot::message_queue::run(dpp::cluster *bot, bot::settings::settings *setting
                 http_headers.emplace("Content-Type", "application/json");
 
                 std::string tr_message = message.message;
-                dpp::https_client http_request(tr_hostname, tr_port, tr_url, "POST", json_body.dump(), http_headers, !tr_tls);
-                if (http_request.get_status() == 200) {
-                    dpp::json response = dpp::json::parse(http_request.get_content());
-                    if (response.is_object()) {
-                        auto tr_text = response.find("translatedText");
-                        if (tr_text != response.end())
-                            tr_message = tr_text.value();
-                    }
-                }
-
-                dpp::webhook webhook(target->webhook);
-                webhook.name = message.author;
 
                 try {
-                    bot->execute_webhook_sync(webhook, dpp::message(tr_message));
+                    dpp::https_client http_request(tr_hostname, tr_port, tr_url, "POST", json_body.dump(), http_headers, !tr_tls);
+                    if (http_request.get_status() == 200) {
+                        const dpp::json response = dpp::json::parse(http_request.get_content());
+                        if (response.is_object()) {
+                            auto tr_text = response.find("translatedText");
+                            if (tr_text != response.end())
+                                tr_message = tr_text.value();
+                        }
+                    }
                 }
-                catch (const dpp::rest_exception &exception) {
-                    std::cerr << "REST Error: " << exception.what() << std::endl;
+                catch (const dpp::json::exception &exception) {
+                    std::cerr << "Exception thrown while parsing translated JSON: " << exception.what() << std::endl;
                 }
+                catch (const std::exception &exception) {
+                    std::cerr << "Exception thrown while translating: " << exception.what() << std::endl;
+                }
+                catch (...) {
+                    std::cerr << "Exception thrown while translating: unknown" << std::endl;
+                }
+
+                submit_queue->add(make_translated_message(message, tr_message, target->webhook));
             }
 
             std::this_thread::yield();
@@ -90,4 +103,9 @@ void bot::message_queue::run(dpp::cluster *bot, bot::settings::settings *setting
             std::this_thread::sleep_for(100ms);
         }
     }
+}
+
+void bot::message_queue::terminate()
+{
+    m_running = false;
 }
