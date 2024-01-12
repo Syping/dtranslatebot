@@ -44,18 +44,16 @@ int main(int argc, char* argv[]) {
             return;
 
         settings.lock();
-        bot::settings::guild *guild = settings.get_guild(event.msg.guild_id);
-        if (guild) {
-            bot::settings::channel *channel = settings.get_channel(guild, event.msg.channel_id);
-            if (channel) {
-                bot::message message;
-                message.author = event.msg.author.format_username();
-                message.avatar = event.msg.author.avatar.to_string();
-                message.message = event.msg.content;
-                message.source = channel->source;
-                message.targets = channel->targets;
-                message_queue.add(message);
-            }
+        bot::settings::channel *channel = settings.get_channel(event.msg.guild_id, event.msg.channel_id);
+        if (channel) {
+            bot::message message;
+            message.id = event.msg.id;
+            message.author = event.msg.author.format_username();
+            message.avatar = event.msg.author.avatar.to_string();
+            message.message = event.msg.content;
+            message.source = channel->source;
+            message.targets = channel->targets;
+            message_queue.add(message);
         }
         settings.unlock();
     });

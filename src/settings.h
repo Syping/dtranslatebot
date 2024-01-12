@@ -25,10 +25,14 @@
 
 namespace bot {
     namespace settings {
+        struct target {
+            std::string target;
+            std::string webhook;
+        };
         struct channel {
             uint64_t id;
             std::string source;
-            std::vector<std::pair<std::string,std::string>> targets;
+            std::vector<bot::settings::target> targets;
         };
         struct guild {
             uint64_t id;
@@ -45,6 +49,7 @@ namespace bot {
         class settings {
         public:
             bot::settings::channel* get_channel(bot::settings::guild *guild, uint64_t channel_id);
+            bot::settings::channel* get_channel(uint64_t guild_id, uint64_t channel_id);
             bot::settings::guild* get_guild(uint64_t guild_id);
             bot::settings::translate* get_translate();
             const std::string get_token();

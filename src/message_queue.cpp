@@ -51,7 +51,7 @@ void bot::message_queue::run(dpp::cluster *bot, bot::settings::settings *setting
                 dpp::json json_body = {
                     {"q", message.message},
                     {"source", message.source},
-                    {"target", target->first},
+                    {"target", target->target},
                     {"format", "text"},
                 };
 
@@ -72,13 +72,13 @@ void bot::message_queue::run(dpp::cluster *bot, bot::settings::settings *setting
                     }
                 }
 
-                dpp::webhook webhook(target->second);
+                dpp::webhook webhook(target->webhook);
                 webhook.name = message.author;
 
                 try {
                     bot->execute_webhook_sync(webhook, dpp::message(tr_message));
                 }
-                catch (dpp::rest_exception &exception) {
+                catch (const dpp::rest_exception &exception) {
                     std::cerr << "REST Error: " << exception.what() << std::endl;
                 }
             }

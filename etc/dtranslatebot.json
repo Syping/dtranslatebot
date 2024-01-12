@@ -1,25 +1,27 @@
 {
-    "token": "bot_token",
+    "token": "$bot_token",
     "guilds": {
-        "guild_1": {
-            "channel_1": {
+        "$guild1_id": {
+            "$channel1_id": {
                 "source": "en",
                 "target": "de",
-                "webhook": "https://german.webhook"
+                "webhook": "https://discord.com/api/webhooks/$guild1_de_webhook_id/$guild1_de_webhook_token"
             },
-            "channel_2": {
+            "$channel2_id": {
                 "source": "de",
                 "target": "en",
-                "webhook": "https://english.webhook"
+                "webhook": "https://discord.com/api/webhooks/$guild1_en_webhook_id/$guild1_en_webhook_token"
             }
         },
-        "guild_2": {
-            "channel_1": {
+        "My Discord Guild": {
+            "id": "$guild2_id",
+            "General English": {
+                "id": "$channel3_id",
                 "source": "en",
                 "target": {
-                    "de": "https://german.webhook",
-                    "fr": "https://french.webhook",
-                    "ru": "https://russian.webhook"
+                    "de": "https://discord.com/api/webhooks/$guild2_de_webhook_id/$guild2_de_webhook_token",
+                    "fr": "https://discord.com/api/webhooks/$guild2_fr_webhook_id/$guild2_fr_webhook_token",
+                    "ru": "https://discord.com/api/webhooks/$guild2_ru_webhook_id/$guild2_ru_webhook_token"
                 }
             }
         }

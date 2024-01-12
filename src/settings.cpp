@@ -19,7 +19,6 @@
 #include <dpp/dpp.h>
 #include <mutex>
 #include <iostream>
-#include <utility>
 #include "settings.h"
 
 bot::settings::channel* bot::settings::settings::get_channel(bot::settings::guild *guild, uint64_t channel_id)
@@ -27,6 +26,19 @@ bot::settings::channel* bot::settings::settings::get_channel(bot::settings::guil
     for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
         if (channel->id == channel_id)
             return &(*channel);
+    }
+    return nullptr;
+}
+
+bot::settings::channel* bot::settings::settings::get_channel(uint64_t guild_id, uint64_t channel_id)
+{
+    for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
+        if (guild->id == guild_id) {
+            for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
+                if (channel->id == channel_id)
+                    return &(*channel);
+            }
+        }
     }
     return nullptr;
 }
@@ -66,20 +78,20 @@ bool bot::settings::settings::parse(const std::string &filename)
     std::string sdata(std::istreambuf_iterator<char>{ifs}, {});
     ifs.close();
 
-    dpp::json json = dpp::json::parse(sdata);
-    if (!json.is_object()) {
-        std::cerr << "JSON configuration file is corrupt" << std::endl;
-        return false;
-    }
-
-    auto json_token = json.find("token");
-    if (json_token == json.end()) {
-        std::cerr << "Bot token can not be found" << std::endl;
-        return false;
-    }
-
-    const std::lock_guard<std::recursive_mutex> guard(m_mutex);
     try {
+        dpp::json json = dpp::json::parse(sdata);
+        if (!json.is_object()) {
+            std::cerr << "JSON configuration file is corrupt" << std::endl;
+            return false;
+        }
+
+        auto json_token = json.find("token");
+        if (json_token == json.end()) {
+            std::cerr << "Bot token can not be found" << std::endl;
+            return false;
+        }
+
+        const std::lock_guard<std::recursive_mutex> guard(m_mutex);
         m_token = json_token.value();
 
         auto json_translate = json.find("translate");
@@ -131,37 +143,69 @@ bool bot::settings::settings::parse(const std::string &filename)
             for (auto json_guild = json_guilds.value().begin(); json_guild != json_guilds.value().end(); json_guild++) {
                 if (json_guild.value().is_object()) {
                     bot::settings::guild guild;
-                    guild.id = std::stoull(json_guild.key());
+
+                    auto json_guild_id = json_guild.value().find("id");
+                    if (json_guild_id != json_guild.value().end()) {
+                        if (json_guild_id->is_number())
+                            guild.id = json_guild_id.value();
+                        else if (json_guild_id->is_string())
+                            guild.id = std::stoull(std::string(json_guild_id.value()));
+                        else
+                            throw std::invalid_argument("Guild id is not a number or a string");
+                    }
+                    else
+                        guild.id = std::stoull(json_guild.key());
+
                     for (auto json_channel = json_guild.value().begin(); json_channel != json_guild.value().end(); json_channel++) {
-                        bot::settings::channel channel;
-                        channel.id = std::stoull(json_channel.key());
+                        if (json_channel.value().is_object()) {
+                            bot::settings::channel channel;
 
-                        auto json_channel_source = json_channel.value().find("source");
-                        if (json_channel_source != json_channel.value().end())
-                            channel.source = json_channel_source.value();
-
-                        auto json_channel_target = json_channel.value().find("target");
-                        if (json_channel_target != json_channel.value().end()) {
-                            if (json_channel_target.value().is_string()) {
-                                const std::string target = json_channel_target.value();
-                                const std::string webhook = json_channel->at("webhook");
-                                channel.targets.push_back(std::make_pair(target, webhook));
+                            auto json_channel_id = json_channel.value().find("id");
+                            if (json_channel_id != json_channel.value().end()) {
+                                if (json_channel_id->is_number())
+                                    channel.id = json_channel_id.value();
+                                else if (json_channel_id->is_string())
+                                    channel.id = std::stoull(std::string(json_channel_id.value()));
+                                else
+                                    throw std::invalid_argument("Channel id is not a number or a string");
                             }
-                            else if (json_channel_target.value().is_object()) {
-                                for (auto json_target = json_channel_target.value().begin(); json_target != json_channel_target.value().end(); json_target++) {
-                                    channel.targets.push_back(std::make_pair(json_target.key(), json_target.value()));
+                            else
+                                channel.id = std::stoull(json_channel.key());
+
+                            auto json_channel_source = json_channel.value().find("source");
+                            if (json_channel_source != json_channel.value().end())
+                                channel.source = json_channel_source.value();
+
+                            auto json_channel_target = json_channel.value().find("target");
+                            if (json_channel_target != json_channel.value().end()) {
+                                if (json_channel_target.value().is_string()) {
+                                    bot::settings::target target;
+                                    target.target = json_channel_target.value();
+                                    target.webhook = json_channel->at("webhook");
+                                    channel.targets.push_back(target);
+                                }
+                                else if (json_channel_target.value().is_object()) {
+                                    for (auto json_target = json_channel_target.value().begin(); json_target != json_channel_target.value().end(); json_target++) {
+                                        bot::settings::target target;
+                                        target.target = json_target.key();
+                                        target.webhook = json_target.value();
+                                        channel.targets.push_back(target);
+                                    }
                                 }
                             }
-                        }
 
-                        if (!channel.source.empty() && !channel.targets.empty())
-                            guild.channel.push_back(channel);
+                            if (!channel.source.empty() && !channel.targets.empty())
+                                guild.channel.push_back(channel);
+                        }
                     }
                     m_guilds.push_back(guild);
                 }
             }
         }
         return true;
+    }
+    catch (const dpp::json::exception &exception) {
+        std::cerr << "Exception thrown while parsing configuration: " << exception.what() << std::endl;
     }
     catch (const std::exception &exception) {
         std::cerr << "Exception thrown while parsing configuration: " << exception.what() << std::endl;

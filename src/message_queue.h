@@ -26,11 +26,12 @@
 
 namespace bot {
     struct message {
+        uint64_t id;
         std::string author;
         std::string avatar;
         std::string message;
         std::string source;
-        std::vector<std::pair<std::string,std::string>> targets;
+        std::vector<bot::settings::target> targets;
     };
 
     class message_queue {
