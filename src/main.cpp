@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
             bot::message message;
             message.id = event.msg.id;
             message.author = event.msg.author.format_username();
-            message.avatar = event.msg.author.avatar.to_string();
+            message.avatar = event.msg.author.get_avatar_url(settings.get_avatar_size());
             message.message = event.msg.content;
             message.source = channel->source;
             message.targets = channel->targets;

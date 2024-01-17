@@ -16,41 +16,25 @@
 * responsible for anything with use of the software, you are self responsible.
 *****************************************************************************/
 
-#include <thread>
+#ifndef WEBHOOK_PUSH_H
+#define WEBHOOK_PUSH_H
+
+#include <dpp/dpp.h>
 #include "submit_queue.h"
-#include "webhook_push.h"
-using namespace std::chrono_literals;
 
-void bot::submit_queue::add(const bot::translated_message &message)
-{
-    m_mutex.lock();
-    m_queue.push_back(message);
-    m_mutex.unlock();
+namespace bot {
+    class webhook_push {
+    public:
+        explicit webhook_push(const dpp::webhook &webhook, const bot::translated_message &message);
+        const std::string get_content() const;
+        uint16_t get_status() const;
+
+    private:
+        std::string m_content;
+        uint16_t m_status;
+        dpp::webhook m_webhook;
+        bot::translated_message m_message;
+    };
 }
 
-void bot::submit_queue::run(dpp::cluster *bot)
-{
-    m_running = true;
-    while (m_running) {
-        m_mutex.lock();
-        if (!m_queue.empty()) {
-            const bot::translated_message message = m_queue.front();
-            m_queue.erase(m_queue.begin());
-            m_mutex.unlock();
-
-            dpp::webhook webhook(message.webhook);
-            bot::webhook_push webhook_push(webhook, message);
-
-            std::this_thread::yield();
-        }
-        else {
-            m_mutex.unlock();
-            std::this_thread::sleep_for(100ms);
-        }
-    }
-}
-
-void bot::submit_queue::terminate()
-{
-    m_running = false;
-}
+#endif // WEBHOOK_PUSH_H

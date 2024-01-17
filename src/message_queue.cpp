@@ -25,6 +25,7 @@ inline bot::translated_message make_translated_message(const bot::message &messa
 {
     bot::translated_message tr_message;
     tr_message.author = message.author;
+    tr_message.avatar = message.avatar;
     tr_message.message = translated_message;
     tr_message.webhook = webhook;
     return tr_message;
@@ -61,7 +62,7 @@ void bot::message_queue::run(bot::settings::settings *settings, bot::submit_queu
                     {"q", message.message},
                     {"source", message.source},
                     {"target", target->target},
-                    {"format", "text"},
+                    {"format", "text"}
                 };
 
                 if (!tr_apiKey.empty())

@@ -29,6 +29,8 @@ add_executable(${PROJECT_NAME}
     src/settings.h
     src/submit_queue.cpp
     src/submit_queue.h
+    src/webhook_push.cpp
+    src/webhook_push.h
 )
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)

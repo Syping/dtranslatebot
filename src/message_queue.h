@@ -48,4 +48,4 @@ namespace bot {
     };
 }
 
-#endif //MESSAGE_QUEUE_H
+#endif // MESSAGE_QUEUE_H

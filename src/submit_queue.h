@@ -26,6 +26,7 @@
 namespace bot {
     struct translated_message {
         std::string author;
+        std::string avatar;
         std::string message;
         std::string webhook;
     };

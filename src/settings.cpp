@@ -21,6 +21,11 @@
 #include <iostream>
 #include "settings.h"
 
+uint16_t bot::settings::settings::get_avatar_size()
+{
+    return m_avatarSize;
+}
+
 bot::settings::channel* bot::settings::settings::get_channel(bot::settings::guild *guild, uint64_t channel_id)
 {
     for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
@@ -146,6 +151,17 @@ bool bot::settings::settings::parse(const std::string &filename)
             m_translate.apiKey = json_translate_apiKey.value();
         else
             m_translate.apiKey.clear();
+
+        auto json_avatarSize = json.find("avatar_size");
+        if (json_avatarSize != json.end()) {
+            m_avatarSize = json_avatarSize.value();
+            if (m_avatarSize < 16)
+                m_avatarSize = 16;
+            else if (m_avatarSize > 4096)
+                m_avatarSize = 4096;
+        }
+        else
+            m_avatarSize = 256;
 
         m_guilds.clear();
         m_webhookIds.clear();

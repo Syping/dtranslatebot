@@ -48,6 +48,7 @@ namespace bot {
 
         class settings {
         public:
+            uint16_t get_avatar_size();
             bot::settings::channel* get_channel(bot::settings::guild *guild, uint64_t channel_id);
             bot::settings::channel* get_channel(uint64_t guild_id, uint64_t channel_id);
             bot::settings::guild* get_guild(uint64_t guild_id);
@@ -59,6 +60,7 @@ namespace bot {
             void unlock();
 
         private:
+            uint16_t m_avatarSize;
             std::recursive_mutex m_mutex;
             std::vector<bot::settings::guild> m_guilds;
             bot::settings::translate m_translate;
@@ -68,4 +70,4 @@ namespace bot {
     }
 }
 
-#endif //SETTINGS_H
+#endif // SETTINGS_H

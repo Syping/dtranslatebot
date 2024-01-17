@@ -1,5 +1,5 @@
 {
-    "token": "$bot_token",
+    "avatar_size": 256,
     "guilds": {
         "$guild1_id": {
             "$channel1_id": {
@@ -26,6 +26,7 @@
             }
         }
     },
+    "token": "$bot_token",
     "translate": {
         "hostname": "127.0.0.1",
         "port": 80,
