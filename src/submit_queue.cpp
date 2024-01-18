@@ -38,8 +38,7 @@ void bot::submit_queue::run(dpp::cluster *bot)
             m_queue.erase(m_queue.begin());
             m_mutex.unlock();
 
-            dpp::webhook webhook(message.webhook);
-            bot::webhook_push webhook_push(webhook, message);
+            bot::webhook_push webhook_push(message.webhook, message, bot);
 
             std::this_thread::yield();
         }

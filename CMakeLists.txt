@@ -17,36 +17,40 @@
 ****************************************************************************]]
 
 cmake_minimum_required(VERSION 3.16)
-project(dtranslatebot VERSION 0.1 DESCRIPTION "Discord Translation Bot")
+project(dtranslatebot VERSION 0.1 LANGUAGES CXX)
+include(GNUInstallDirs)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
-add_executable(${PROJECT_NAME}
-    src/main.cpp
-    src/message_queue.cpp
+# dtranslatebot Source files
+set(DTRANSLATEBOT_HEADERS
     src/message_queue.h
-    src/settings.cpp
     src/settings.h
-    src/submit_queue.cpp
     src/submit_queue.h
-    src/webhook_push.cpp
     src/webhook_push.h
 )
+set(DTRANSLATEBOT_SOURCES
+    src/main.cpp
+    src/message_queue.cpp
+    src/settings.cpp
+    src/submit_queue.cpp
+    src/webhook_push.cpp
+)
 
-set(THREADS_PREFER_PTHREAD_FLAG ON)
+# dtranslatebot Module Path
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+# D++ Discord API Library for Bots
 find_package(DPP REQUIRED)
+
+# pthread Support
+set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-target_link_libraries(${PROJECT_NAME}
-    ${DPP_LIBRARIES}
-    Threads::Threads
-)
-
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${DPP_INCLUDE_DIR}
-)
-
-set_target_properties(${PROJECT_NAME} PROPERTIES
+# dtranslatebot Target + Installs
+add_executable(dtranslatebot ${DTRANSLATEBOT_HEADERS} ${DTRANSLATEBOT_SOURCES})
+target_link_libraries(dtranslatebot Threads::Threads ${DPP_LIBRARIES})
+target_include_directories(dtranslatebot PRIVATE ${DPP_INCLUDE_DIR})
+set_target_properties(dtranslatebot PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
 )
+install(TARGETS dtranslatebot DESTINATION "${CMAKE_INSTALL_BINDIR}")

@@ -52,14 +52,14 @@ int main(int argc, char* argv[]) {
         }
 
         const std::lock_guard<bot::settings::settings> guard(settings);
-        bot::settings::channel *channel = settings.get_channel(event.msg.guild_id, event.msg.channel_id);
+        const bot::settings::channel *channel = settings.get_channel(event.msg.guild_id, event.msg.channel_id);
         if (channel) {
             bot::message message;
             message.id = event.msg.id;
 
             message.author = event.msg.member.get_nickname();
             if (message.author.empty())
-                message.author = event.msg.author.format_username();
+                message.author = event.msg.author.global_name;
 
             message.avatar = event.msg.member.get_avatar_url(settings.get_avatar_size());
             if (message.avatar.empty())

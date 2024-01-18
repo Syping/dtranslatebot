@@ -49,10 +49,10 @@ namespace bot {
         class settings {
         public:
             uint16_t get_avatar_size();
-            bot::settings::channel* get_channel(bot::settings::guild *guild, uint64_t channel_id);
-            bot::settings::channel* get_channel(uint64_t guild_id, uint64_t channel_id);
-            bot::settings::guild* get_guild(uint64_t guild_id);
-            bot::settings::translate* get_translate();
+            const bot::settings::channel* get_channel(bot::settings::guild *guild, uint64_t channel_id);
+            const bot::settings::channel* get_channel(uint64_t guild_id, uint64_t channel_id);
+            const bot::settings::guild* get_guild(uint64_t guild_id);
+            const bot::settings::translate* get_translate();
             const std::string get_token();
             bool is_translatebot(uint64_t webhook_id);
             void lock();

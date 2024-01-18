@@ -16,11 +16,10 @@
 * responsible for anything with use of the software, you are self responsible.
 *****************************************************************************/
 
-#include <sstream>
 #include "webhook_push.h"
 
-bot::webhook_push::webhook_push(const dpp::webhook &webhook, const bot::translated_message &message) :
-    m_webhook(webhook), m_message(message)
+bot::webhook_push::webhook_push(const std::string &webhook, const bot::translated_message &message, dpp::cluster *bot) :
+    m_message(message)
 {
     const dpp::json json_body = {
         {"content", message.message},
@@ -28,22 +27,19 @@ bot::webhook_push::webhook_push(const dpp::webhook &webhook, const bot::translat
         {"avatar_url", message.avatar}
     };
 
-    dpp::http_headers http_headers;
-    http_headers.emplace("Content-Type", "application/json");
-
-    std::ostringstream webhook_url;
-    webhook_url << "/api/webhooks/" << m_webhook.id << "/" << m_webhook.token;
-
     try {
-        dpp::https_client https_request("discord.com", 443, webhook_url.str(), "POST", json_body.dump(), http_headers);
-        m_content = https_request.get_content();
-        m_status = https_request.get_status();
+        dpp::http_request webhook_request(webhook, nullptr, dpp::m_post, json_body.dump(), "application/json");
+        const dpp::http_request_completion_t result = webhook_request.run(bot);
+        if (result.status != 204)
+            std::cerr << "Webhook push returned unexpected code " << result.status << " with response: " << result.body << std::endl;
+        m_content = result.body;
+        m_status = result.status;
     }
     catch (const std::exception &exception) {
-        std::cerr << "Exception thrown while submitting: " << exception.what() << std::endl;
+        std::cerr << "Exception thrown while Webhook push: " << exception.what() << std::endl;
     }
     catch (...) {
-        std::cerr << "Exception thrown while submitting: unknown" << std::endl;
+        std::cerr << "Exception thrown while Webhook push: unknown" << std::endl;
     }
 }
 

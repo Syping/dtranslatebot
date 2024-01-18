@@ -25,14 +25,13 @@
 namespace bot {
     class webhook_push {
     public:
-        explicit webhook_push(const dpp::webhook &webhook, const bot::translated_message &message);
+        explicit webhook_push(const std::string &webhook, const bot::translated_message &message, dpp::cluster *bot);
         const std::string get_content() const;
         uint16_t get_status() const;
 
     private:
         std::string m_content;
         uint16_t m_status;
-        dpp::webhook m_webhook;
         bot::translated_message m_message;
     };
 }

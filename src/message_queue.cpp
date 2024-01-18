@@ -49,7 +49,7 @@ void bot::message_queue::run(bot::settings::settings *settings, bot::submit_queu
             m_mutex.unlock();
 
             settings->lock();
-            bot::settings::translate *translate = settings->get_translate();
+            const bot::settings::translate *translate = settings->get_translate();
             const std::string tr_apiKey = translate->apiKey;
             const std::string tr_hostname = translate->hostname;
             const uint16_t tr_port = translate->port;
@@ -68,8 +68,9 @@ void bot::message_queue::run(bot::settings::settings *settings, bot::submit_queu
                 if (!tr_apiKey.empty())
                     json_body.emplace("apiKey", tr_apiKey);
 
-                dpp::http_headers http_headers;
-                http_headers.emplace("Content-Type", "application/json");
+                const dpp::http_headers http_headers = {
+                    {"Content-Type", "application/json"}
+                };
 
                 std::string tr_message = message.message;
 

@@ -26,7 +26,7 @@ uint16_t bot::settings::settings::get_avatar_size()
     return m_avatarSize;
 }
 
-bot::settings::channel* bot::settings::settings::get_channel(bot::settings::guild *guild, uint64_t channel_id)
+const bot::settings::channel *bot::settings::settings::get_channel(bot::settings::guild *guild, uint64_t channel_id)
 {
     for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
         if (channel->id == channel_id)
@@ -35,7 +35,7 @@ bot::settings::channel* bot::settings::settings::get_channel(bot::settings::guil
     return nullptr;
 }
 
-bot::settings::channel* bot::settings::settings::get_channel(uint64_t guild_id, uint64_t channel_id)
+const bot::settings::channel *bot::settings::settings::get_channel(uint64_t guild_id, uint64_t channel_id)
 {
     for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
         if (guild->id == guild_id) {
@@ -48,7 +48,7 @@ bot::settings::channel* bot::settings::settings::get_channel(uint64_t guild_id, 
     return nullptr;
 }
 
-bot::settings::guild* bot::settings::settings::get_guild(uint64_t guild_id)
+const bot::settings::guild *bot::settings::settings::get_guild(uint64_t guild_id)
 {
     for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
         if (guild->id == guild_id)
@@ -57,7 +57,7 @@ bot::settings::guild* bot::settings::settings::get_guild(uint64_t guild_id)
     return nullptr;
 }
 
-bot::settings::translate* bot::settings::settings::get_translate()
+const bot::settings::translate *bot::settings::settings::get_translate()
 {
     return &m_translate;
 }
