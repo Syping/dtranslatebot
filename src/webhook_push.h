@@ -19,13 +19,17 @@
 #ifndef WEBHOOK_PUSH_H
 #define WEBHOOK_PUSH_H
 
-#include <dpp/dpp.h>
+#include <dpp/cluster.h>
+#include <dpp/snowflake.h>
 #include "submit_queue.h"
 
 namespace bot {
     class webhook_push {
     public:
-        static void run(const dpp::webhook &webhook, const bot::translated_message &message, dpp::cluster *bot);
+        static void run(const bot::translated_message &message, dpp::cluster *bot);
+
+    private:
+        static void push_request(dpp::snowflake webhook_id, const std::string &webhook_token, const std::string &json, dpp::cluster *bot);
     };
 }
 

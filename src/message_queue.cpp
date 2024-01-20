@@ -66,7 +66,7 @@ void bot::message_queue::run(bot::settings::settings *settings, bot::submit_queu
                 };
 
                 if (!tr_apiKey.empty())
-                    json_body.emplace("apiKey", tr_apiKey);
+                    json_body["apiKey"] = tr_apiKey;
 
                 const dpp::http_headers http_headers = {
                     {"Content-Type", "application/json"}
