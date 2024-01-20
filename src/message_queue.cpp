@@ -95,7 +95,7 @@ void bot::message_queue::run(bot::settings::settings *settings, bot::submit_queu
                     std::cerr << "Exception thrown while translating: unknown" << std::endl;
                 }
 
-                submit_queue->add(make_translated_message(message, tr_message, dpp::webhook(target->webhook)));
+                submit_queue->add(make_translated_message(message, tr_message, target->webhook));
             }
 
             std::this_thread::yield();

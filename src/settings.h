@@ -19,6 +19,8 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 #include <cstdint>
+#include <dpp/snowflake.h>
+#include <dpp/webhook.h>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -27,15 +29,15 @@ namespace bot {
     namespace settings {
         struct target {
             std::string target;
-            std::string webhook;
+            dpp::webhook webhook;
         };
         struct channel {
-            uint64_t id;
+            dpp::snowflake id;
             std::string source;
             std::vector<bot::settings::target> targets;
         };
         struct guild {
-            uint64_t id;
+            dpp::snowflake id;
             std::vector<bot::settings::channel> channel;
         };
         struct translate {
@@ -49,12 +51,12 @@ namespace bot {
         class settings {
         public:
             uint16_t get_avatar_size();
-            const bot::settings::channel* get_channel(bot::settings::guild *guild, uint64_t channel_id);
-            const bot::settings::channel* get_channel(uint64_t guild_id, uint64_t channel_id);
-            const bot::settings::guild* get_guild(uint64_t guild_id);
+            const bot::settings::channel* get_channel(const bot::settings::guild *guild, dpp::snowflake channel_id);
+            const bot::settings::channel* get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id);
+            const bot::settings::guild* get_guild(dpp::snowflake guild_id);
             const bot::settings::translate* get_translate();
             const std::string get_token();
-            bool is_translatebot(uint64_t webhook_id);
+            bool is_translatebot(dpp::snowflake webhook_id);
             void lock();
             bool parse(const std::string &filename);
             void unlock();
@@ -65,7 +67,7 @@ namespace bot {
             std::vector<bot::settings::guild> m_guilds;
             bot::settings::translate m_translate;
             std::string m_token;
-            std::vector<uint64_t> m_webhookIds;
+            std::vector<dpp::snowflake> m_webhookIds;
         };
     }
 }

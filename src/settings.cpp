@@ -26,7 +26,7 @@ uint16_t bot::settings::settings::get_avatar_size()
     return m_avatarSize;
 }
 
-const bot::settings::channel *bot::settings::settings::get_channel(bot::settings::guild *guild, uint64_t channel_id)
+const bot::settings::channel *bot::settings::settings::get_channel(const bot::settings::guild *guild, dpp::snowflake channel_id)
 {
     for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
         if (channel->id == channel_id)
@@ -35,7 +35,7 @@ const bot::settings::channel *bot::settings::settings::get_channel(bot::settings
     return nullptr;
 }
 
-const bot::settings::channel *bot::settings::settings::get_channel(uint64_t guild_id, uint64_t channel_id)
+const bot::settings::channel *bot::settings::settings::get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id)
 {
     for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
         if (guild->id == guild_id) {
@@ -48,7 +48,7 @@ const bot::settings::channel *bot::settings::settings::get_channel(uint64_t guil
     return nullptr;
 }
 
-const bot::settings::guild *bot::settings::settings::get_guild(uint64_t guild_id)
+const bot::settings::guild *bot::settings::settings::get_guild(dpp::snowflake guild_id)
 {
     for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
         if (guild->id == guild_id)
@@ -67,7 +67,7 @@ const std::string bot::settings::settings::get_token()
     return m_token;
 }
 
-bool bot::settings::settings::is_translatebot(uint64_t webhook_id)
+bool bot::settings::settings::is_translatebot(dpp::snowflake webhook_id)
 {
     for (auto id = m_webhookIds.begin(); id != m_webhookIds.end(); id++) {
         if (*id == webhook_id)
@@ -209,21 +209,17 @@ bool bot::settings::settings::parse(const std::string &filename)
                                 if (json_channel_target.value().is_string()) {
                                     bot::settings::target target;
                                     target.target = json_channel_target.value();
-                                    target.webhook = json_channel->at("webhook");
+                                    target.webhook = dpp::webhook(json_channel->at("webhook"));
                                     channel.targets.push_back(target);
-
-                                    const dpp::webhook webhook(target.webhook);
-                                    m_webhookIds.push_back(webhook.id);
+                                    m_webhookIds.push_back(target.webhook.id);
                                 }
                                 else if (json_channel_target.value().is_object()) {
                                     for (auto json_target = json_channel_target.value().begin(); json_target != json_channel_target.value().end(); json_target++) {
                                         bot::settings::target target;
                                         target.target = json_target.key();
-                                        target.webhook = json_target.value();
+                                        target.webhook = dpp::webhook(json_target.value());
                                         channel.targets.push_back(target);
-
-                                        const dpp::webhook webhook(target.webhook);
-                                        m_webhookIds.push_back(webhook.id);
+                                        m_webhookIds.push_back(target.webhook.id);
                                     }
                                 }
                             }
