@@ -35,12 +35,11 @@ void bot::webhook_push::run(const bot::translated_message &message, dpp::cluster
             const std::string_view::size_type pos = message_eov.rfind('\n');
             if (pos != std::string_view::npos) {
                 json_body["content"] = message_v.substr(0, 1333 + pos);
-                push_request(message.webhook.id, message.webhook.token, json_body.dump(), bot);
                 message_v = message_v.substr(1333 + pos);
             }
             else {
                 std::cmatch match;
-                const std::regex eos_regex("^.*(\\.|\\?|\\!)\\s.*$");
+                const std::regex eos_regex("^.*(\\.|\\?|\\!|\\。)\\s.*$");
                 const std::regex eop_regex("^.*(\\,)\\s.*$");
                 const std::regex eow_regex("^.*()\\s.*$");
                 if (std::regex_match(message_eov.begin(), message_eov.end(), match, eos_regex)) {
@@ -59,12 +58,13 @@ void bot::webhook_push::run(const bot::translated_message &message, dpp::cluster
                     json_body["content"] = message_v.substr(0, 1333);
                     message_v = message_v.substr(1333);
                 }
-                push_request(message.webhook.id, message.webhook.token, json_body.dump(), bot);
             }
+            push_request(message.webhook.id, message.webhook.token, json_body.dump(), bot);
+
             if (message_v.length() <= 2000) {
                 json_body["content"] = message_v;
-                push_request(message.webhook.id, message.webhook.token, json_body.dump(), bot);
                 message_v = std::string_view();
+                push_request(message.webhook.id, message.webhook.token, json_body.dump(), bot);
             }
         }
     }
@@ -76,7 +76,6 @@ void bot::webhook_push::run(const bot::translated_message &message, dpp::cluster
 
 void bot::webhook_push::push_request(dpp::snowflake webhook_id, const std::string &webhook_token, const std::string &json, dpp::cluster *bot)
 {
-
     std::promise<dpp::http_request_completion_t> _p;
     std::future<dpp::http_request_completion_t> _f = _p.get_future();
     bot->post_rest(API_PATH "/webhooks", std::to_string(webhook_id), dpp::utility::url_encode(webhook_token), dpp::m_post, json, [bot, &_p](dpp::json &json, const dpp::http_request_completion_t &event) {
