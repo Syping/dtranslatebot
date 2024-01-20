@@ -28,7 +28,7 @@ namespace bot {
         std::string author;
         std::string avatar;
         std::string message;
-        std::string webhook;
+        dpp::webhook webhook;
     };
 
     class submit_queue {

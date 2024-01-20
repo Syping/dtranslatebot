@@ -21,7 +21,7 @@
 #include "settings.h"
 using namespace std::chrono_literals;
 
-inline bot::translated_message make_translated_message(const bot::message &message, const std::string &translated_message, const std::string &webhook)
+inline bot::translated_message make_translated_message(const bot::message &message, const std::string &translated_message, const dpp::webhook &webhook)
 {
     bot::translated_message tr_message;
     tr_message.author = message.author;
@@ -95,7 +95,7 @@ void bot::message_queue::run(bot::settings::settings *settings, bot::submit_queu
                     std::cerr << "Exception thrown while translating: unknown" << std::endl;
                 }
 
-                submit_queue->add(make_translated_message(message, tr_message, target->webhook));
+                submit_queue->add(make_translated_message(message, tr_message, dpp::webhook(target->webhook)));
             }
 
             std::this_thread::yield();
