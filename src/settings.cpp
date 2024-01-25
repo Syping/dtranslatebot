@@ -36,7 +36,11 @@ void bot::settings::settings::add_channel(const bot::settings::channel &channel,
     guild.id = guild_id;
     guild.channel.push_back(channel);
     m_guilds.push_back(guild);
-    return;
+}
+
+void bot::settings::settings::add_translatebot_webhook(const dpp::webhook &webhook)
+{
+    m_webhookIds.push_back(webhook.id);
 }
 
 uint16_t bot::settings::settings::get_avatar_size()

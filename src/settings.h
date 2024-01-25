@@ -52,6 +52,7 @@ namespace bot {
         class settings {
         public:
             void add_channel(const bot::settings::channel &channel, dpp::snowflake guild_id);
+            void add_translatebot_webhook(const dpp::webhook &webhook);
             uint16_t get_avatar_size();
             const bot::settings::channel* get_channel(const bot::settings::guild *guild, dpp::snowflake channel_id);
             const bot::settings::channel* get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id);

@@ -142,8 +142,10 @@ int main(int argc, char* argv[]) {
                                 s_target.webhook = webhook;
                                 s_channel.targets.push_back(s_target);
 
-                                const std::lock_guard<bot::settings::settings> guard(settings);
+                                settings.lock();
                                 settings.add_channel(s_channel, event.command.guild_id);
+                                settings.add_translatebot_webhook(webhook);
+                                settings.unlock();
 
                                 event.reply(dpp::message("Channel will be now translated!").set_flags(dpp::m_ephemeral));
                             });
@@ -158,8 +160,10 @@ int main(int argc, char* argv[]) {
                             s_target.webhook = *webhook;
                             s_channel.targets.push_back(s_target);
 
-                            const std::lock_guard<bot::settings::settings> guard(settings);
+                            settings.lock();
                             settings.add_channel(s_channel, event.command.guild_id);
+                            settings.add_translatebot_webhook(*webhook);
+                            settings.unlock();
 
                             event.reply(dpp::message("Channel will be now translated!").set_flags(dpp::m_ephemeral));
                         }
