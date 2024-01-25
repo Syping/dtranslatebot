@@ -20,13 +20,31 @@
 #include <mutex>
 #include <iostream>
 #include "settings.h"
+#include "translate_libretranslate.h"
+
+void bot::settings::settings::add_channel(const bot::settings::channel &channel, dpp::snowflake guild_id)
+{
+    for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
+        if (guild->id == guild_id) {
+            guild->channel.push_back(channel);
+            return;
+        }
+    }
+
+    // We will create the guild structure when it is not in memory
+    bot::settings::guild guild;
+    guild.id = guild_id;
+    guild.channel.push_back(channel);
+    m_guilds.push_back(guild);
+    return;
+}
 
 uint16_t bot::settings::settings::get_avatar_size()
 {
     return m_avatarSize;
 }
 
-const bot::settings::channel *bot::settings::settings::get_channel(const bot::settings::guild *guild, dpp::snowflake channel_id)
+const bot::settings::channel* bot::settings::settings::get_channel(const bot::settings::guild *guild, dpp::snowflake channel_id)
 {
     for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
         if (channel->id == channel_id)
@@ -35,7 +53,7 @@ const bot::settings::channel *bot::settings::settings::get_channel(const bot::se
     return nullptr;
 }
 
-const bot::settings::channel *bot::settings::settings::get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id)
+const bot::settings::channel* bot::settings::settings::get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id)
 {
     for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
         if (guild->id == guild_id) {
@@ -48,7 +66,7 @@ const bot::settings::channel *bot::settings::settings::get_channel(dpp::snowflak
     return nullptr;
 }
 
-const bot::settings::guild *bot::settings::settings::get_guild(dpp::snowflake guild_id)
+const bot::settings::guild* bot::settings::settings::get_guild(dpp::snowflake guild_id)
 {
     for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
         if (guild->id == guild_id)
@@ -57,9 +75,22 @@ const bot::settings::guild *bot::settings::settings::get_guild(dpp::snowflake gu
     return nullptr;
 }
 
-const bot::settings::translate *bot::settings::settings::get_translate()
+const std::vector<std::string> bot::settings::settings::get_preferred_languages()
+{
+    return m_preflangs;
+}
+
+const bot::settings::translate* bot::settings::settings::get_translate()
 {
     return &m_translate;
+}
+
+std::unique_ptr<bot::translate::translator> bot::settings::settings::get_translator()
+{
+    const std::lock_guard<std::recursive_mutex> guard(m_mutex);
+    std::unique_ptr<bot::translate::translator> libretranslate(
+                new bot::translate::libretranslate(m_translate.hostname, m_translate.port, m_translate.url, m_translate.tls, m_translate.apiKey));
+    return libretranslate;
 }
 
 const std::string bot::settings::settings::get_token()
@@ -164,6 +195,7 @@ bool bot::settings::settings::parse(const std::string &filename)
             m_avatarSize = 256;
 
         m_guilds.clear();
+        m_preflangs.clear();
         m_webhookIds.clear();
 
         auto json_guilds = json.find("guilds");
@@ -233,6 +265,19 @@ bool bot::settings::settings::parse(const std::string &filename)
             }
         }
 
+        auto json_preflangs = json.find("preferred_lang");
+        if (json_preflangs != json.end() && json_preflangs->is_array()) {
+            size_t i = 0;
+            for (const auto &json_preflang : json_preflangs.value()) {
+                if (i >= 25) {
+                    std::cerr << "\"preferred_lang\" is limited to 25 languages" << std::endl;
+                    break;
+                }
+                m_preflangs.push_back(json_preflang);
+                i++;
+            }
+        }
+
         return true;
     }
     catch (const dpp::json::exception &exception) {
@@ -240,9 +285,6 @@ bool bot::settings::settings::parse(const std::string &filename)
     }
     catch (const std::exception &exception) {
         std::cerr << "Exception thrown while parsing configuration: " << exception.what() << std::endl;
-    }
-    catch (...) {
-        std::cerr << "Exception thrown while parsing configuration: unknown" << std::endl;
     }
     return false;
 }

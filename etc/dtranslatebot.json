@@ -26,11 +26,12 @@
             }
         }
     },
+    "preferred_lang": ["en", "de", "fr", "ru"],
     "token": "$bot_token",
     "translate": {
         "hostname": "127.0.0.1",
         "port": 80,
-        "url": "/translate",
+        "url": "/",
         "tls": false,
         "apiKey": ""
     }

@@ -48,53 +48,10 @@ void bot::message_queue::run(bot::settings::settings *settings, bot::submit_queu
             m_queue.erase(m_queue.begin());
             m_mutex.unlock();
 
-            settings->lock();
-            const bot::settings::translate *translate = settings->get_translate();
-            const std::string tr_apiKey = translate->apiKey;
-            const std::string tr_hostname = translate->hostname;
-            const uint16_t tr_port = translate->port;
-            const std::string tr_url = translate->url;
-            const bool tr_tls = translate->tls;
-            settings->unlock();
+            std::unique_ptr<bot::translate::translator> translator = settings->get_translator();
 
             for (auto target = message.targets.begin(); target != message.targets.end(); target++) {
-                dpp::json json_body = {
-                    {"q", message.message},
-                    {"source", message.source},
-                    {"target", target->target},
-                    {"format", "text"}
-                };
-
-                if (!tr_apiKey.empty())
-                    json_body["apiKey"] = tr_apiKey;
-
-                const dpp::http_headers http_headers = {
-                    {"Content-Type", "application/json"}
-                };
-
-                std::string tr_message = message.message;
-
-                try {
-                    dpp::https_client http_request(tr_hostname, tr_port, tr_url, "POST", json_body.dump(), http_headers, !tr_tls);
-                    if (http_request.get_status() == 200) {
-                        const dpp::json response = dpp::json::parse(http_request.get_content());
-                        if (response.is_object()) {
-                            auto tr_text = response.find("translatedText");
-                            if (tr_text != response.end())
-                                tr_message = tr_text.value();
-                        }
-                    }
-                }
-                catch (const dpp::json::exception &exception) {
-                    std::cerr << "Exception thrown while parsing translated JSON: " << exception.what() << std::endl;
-                }
-                catch (const std::exception &exception) {
-                    std::cerr << "Exception thrown while translating: " << exception.what() << std::endl;
-                }
-                catch (...) {
-                    std::cerr << "Exception thrown while translating: unknown" << std::endl;
-                }
-
+                const std::string tr_message = translator->translate(message.message, message.source, target->target);
                 submit_queue->add(make_translated_message(message, tr_message, target->webhook));
             }
 

@@ -24,6 +24,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include "translate_core.h"
 
 namespace bot {
     namespace settings {
@@ -50,11 +51,14 @@ namespace bot {
 
         class settings {
         public:
+            void add_channel(const bot::settings::channel &channel, dpp::snowflake guild_id);
             uint16_t get_avatar_size();
             const bot::settings::channel* get_channel(const bot::settings::guild *guild, dpp::snowflake channel_id);
             const bot::settings::channel* get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id);
             const bot::settings::guild* get_guild(dpp::snowflake guild_id);
+            const std::vector<std::string> get_preferred_languages();
             const bot::settings::translate* get_translate();
+            std::unique_ptr<bot::translate::translator> get_translator();
             const std::string get_token();
             bool is_translatebot(dpp::snowflake webhook_id);
             void lock();
@@ -65,6 +69,7 @@ namespace bot {
             uint16_t m_avatarSize;
             std::recursive_mutex m_mutex;
             std::vector<bot::settings::guild> m_guilds;
+            std::vector<std::string> m_preflangs;
             bot::settings::translate m_translate;
             std::string m_token;
             std::vector<dpp::snowflake> m_webhookIds;
