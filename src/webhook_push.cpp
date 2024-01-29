@@ -19,12 +19,14 @@
 #include <future>
 #include <regex>
 #include "webhook_push.h"
+using namespace std::string_literals;
+using namespace std::string_view_literals;
 
 void bot::webhook_push::run(const bot::translated_message &message, dpp::cluster *bot)
 {
     dpp::json json_body = {
-        {"username", message.author},
-        {"avatar_url", message.avatar}
+        {"username"s, message.author},
+        {"avatar_url"s, message.avatar}
     };
 
     // We will split too long messages into multiple messages
@@ -39,18 +41,15 @@ void bot::webhook_push::run(const bot::translated_message &message, dpp::cluster
             }
             else {
                 std::cmatch match;
-                const std::regex eos_regex("^.*(\\.|\\?|\\!|\\。)\\s.*$");
-                const std::regex eop_regex("^.*(\\,)\\s.*$");
-                const std::regex eow_regex("^.*()\\s.*$");
-                if (std::regex_match(message_eov.begin(), message_eov.end(), match, eos_regex)) {
+                if (std::regex_match(message_eov.begin(), message_eov.end(), match, std::regex("^.*(\\.|\\?|\\!|\\。)\\s.*$"s))) {
                     json_body["content"] = message_v.substr(0, 1334 + match.position(1));
                     message_v = message_v.substr(1334 + match.position(1));
                 }
-                else if (std::regex_match(message_eov.begin(), message_eov.end(), match, eop_regex)) {
+                else if (std::regex_match(message_eov.begin(), message_eov.end(), match, std::regex("^.*(\\,)\\s.*$"s))) {
                     json_body["content"] = message_v.substr(0, 1334 + match.position(1));
                     message_v = message_v.substr(1334 + match.position(1));
                 }
-                else if (std::regex_match(message_eov.begin(), message_eov.end(), match, eow_regex)) {
+                else if (std::regex_match(message_eov.begin(), message_eov.end(), match, std::regex("^.*()\\s.*$"s))) {
                     json_body["content"] = message_v.substr(0, 1334 + match.position(1));
                     message_v = message_v.substr(1334 + match.position(1));
                 }
@@ -63,7 +62,7 @@ void bot::webhook_push::run(const bot::translated_message &message, dpp::cluster
 
             if (message_v.length() <= 2000) {
                 json_body["content"] = message_v;
-                message_v = std::string_view();
+                message_v = ""sv;
                 push_request(message.webhook.id, message.webhook.token, json_body.dump(), bot);
             }
         }

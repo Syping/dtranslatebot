@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
                                 bot::settings::target s_target;
                                 s_target.target = target;
                                 s_target.webhook = webhook;
-                                s_channel.targets.push_back(s_target);
+                                s_channel.targets.emplace_back(s_target);
 
                                 settings.lock();
                                 settings.add_channel(s_channel, event.command.guild_id);
@@ -158,7 +158,7 @@ int main(int argc, char* argv[]) {
                             bot::settings::target s_target;
                             s_target.target = target;
                             s_target.webhook = *webhook;
-                            s_channel.targets.push_back(s_target);
+                            s_channel.targets.emplace_back(s_target);
 
                             settings.lock();
                             settings.add_channel(s_channel, event.command.guild_id);
@@ -217,7 +217,7 @@ int main(int argc, char* argv[]) {
             webhook_subcommand.add_option(webhook_option);
             command_translate.add_option(channel_subcommand);
             command_translate.add_option(webhook_subcommand);
-            commands.push_back(command_translate);
+            commands.emplace_back(command_translate);
 
             if (preferred_languages.size() > 1) {
                 dpp::slashcommand command_translate_pref("translate_pref", "Translate current channel (Preferred languages)", bot.me.id);
@@ -240,7 +240,7 @@ int main(int argc, char* argv[]) {
                 webhook_pref_subcommand.add_option(webhook_option);
                 command_translate_pref.add_option(channel_pref_subcommand);
                 command_translate_pref.add_option(webhook_pref_subcommand);
-                commands.push_back(command_translate_pref);
+                commands.emplace_back(command_translate_pref);
             }
 
             bot.global_bulk_command_create(commands);

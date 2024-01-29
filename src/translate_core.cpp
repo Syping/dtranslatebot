@@ -23,6 +23,10 @@ bot::translate::translator::translator()
 {
 }
 
+bot::translate::translator::~translator()
+{
+}
+
 const std::vector<bot::translate::language> bot::translate::translator::get_languages()
 {
     std::cerr << "WARNING: translator::get_languages() have being called." << std::endl;

@@ -19,9 +19,14 @@
 #include <dpp/json.h>
 #include <dpp/httpsclient.h>
 #include "translate_libretranslate.h"
+using namespace std::string_literals;
 
 bot::translate::libretranslate::libretranslate(const std::string &hostname, uint16_t port, const std::string &url, bool tls, const std::string apiKey) :
     m_hostname(hostname), m_port(port), m_url(url), m_tls(tls), m_apiKey(apiKey)
+{
+}
+
+bot::translate::libretranslate::~libretranslate()
 {
 }
 
@@ -34,20 +39,20 @@ const std::vector<bot::translate::language> bot::translate::libretranslate::get_
         if (http_request.get_status() == 200) {
             const dpp::json response = dpp::json::parse(http_request.get_content());
             if (response.is_array()) {
-                for (auto json_language = response.begin(); json_language != response.end(); json_language++) {
-                    if (json_language->is_object()) {
+                for (const auto &json_language : response) {
+                    if (json_language.is_object()) {
                         bot::translate::language language;
 
-                        auto json_lang_code = json_language.value().find("code");
-                        if (json_lang_code != json_language.value().end())
+                        auto json_lang_code = json_language.find("code");
+                        if (json_lang_code != json_language.end())
                             language.code = json_lang_code.value();
 
-                        auto json_lang_name = json_language.value().find("name");
-                        if (json_lang_name != json_language.value().end())
+                        auto json_lang_name = json_language.find("name");
+                        if (json_lang_name != json_language.end())
                             language.name = json_lang_name.value();
 
                         if (!language.code.empty() && !language.name.empty())
-                            languages.push_back(language);
+                            languages.emplace_back(language);
                     }
                 }
             }
@@ -66,14 +71,14 @@ const std::vector<bot::translate::language> bot::translate::libretranslate::get_
 const std::string bot::translate::libretranslate::translate(const std::string &text, const std::string &source, const std::string &target)
 {
     const dpp::http_headers http_headers = {
-        {"Content-Type", "application/json"}
+        {"Content-Type"s, "application/json"s}
     };
 
     dpp::json json_body = {
-        {"q", text},
-        {"source", source},
-        {"target", target},
-        {"format", "text"}
+        {"q"s, text},
+        {"source"s, source},
+        {"target"s, target},
+        {"format"s, "text"s}
     };
 
     if (!m_apiKey.empty())

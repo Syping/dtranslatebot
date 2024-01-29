@@ -16,8 +16,9 @@
 * responsible for anything with use of the software, you are self responsible.
 *****************************************************************************/
 
-#include <dpp/dpp.h>
+#include <dpp/json.h>
 #include <mutex>
+#include <fstream>
 #include <iostream>
 #include "settings.h"
 #include "translate_libretranslate.h"
@@ -34,8 +35,8 @@ void bot::settings::settings::add_channel(const bot::settings::channel &channel,
     // We will create the guild structure when it is not in memory
     bot::settings::guild guild;
     guild.id = guild_id;
-    guild.channel.push_back(channel);
-    m_guilds.push_back(guild);
+    guild.channel.emplace_back(channel);
+    m_guilds.emplace_back(guild);
 }
 
 void bot::settings::settings::add_translatebot_webhook(const dpp::webhook &webhook)
@@ -65,6 +66,7 @@ const bot::settings::channel* bot::settings::settings::get_channel(dpp::snowflak
                 if (channel->id == channel_id)
                     return &(*channel);
             }
+            return nullptr;
         }
     }
     return nullptr;
@@ -92,8 +94,8 @@ const bot::settings::translate* bot::settings::settings::get_translate()
 std::unique_ptr<bot::translate::translator> bot::settings::settings::get_translator()
 {
     const std::lock_guard<std::recursive_mutex> guard(m_mutex);
-    std::unique_ptr<bot::translate::translator> libretranslate(
-                new bot::translate::libretranslate(m_translate.hostname, m_translate.port, m_translate.url, m_translate.tls, m_translate.apiKey));
+    std::unique_ptr<bot::translate::libretranslate> libretranslate(
+        new bot::translate::libretranslate(m_translate.hostname, m_translate.port, m_translate.url, m_translate.tls, m_translate.apiKey));
     return libretranslate;
 }
 
@@ -246,7 +248,7 @@ bool bot::settings::settings::parse(const std::string &filename)
                                     bot::settings::target target;
                                     target.target = json_channel_target.value();
                                     target.webhook = dpp::webhook(json_channel->at("webhook"));
-                                    channel.targets.push_back(target);
+                                    channel.targets.emplace_back(target);
                                     m_webhookIds.push_back(target.webhook.id);
                                 }
                                 else if (json_channel_target.value().is_object()) {
@@ -254,17 +256,17 @@ bool bot::settings::settings::parse(const std::string &filename)
                                         bot::settings::target target;
                                         target.target = json_target.key();
                                         target.webhook = dpp::webhook(json_target.value());
-                                        channel.targets.push_back(target);
+                                        channel.targets.emplace_back(target);
                                         m_webhookIds.push_back(target.webhook.id);
                                     }
                                 }
                             }
 
                             if (!channel.source.empty() && !channel.targets.empty())
-                                guild.channel.push_back(channel);
+                                guild.channel.emplace_back(channel);
                         }
                     }
-                    m_guilds.push_back(guild);
+                    m_guilds.emplace_back(guild);
                 }
             }
         }

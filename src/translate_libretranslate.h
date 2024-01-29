@@ -28,8 +28,9 @@ namespace bot {
         class libretranslate : public translator {
         public:
             explicit libretranslate(const std::string &hostname, uint16_t port, const std::string &url, bool tls, const std::string apiKey = {});
-            const std::vector<bot::translate::language> get_languages();
-            const std::string translate(const std::string &text, const std::string &source, const std::string &target);
+            ~libretranslate() override;
+            const std::vector<bot::translate::language> get_languages() override;
+            const std::string translate(const std::string &text, const std::string &source, const std::string &target) override;
 
         private:
             std::string m_apiKey;
