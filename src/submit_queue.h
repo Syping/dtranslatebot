@@ -21,6 +21,7 @@
 #include <dpp/dpp.h>
 #include <mutex>
 #include <string>
+#include <queue>
 #include <vector>
 
 namespace bot {
@@ -40,7 +41,7 @@ namespace bot {
     private:
         bool m_running;
         std::mutex m_mutex;
-        std::vector<bot::translated_message> m_queue;
+        std::queue<bot::translated_message> m_queue;
     };
 }
 

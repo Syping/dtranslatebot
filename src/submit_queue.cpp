@@ -24,7 +24,7 @@ using namespace std::chrono_literals;
 void bot::submit_queue::add(const bot::translated_message &message)
 {
     m_mutex.lock();
-    m_queue.push_back(message);
+    m_queue.push(message);
     m_mutex.unlock();
 }
 
@@ -35,7 +35,7 @@ void bot::submit_queue::run(dpp::cluster *bot)
         m_mutex.lock();
         if (!m_queue.empty()) {
             const bot::translated_message message = m_queue.front();
-            m_queue.erase(m_queue.begin());
+            m_queue.pop();
             m_mutex.unlock();
 
             webhook_push::run(message, bot);

@@ -34,7 +34,7 @@ inline bot::translated_message make_translated_message(const bot::message &messa
 void bot::message_queue::add(const bot::message &message)
 {
     m_mutex.lock();
-    m_queue.push_back(message);
+    m_queue.push(message);
     m_mutex.unlock();
 }
 
@@ -45,7 +45,7 @@ void bot::message_queue::run(bot::settings::settings *settings, bot::submit_queu
         m_mutex.lock();
         if (!m_queue.empty()) {
             const bot::message message = m_queue.front();
-            m_queue.erase(m_queue.begin());
+            m_queue.pop();
             m_mutex.unlock();
 
             std::unique_ptr<bot::translate::translator> translator = settings->get_translator();
