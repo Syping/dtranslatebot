@@ -40,6 +40,22 @@ void bot::settings::settings::add_channel(const bot::settings::channel &channel,
     m_guilds.push_back(std::move(guild));
 }
 
+bool bot::settings::settings::add_target(const bot::settings::target &target, dpp::snowflake guild_id, dpp::snowflake channel_id)
+{
+    for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
+        if (guild->id == guild_id) {
+            for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
+                if (channel->id == channel_id) {
+                    channel->targets.push_back(target);
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+    return false;
+}
+
 void bot::settings::settings::add_translatebot_webhook(dpp::snowflake webhook_id)
 {
     m_webhookIds.push_back(webhook_id);

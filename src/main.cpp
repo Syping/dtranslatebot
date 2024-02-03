@@ -69,8 +69,7 @@ int main(int argc, char* argv[]) {
             return;
 
         const std::lock_guard<bot::settings::settings> guard(settings);
-        const bot::settings::channel *channel = settings.get_channel(event.msg.guild_id, event.msg.channel_id);
-        if (channel) {
+        if (const bot::settings::channel *channel = settings.get_channel(event.msg.guild_id, event.msg.channel_id)) {
             bot::message message;
             message.id = event.msg.id;
 
