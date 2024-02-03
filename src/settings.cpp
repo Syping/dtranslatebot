@@ -18,6 +18,7 @@
 
 #include <dpp/json.h>
 #include <mutex>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include "settings.h"
@@ -35,13 +36,13 @@ void bot::settings::settings::add_channel(const bot::settings::channel &channel,
     // We will create the guild structure when it is not in memory
     bot::settings::guild guild;
     guild.id = guild_id;
-    guild.channel.emplace_back(channel);
-    m_guilds.emplace_back(guild);
+    guild.channel.push_back(std::move(channel));
+    m_guilds.push_back(std::move(guild));
 }
 
-void bot::settings::settings::add_translatebot_webhook(const dpp::webhook &webhook)
+void bot::settings::settings::add_translatebot_webhook(dpp::snowflake webhook_id)
 {
-    m_webhookIds.push_back(webhook.id);
+    m_webhookIds.push_back(webhook_id);
 }
 
 uint16_t bot::settings::settings::get_avatar_size()
@@ -86,6 +87,11 @@ const std::vector<std::string> bot::settings::settings::get_preferred_languages(
     return m_preflangs;
 }
 
+const std::filesystem::path bot::settings::settings::get_storage_path()
+{
+    return m_storagepath;
+}
+
 const bot::settings::translate* bot::settings::settings::get_translate()
 {
     return &m_translate;
@@ -95,7 +101,7 @@ std::unique_ptr<bot::translate::translator> bot::settings::settings::get_transla
 {
     const std::lock_guard<std::recursive_mutex> guard(m_mutex);
     std::unique_ptr<bot::translate::libretranslate> libretranslate(
-        new bot::translate::libretranslate(m_translate.hostname, m_translate.port, m_translate.url, m_translate.tls, m_translate.apiKey));
+                new bot::translate::libretranslate(m_translate.hostname, m_translate.port, m_translate.url, m_translate.tls, m_translate.apiKey));
     return libretranslate;
 }
 
@@ -145,6 +151,16 @@ bool bot::settings::settings::parse(const std::string &filename)
         const std::lock_guard<std::recursive_mutex> guard(m_mutex);
         m_token = json_token.value();
 
+        auto json_storage = json.find("storage");
+        if (json_storage != json.end())
+            m_storagepath = std::string(json_storage.value());
+        else if (char *storagepath = getenv("DTRANSLATEBOT_STORAGE"))
+            m_storagepath = storagepath;
+
+        if (m_storagepath.empty())
+            m_storagepath = std::filesystem::current_path();
+
+        // In future we should allow more services here, for now it's only LibreTranslate
         auto json_translate = json.find("translate");
         if (json_translate == json.end()) {
             std::cerr << "Translate settings can not be found" << std::endl;
@@ -248,25 +264,25 @@ bool bot::settings::settings::parse(const std::string &filename)
                                     bot::settings::target target;
                                     target.target = json_channel_target.value();
                                     target.webhook = dpp::webhook(json_channel->at("webhook"));
-                                    channel.targets.emplace_back(target);
                                     m_webhookIds.push_back(target.webhook.id);
+                                    channel.targets.push_back(std::move(target));
                                 }
                                 else if (json_channel_target.value().is_object()) {
                                     for (auto json_target = json_channel_target.value().begin(); json_target != json_channel_target.value().end(); json_target++) {
                                         bot::settings::target target;
                                         target.target = json_target.key();
                                         target.webhook = dpp::webhook(json_target.value());
-                                        channel.targets.emplace_back(target);
                                         m_webhookIds.push_back(target.webhook.id);
+                                        channel.targets.push_back(std::move(target));
                                     }
                                 }
                             }
 
                             if (!channel.source.empty() && !channel.targets.empty())
-                                guild.channel.emplace_back(channel);
+                                guild.channel.push_back(std::move(channel));
                         }
                     }
-                    m_guilds.emplace_back(guild);
+                    m_guilds.push_back(std::move(guild));
                 }
             }
         }
@@ -279,7 +295,7 @@ bool bot::settings::settings::parse(const std::string &filename)
                     std::cerr << "\"preferred_lang\" is limited to 25 languages" << std::endl;
                     break;
                 }
-                m_preflangs.push_back(json_preflang);
+                m_preflangs.push_back(std::move(json_preflang));
                 i++;
             }
         }

@@ -18,7 +18,6 @@
 
 #ifndef MESSAGE_QUEUE_H
 #define MESSAGE_QUEUE_H
-#include <dpp/dpp.h>
 #include <mutex>
 #include <string>
 #include <queue>

@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <dpp/snowflake.h>
 #include <dpp/webhook.h>
+#include <filesystem>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -52,12 +53,13 @@ namespace bot {
         class settings {
         public:
             void add_channel(const bot::settings::channel &channel, dpp::snowflake guild_id);
-            void add_translatebot_webhook(const dpp::webhook &webhook);
+            void add_translatebot_webhook(dpp::snowflake webhook_id);
             uint16_t get_avatar_size();
             const bot::settings::channel* get_channel(const bot::settings::guild *guild, dpp::snowflake channel_id);
             const bot::settings::channel* get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id);
             const bot::settings::guild* get_guild(dpp::snowflake guild_id);
             const std::vector<std::string> get_preferred_languages();
+            const std::filesystem::path get_storage_path();
             const bot::settings::translate* get_translate();
             std::unique_ptr<bot::translate::translator> get_translator();
             const std::string get_token();
@@ -71,6 +73,7 @@ namespace bot {
             std::recursive_mutex m_mutex;
             std::vector<bot::settings::guild> m_guilds;
             std::vector<std::string> m_preflangs;
+            std::filesystem::path m_storagepath;
             bot::settings::translate m_translate;
             std::string m_token;
             std::vector<dpp::snowflake> m_webhookIds;

@@ -24,6 +24,7 @@ include(GNUInstallDirs)
 set(DTRANSLATEBOT_HEADERS
     src/message_queue.h
     src/settings.h
+    src/slashcommands.h
     src/submit_queue.h
     src/translate_core.h
     src/translate_libretranslate.h
@@ -33,6 +34,7 @@ set(DTRANSLATEBOT_SOURCES
     src/main.cpp
     src/message_queue.cpp
     src/settings.cpp
+    src/slashcommands.cpp
     src/submit_queue.cpp
     src/translate_core.cpp
     src/translate_libretranslate.cpp

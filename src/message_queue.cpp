@@ -21,16 +21,6 @@
 #include "settings.h"
 using namespace std::chrono_literals;
 
-inline bot::translated_message make_translated_message(const bot::message &message, const std::string &translated_message, const dpp::webhook &webhook)
-{
-    bot::translated_message tr_message;
-    tr_message.author = message.author;
-    tr_message.avatar = message.avatar;
-    tr_message.message = translated_message;
-    tr_message.webhook = webhook;
-    return tr_message;
-}
-
 void bot::message_queue::add(const bot::message &message)
 {
     m_mutex.lock();
@@ -51,8 +41,12 @@ void bot::message_queue::run(bot::settings::settings *settings, bot::submit_queu
             std::unique_ptr<bot::translate::translator> translator = settings->get_translator();
 
             for (auto target = message.targets.begin(); target != message.targets.end(); target++) {
-                const std::string tr_message = translator->translate(message.message, message.source, target->target);
-                submit_queue->add(make_translated_message(message, tr_message, target->webhook));
+                bot::translated_message tr_message;
+                tr_message.author = message.author;
+                tr_message.avatar = message.avatar;
+                tr_message.message = translator->translate(message.message, message.source, target->target);
+                tr_message.webhook = target->webhook;
+                submit_queue->add(std::move(tr_message));
             }
 
             std::this_thread::yield();

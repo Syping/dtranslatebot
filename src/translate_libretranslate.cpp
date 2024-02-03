@@ -52,7 +52,7 @@ const std::vector<bot::translate::language> bot::translate::libretranslate::get_
                             language.name = json_lang_name.value();
 
                         if (!language.code.empty() && !language.name.empty())
-                            languages.emplace_back(language);
+                            languages.push_back(std::move(language));
                     }
                 }
             }

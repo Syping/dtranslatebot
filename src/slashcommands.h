@@ -16,33 +16,18 @@
 * responsible for anything with use of the software, you are self responsible.
 *****************************************************************************/
 
-#ifndef SUBMIT_QUEUE_H
-#define SUBMIT_QUEUE_H
+#ifndef SLASHCOMMANDS_H
+#define SLASHCOMMANDS_H
+
 #include <dpp/cluster.h>
-#include <dpp/webhook.h>
-#include <mutex>
-#include <string>
-#include <queue>
+#include "settings.h"
 
 namespace bot {
-    struct translated_message {
-        std::string author;
-        std::string avatar;
-        std::string message;
-        dpp::webhook webhook;
-    };
-
-    class submit_queue {
+    class slashcommands {
     public:
-        void add(const bot::translated_message &message);
-        void run(dpp::cluster *bot);
-        void terminate();
-
-    private:
-        bool m_running;
-        std::mutex m_mutex;
-        std::queue<bot::translated_message> m_queue;
+        static void process_translate_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event);
+        static void register_commands(dpp::cluster *bot, bot::settings::settings *settings);
     };
 }
 
-#endif // SUBMIT_QUEUE_H
+#endif // SLASHCOMMANDS_H
