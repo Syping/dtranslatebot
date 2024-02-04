@@ -33,7 +33,7 @@ translator::~translator()
 const std::vector<language> translator::get_languages()
 {
 #ifndef NDEBUG
-    std::cerr << "[DEBUG] translator::get_languages() have being called." << std::endl;
+    std::cerr << "[Debug] translator::get_languages() have being called." << std::endl;
 #endif
     return {};
 }
@@ -41,7 +41,7 @@ const std::vector<language> translator::get_languages()
 const std::string translator::translate(const std::string &text, const std::string &source, const std::string &target)
 {
 #ifndef NDEBUG
-    std::cerr << "[DEBUG] translator:translate(const std::string&, const std::string&, const std::string&) have being called." << std::endl;
+    std::cerr << "[Debug] translator:translate(const std::string&, const std::string&, const std::string&) have being called." << std::endl;
 #endif
     return {};
 }

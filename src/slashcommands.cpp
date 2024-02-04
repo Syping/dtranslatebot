@@ -115,7 +115,7 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
         }
     }
     catch (const std::exception &exception) {
-        std::cerr << "[dtranslatebot] Exception: " << exception.what() << std::endl;
+        std::cerr << "[Exception] " << exception.what() << std::endl;
         event.reply(dpp::message("Exception while processing command:\n"s + exception.what()).set_flags(dpp::m_ephemeral));
     }
 }

@@ -60,7 +60,7 @@ const std::vector<language> libretranslate::get_languages()
         }
     }
     catch (const std::exception &exception) {
-        std::cerr << "[dtranslatebot] [EXCEPTION] " << exception.what() << std::endl;
+        std::cerr << "[Exception] " << exception.what() << std::endl;
     }
 
     return languages;
@@ -94,7 +94,7 @@ const std::string libretranslate::translate(const std::string &text, const std::
         }
     }
     catch (const std::exception &exception) {
-        std::cerr << "[dtranslatebot] [EXCEPTION] " << exception.what() << std::endl;
+        std::cerr << "[Exception] " << exception.what() << std::endl;
     }
 
     return text;

@@ -96,7 +96,7 @@ void process_preflang_settings(const dpp::json &json, std::vector<std::string> *
 {
     for (auto json_preferred_lang = json.begin(); json_preferred_lang != json.end(); json_preferred_lang++) {
         if (std::distance(json.begin(), json_preferred_lang) >= 25) {
-            std::cerr << "[dtranslatebot] [ERROR] preferred_lang is limited to 25 languages" << std::endl;
+            std::cerr << "[Error] Value preferred_lang is limited to 25 languages" << std::endl;
             break;
         }
         preferred_langs->push_back(*json_preferred_lang);
@@ -113,34 +113,32 @@ void process_user_settings(const dpp::json &json, uint16_t *avatar_size)
         else if (*avatar_size > 4096)
             *avatar_size = 4096;
     }
-    else
-        *avatar_size = 256;
 }
 
 bool process_translator_settings(const dpp::json &json, translator *translator)
 {
     if (!json.is_object()) {
-        std::cerr << "[dtranslatebot] [ERROR] Translator settings needs to be in a object" << std::endl;
+        std::cerr << "[Error] Value translator needs to be a object" << std::endl;
         return false;
     }
 
     auto json_translate_hostname = json.find("hostname");
     if (json_translate_hostname == json.end()) {
-        std::cerr << "[dtranslatebot] [ERROR] hostname can not be found in Translator settings" << std::endl;
+        std::cerr << "[Error] Value hostname not found in translator object" << std::endl;
         return false;
     }
     translator->hostname = *json_translate_hostname;
 
     auto json_translate_port = json.find("port");
     if (json_translate_port == json.end()) {
-        std::cerr << "[dtranslatebot] [ERROR] port can not be found in Translator settings" << std::endl;
+        std::cerr << "[Error] Value port not found in translator object" << std::endl;
         return false;
     }
     translator->port = *json_translate_port;
 
     auto json_translate_url = json.find("url");
     if (json_translate_url == json.end()) {
-        std::cerr << "[dtranslatebot] [ERROR] url can not be found in Translate settings" << std::endl;
+        std::cerr << "[Error] Value url not found in translator object" << std::endl;
         return false;
     }
     translator->url = *json_translate_url;
@@ -210,7 +208,7 @@ const channel* settings::get_channel(const guild *guild, dpp::snowflake channel_
 {
     if (!m_externallyLockedCount) {
 #ifndef NDEBUG
-        std::cerr << "[DEBUG] settings::get_channel(const guild*, dpp::snowflake) have being called without settings being locked." << std::endl;
+        std::cerr << "[Debug] settings::get_channel(const guild*, dpp::snowflake) have being called without settings being locked." << std::endl;
 #endif
         return nullptr;
     }
@@ -225,7 +223,7 @@ const channel* settings::get_channel(dpp::snowflake guild_id, dpp::snowflake cha
 {
     if (!m_externallyLockedCount) {
 #ifndef NDEBUG
-        std::cerr << "[DEBUG] settings::get_channel(dpp::snowflake, dpp::snowflake) have being called without settings being locked." << std::endl;
+        std::cerr << "[Debug] settings::get_channel(dpp::snowflake, dpp::snowflake) have being called without settings being locked." << std::endl;
 #endif
         return nullptr;
     }
@@ -245,7 +243,7 @@ const guild* settings::get_guild(dpp::snowflake guild_id) const
 {
     if (!m_externallyLockedCount) {
 #ifndef NDEBUG
-        std::cerr << "[DEBUG] settings::get_guild(dpp::snowflake) have being called without settings being locked." << std::endl;
+        std::cerr << "[Debug] settings::get_guild(dpp::snowflake) have being called without settings being locked." << std::endl;
 #endif
         return nullptr;
     }
@@ -306,14 +304,14 @@ bool settings::parse(const std::string &data)
             json = dpp::json::parse(data);
         }
         catch (const std::exception &exception) {
-            std::cerr << "[dtranslatebot] [EXCEPTION] " << exception.what() << std::endl;
-            std::cerr << "[dtranslatebot] [ERROR] Exception while parsing JSON" << std::endl;
+            std::cerr << "[Exception] " << exception.what() << std::endl;
+            std::cerr << "[Error] Exception while parsing JSON" << std::endl;
             return false;
         }
 
         auto json_token = json.find("token");
         if (json_token == json.end()) {
-            std::cerr << "[dtranslatebot] [ERROR] Bot token can not be found" << std::endl;
+            std::cerr << "[Error] Value token not found" << std::endl;
             return false;
         }
 
@@ -331,7 +329,7 @@ bool settings::parse(const std::string &data)
 
         auto json_translator = json.find("translator");
         if (json_translator == json.end()) {
-            std::cerr << "[dtranslatebot] [ERROR] Translator settings can not be found" << std::endl;
+            std::cerr << "[Error] Value translator not found" << std::endl;
             return false;
         }
         if (!process_translator_settings(*json_translator, &m_translator))
@@ -357,7 +355,7 @@ bool settings::parse(const std::string &data)
         return true;
     }
     catch (const std::exception &exception) {
-        std::cerr << "[dtranslatebot] [EXCEPTION] " << exception.what() << std::endl;
+        std::cerr << "[Exception] " << exception.what() << std::endl;
     }
     return false;
 }
@@ -366,7 +364,7 @@ bool settings::parse_file(const std::string &filename)
 {
     std::ifstream ifs(filename, std::ios::in | std::ios::binary);
     if (!ifs.is_open()) {
-        std::cerr << "[dtranslatebot] [ERROR] Failed to open JSON configuration file located at " << filename << std::endl;
+        std::cerr << "[Error] Failed to open JSON configuration file located at " << filename << std::endl;
         return false;
     }
 

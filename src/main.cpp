@@ -36,19 +36,19 @@ int main(int argc, char* argv[]) {
         return 1;
 
     if (settings.get_translator()->get_languages().empty()) {
-        std::cerr << "[dtranslatebot] [ERROR] Failed to initialise translateable languages" << std::endl;
+        std::cerr << "[Error] Failed to initialise translateable languages" << std::endl;
         return 2;
     }
 
     if (!std::filesystem::exists(settings.storage_path())) {
-        std::cerr << "[dtranslatebot] [ERROR] Storage directory " << settings.storage_path() << " can not be found" << std::endl;
+        std::cerr << "[Error] Storage directory " << settings.storage_path() << " can not be found" << std::endl;
         return 2;
     }
 
     dpp::cluster bot(settings.token(), dpp::i_default_intents | dpp::i_message_content);
 
     bot.on_log([&bot](const dpp::log_t &event){
-        std::cerr << "[dtranslatebot] [LOG] " << event.message << std::endl;
+        std::cerr << "[Log] " << event.message << std::endl;
     });
 
     bot::submit_queue submit_queue;
