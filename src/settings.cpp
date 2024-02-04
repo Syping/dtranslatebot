@@ -25,6 +25,127 @@
 #include "translator_libretranslate.h"
 using namespace bot::settings;
 
+void process_guild_settings(const dpp::json &json, std::vector<guild> *guilds, std::vector<dpp::snowflake> *webhookIds)
+{
+    for (auto json_guild = json.begin(); json_guild != json.end(); json_guild++) {
+        if (json_guild->is_object()) {
+            guild guild;
+
+            auto json_guild_id = json_guild->find("id");
+            if (json_guild_id != json_guild->end()) {
+                if (json_guild_id->is_number())
+                    guild.id = *json_guild_id;
+                else if (json_guild_id->is_string())
+                    guild.id = std::stoull(std::string(*json_guild_id));
+                else
+                    throw std::invalid_argument("Guild id isvalue() not a number or a string");
+            }
+            else
+                guild.id = std::stoull(json_guild.key());
+
+            for (auto json_channel = json_guild->begin(); json_channel != json_guild->end(); json_channel++) {
+                if (json_channel->is_object()) {
+                    channel channel;
+
+                    auto json_channel_id = json_channel->find("id");
+                    if (json_channel_id != json_channel->end()) {
+                        if (json_channel_id->is_number())
+                            channel.id = *json_channel_id;
+                        else if (json_channel_id->is_string())
+                            channel.id = std::stoull(std::string(*json_channel_id));
+                        else
+                            throw std::invalid_argument("Channel id is not a number or a string");
+                    }
+                    else
+                        channel.id = std::stoull(json_channel.key());
+
+                    auto json_channel_source = json_channel->find("source");
+                    if (json_channel_source != json_channel->end())
+                        channel.source = *json_channel_source;
+
+                    auto json_channel_target = json_channel->find("target");
+                    if (json_channel_target != json_channel->end()) {
+                        if (json_channel_target->is_string()) {
+                            target target;
+                            target.target = *json_channel_target;
+                            target.webhook = dpp::webhook(json_channel->at("webhook"));
+                            webhookIds->push_back(target.webhook.id);
+                            channel.targets.push_back(std::move(target));
+                        }
+                        else if (json_channel_target->is_object()) {
+                            for (auto json_target = json_channel_target->begin(); json_target != json_channel_target->end(); json_target++) {
+                                target target;
+                                target.target = json_target.key();
+                                target.webhook = dpp::webhook(*json_target);
+                                webhookIds->push_back(target.webhook.id);
+                                channel.targets.push_back(std::move(target));
+                            }
+                        }
+                    }
+
+                    if (!channel.source.empty() && !channel.targets.empty())
+                        guild.channel.push_back(std::move(channel));
+                }
+            }
+            guilds->push_back(std::move(guild));
+        }
+    }
+}
+
+void process_preflang_settings(const dpp::json &json, std::vector<std::string> *preflangs)
+{
+    for (auto json_preflang = json.begin(); json_preflang != json.end(); json_preflang++) {
+        if (std::distance(json.begin(), json_preflang) >= 25) {
+            std::cerr << "\"preferred_lang\" is limited to 25 languages" << std::endl;
+            break;
+        }
+        preflangs->push_back(*json_preflang);
+    }
+}
+
+bool process_translator_settings(const dpp::json &json, translator *translator)
+{
+    if (!json.is_object()) {
+        std::cerr << "Translate settings needs to be in a object" << std::endl;
+        return false;
+    }
+
+    auto json_translate_hostname = json.find("hostname");
+    if (json_translate_hostname == json.end()) {
+        std::cerr << "\"hostname\" can not be found in Translate settings" << std::endl;
+        return false;
+    }
+    translator->hostname = *json_translate_hostname;
+
+    auto json_translate_port = json.find("port");
+    if (json_translate_port == json.end()) {
+        std::cerr << "\"port\" can not be found in Translate settings" << std::endl;
+        return false;
+    }
+    translator->port = *json_translate_port;
+
+    auto json_translate_url = json.find("url");
+    if (json_translate_url == json.end()) {
+        std::cerr << "\"url\" can not be found in Translate settings" << std::endl;
+        return false;
+    }
+    translator->url = *json_translate_url;
+
+    auto json_translate_tls = json.find("tls");
+    if (json_translate_tls != json.end())
+        translator->tls = *json_translate_tls;
+    else
+        translator->tls = false;
+
+    auto json_translate_apiKey = json.find("apiKey");
+    if (json_translate_apiKey != json.end())
+        translator->apiKey = *json_translate_apiKey;
+    else
+        translator->apiKey.clear();
+
+    return true;
+}
+
 void settings::add_channel(const channel &channel, dpp::snowflake guild_id)
 {
     for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
@@ -157,11 +278,11 @@ bool settings::parse(const std::string &data)
         }
 
         const std::lock_guard<std::recursive_mutex> guard(m_mutex);
-        m_token = json_token.value();
+        m_token = *json_token;
 
         auto json_storage = json.find("storage");
         if (json_storage != json.end())
-            m_storagepath = std::string(json_storage.value());
+            m_storagepath = std::string(*json_storage);
         else if (char *storagepath = getenv("DTRANSLATEBOT_STORAGE"))
             m_storagepath = storagepath;
 
@@ -169,53 +290,17 @@ bool settings::parse(const std::string &data)
             m_storagepath = std::filesystem::current_path();
 
         // In future we should allow more services here, for now it's only LibreTranslate
-        auto json_translate = json.find("translate");
-        if (json_translate == json.end()) {
-            std::cerr << "Translate settings can not be found" << std::endl;
+        auto json_translator = json.find("translator");
+        if (json_translator == json.end()) {
+            std::cerr << "Translator settings can not be found" << std::endl;
             return false;
         }
-
-        if (!json_translate->is_object()) {
-            std::cerr << "Translate settings needs to be in a object" << std::endl;
+        if (!process_translator_settings(*json_translator, &m_translator))
             return false;
-        }
-
-        auto json_translate_hostname = json_translate.value().find("hostname");
-        if (json_translate_hostname == json_translate.value().end()) {
-            std::cerr << "\"hostname\" can not be found in Translate settings" << std::endl;
-            return false;
-        }
-        m_translator.hostname = json_translate_hostname.value();
-
-        auto json_translate_port = json_translate.value().find("port");
-        if (json_translate_port == json_translate.value().end()) {
-            std::cerr << "\"port\" can not be found in Translate settings" << std::endl;
-            return false;
-        }
-        m_translator.port = json_translate_port.value();
-
-        auto json_translate_url = json_translate.value().find("url");
-        if (json_translate_url == json_translate.value().end()) {
-            std::cerr << "\"url\" can not be found in Translate settings" << std::endl;
-            return false;
-        }
-        m_translator.url = json_translate_url.value();
-
-        auto json_translate_tls = json_translate.value().find("tls");
-        if (json_translate_tls != json_translate.value().end())
-            m_translator.tls = json_translate_tls.value();
-        else
-            m_translator.tls = false;
-
-        auto json_translate_apiKey = json_translate.value().find("apiKey");
-        if (json_translate_apiKey != json_translate.value().end())
-            m_translator.apiKey = json_translate_apiKey.value();
-        else
-            m_translator.apiKey.clear();
 
         auto json_avatarSize = json.find("avatar_size");
         if (json_avatarSize != json.end()) {
-            m_avatarSize = json_avatarSize.value();
+            m_avatarSize = *json_avatarSize;
             if (m_avatarSize < 16)
                 m_avatarSize = 16;
             else if (m_avatarSize > 4096)
@@ -229,84 +314,12 @@ bool settings::parse(const std::string &data)
         m_webhookIds.clear();
 
         auto json_guilds = json.find("guilds");
-        if (json_guilds != json.end()) {
-            for (auto json_guild = json_guilds.value().begin(); json_guild != json_guilds.value().end(); json_guild++) {
-                if (json_guild.value().is_object()) {
-                    guild guild;
-
-                    auto json_guild_id = json_guild.value().find("id");
-                    if (json_guild_id != json_guild.value().end()) {
-                        if (json_guild_id->is_number())
-                            guild.id = json_guild_id.value();
-                        else if (json_guild_id->is_string())
-                            guild.id = std::stoull(std::string(json_guild_id.value()));
-                        else
-                            throw std::invalid_argument("Guild id is not a number or a string");
-                    }
-                    else
-                        guild.id = std::stoull(json_guild.key());
-
-                    for (auto json_channel = json_guild.value().begin(); json_channel != json_guild.value().end(); json_channel++) {
-                        if (json_channel.value().is_object()) {
-                            channel channel;
-
-                            auto json_channel_id = json_channel.value().find("id");
-                            if (json_channel_id != json_channel.value().end()) {
-                                if (json_channel_id->is_number())
-                                    channel.id = json_channel_id.value();
-                                else if (json_channel_id->is_string())
-                                    channel.id = std::stoull(std::string(json_channel_id.value()));
-                                else
-                                    throw std::invalid_argument("Channel id is not a number or a string");
-                            }
-                            else
-                                channel.id = std::stoull(json_channel.key());
-
-                            auto json_channel_source = json_channel.value().find("source");
-                            if (json_channel_source != json_channel.value().end())
-                                channel.source = json_channel_source.value();
-
-                            auto json_channel_target = json_channel.value().find("target");
-                            if (json_channel_target != json_channel.value().end()) {
-                                if (json_channel_target.value().is_string()) {
-                                    target target;
-                                    target.target = json_channel_target.value();
-                                    target.webhook = dpp::webhook(json_channel->at("webhook"));
-                                    m_webhookIds.push_back(target.webhook.id);
-                                    channel.targets.push_back(std::move(target));
-                                }
-                                else if (json_channel_target.value().is_object()) {
-                                    for (auto json_target = json_channel_target.value().begin(); json_target != json_channel_target.value().end(); json_target++) {
-                                        target target;
-                                        target.target = json_target.key();
-                                        target.webhook = dpp::webhook(json_target.value());
-                                        m_webhookIds.push_back(target.webhook.id);
-                                        channel.targets.push_back(std::move(target));
-                                    }
-                                }
-                            }
-
-                            if (!channel.source.empty() && !channel.targets.empty())
-                                guild.channel.push_back(std::move(channel));
-                        }
-                    }
-                    m_guilds.push_back(std::move(guild));
-                }
-            }
-        }
+        if (json_guilds != json.end() && json_guilds->is_object())
+            process_guild_settings(*json_guilds, &m_guilds, &m_webhookIds);
 
         auto json_preflangs = json.find("preferred_lang");
-        if (json_preflangs != json.end() && json_preflangs->is_array()) {
-            size_t i = 0;
-            for (const auto &json_preflang : json_preflangs.value()) {
-                if (i >= 25) {
-                    std::cerr << "\"preferred_lang\" is limited to 25 languages" << std::endl;
-                    break;
-                }
-                m_preflangs.push_back(std::move(json_preflang));
-                i++;
-            }
-        }
+        if (json_preflangs != json.end() && json_preflangs->is_array())
+            process_preflang_settings(*json_preflangs, &m_preflangs);
 
         return true;
     }
