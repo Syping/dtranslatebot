@@ -1,5 +1,4 @@
 {
-    "avatar_size": 256,
     "guilds": {
         "$guild1_id": {
             "$channel1_id": {
@@ -27,6 +26,9 @@
     },
     "preferred_lang": ["en", "de", "fr", ...],
     "storage": "$working_directory",
+    "user": {
+        "avatar_size": 256
+    },
     "token": "$bot_token",
     "translator": {
         "hostname": "127.0.0.1",
