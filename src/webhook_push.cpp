@@ -62,7 +62,7 @@ void bot::webhook_push::run(const bot::translated_message &message, dpp::cluster
 
             if (message_v.length() <= 2000) {
                 json_body["content"] = message_v;
-                message_v = ""sv;
+                message_v = {};
                 push_request(message.webhook.id, message.webhook.token, json_body.dump(), bot);
             }
         }
@@ -79,7 +79,7 @@ void bot::webhook_push::push_request(dpp::snowflake webhook_id, const std::strin
     std::future<dpp::http_request_completion_t> _f = _p.get_future();
     bot->post_rest(API_PATH "/webhooks", std::to_string(webhook_id), dpp::utility::url_encode(webhook_token), dpp::m_post, json, [bot, &_p](dpp::json &json, const dpp::http_request_completion_t &event) {
         if (event.status != 204)
-            std::cerr << "Webhook push returned unexpected code " << event.status << " with response: " << event.body << std::endl;
+            std::cerr << "[dtranslatebot] Warning: Webhook push returned unexpected code " << event.status << std::endl;
         _p.set_value(event);
     });
     _f.wait();

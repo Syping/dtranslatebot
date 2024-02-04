@@ -59,11 +59,8 @@ const std::vector<language> libretranslate::get_languages()
             }
         }
     }
-    catch (const dpp::json::exception &exception) {
-        std::cerr << "Exception thrown while parsing supported languages JSON: " << exception.what() << std::endl;
-    }
     catch (const std::exception &exception) {
-        std::cerr << "Exception thrown while getting supported languages: " << exception.what() << std::endl;
+        std::cerr << "[dtranslatebot] Exception: " << exception.what() << std::endl;
     }
 
     return languages;
@@ -96,11 +93,8 @@ const std::string libretranslate::translate(const std::string &text, const std::
             }
         }
     }
-    catch (const dpp::json::exception &exception) {
-        std::cerr << "Exception thrown while parsing translated JSON: " << exception.what() << std::endl;
-    }
     catch (const std::exception &exception) {
-        std::cerr << "Exception thrown while translating: " << exception.what() << std::endl;
+        std::cerr << "[dtranslatebot] Exception: " << exception.what() << std::endl;
     }
 
     return text;

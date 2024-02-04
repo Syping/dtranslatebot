@@ -36,16 +36,16 @@ int main(int argc, char* argv[]) {
         return 1;
 
     if (settings.get_translator()->get_languages().empty()) {
-        std::cerr << "Failed to initialise translateable languages" << std::endl;
+        std::cerr << "[dtranslatebot] Error: Failed to initialise translateable languages" << std::endl;
         return 2;
     }
 
-    if (!std::filesystem::exists(settings.get_storage_path())) {
-        std::cerr << "Storage directory " << settings.get_storage_path() << " can not be found" << std::endl;
+    if (!std::filesystem::exists(settings.storage_path())) {
+        std::cerr << "[dtranslatebot] Error: Storage directory " << settings.storage_path() << " can not be found" << std::endl;
         return 2;
     }
 
-    dpp::cluster bot(settings.get_token(), dpp::i_default_intents | dpp::i_message_content);
+    dpp::cluster bot(settings.token(), dpp::i_default_intents | dpp::i_message_content);
 
     bot.on_log(dpp::utility::cout_logger());
 
@@ -77,9 +77,9 @@ int main(int argc, char* argv[]) {
             if (message.author.empty())
                 message.author = event.msg.author.global_name;
 
-            message.avatar = event.msg.member.get_avatar_url(settings.get_avatar_size());
+            message.avatar = event.msg.member.get_avatar_url(settings.avatar_size());
             if (message.avatar.empty())
-                message.avatar = event.msg.author.get_avatar_url(settings.get_avatar_size());
+                message.avatar = event.msg.author.get_avatar_url(settings.avatar_size());
 
             message.message = event.msg.content;
             message.source = channel->source;

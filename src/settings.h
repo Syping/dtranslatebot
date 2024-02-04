@@ -52,31 +52,40 @@ namespace bot {
 
         class settings {
         public:
+            /* add functions */
             void add_channel(const channel &channel, dpp::snowflake guild_id);
             bool add_target(const target &target, dpp::snowflake guild_id, dpp::snowflake channel_id);
             void add_translatebot_webhook(dpp::snowflake webhook_id);
-            uint16_t get_avatar_size();
-            const channel* get_channel(const guild *guild, dpp::snowflake channel_id);
-            const channel* get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id);
-            const guild* get_guild(dpp::snowflake guild_id);
-            const std::vector<std::string> get_preferred_languages();
-            const std::filesystem::path get_storage_path();
-            const translator* get_translate();
-            std::unique_ptr<bot::translator::translator> get_translator();
-            const std::string get_token();
-            bool is_translatebot(dpp::snowflake webhook_id);
+
+            /* get functions */
+            uint16_t avatar_size();
+            const channel* get_channel(const guild *guild, dpp::snowflake channel_id) const;
+            const channel* get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id) const;
+            const guild* get_guild(dpp::snowflake guild_id) const;
+            const std::vector<std::string> preferred_languages() const;
+            const std::filesystem::path storage_path() const;
+            std::unique_ptr<bot::translator::translator> get_translator() const;
+            const std::string token() const;
+
+            /* is functions */
+            bool is_translatebot(dpp::snowflake webhook_id) const;
+
+            /* lock functions */
             void lock();
-            bool parse(const std::string &data);
-            bool parse_file(const std::string &filename);
             void unlock();
 
+            /* parse functions */
+            bool parse(const std::string &data);
+            bool parse_file(const std::string &filename);
+
         private:
+            mutable std::recursive_mutex m_mutex;
+            size_t m_externallyLockedCount;
             uint16_t m_avatarSize;
-            std::recursive_mutex m_mutex;
             std::vector<guild> m_guilds;
-            std::vector<std::string> m_preflangs;
-            std::filesystem::path m_storagepath;
-            translator m_translator;
+            std::vector<std::string> m_prefLangs;
+            std::filesystem::path m_storagePath;
+            bot::settings::translator m_translator;
             std::string m_token;
             std::vector<dpp::snowflake> m_webhookIds;
         };

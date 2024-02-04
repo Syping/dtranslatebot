@@ -17,6 +17,7 @@
 *****************************************************************************/
 
 #include "slashcommands.h"
+using namespace std::string_literals;
 
 void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event)
 {
@@ -59,7 +60,7 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
 
                     bot->create_webhook(webhook, [&bot, &settings, event, source, target](const dpp::confirmation_callback_t &callback) {
                         if (callback.is_error()) {
-                            event.reply(dpp::message("Failed to generate webhook!\n" + callback.http_info.body).set_flags(dpp::m_ephemeral));
+                            event.reply(dpp::message("Failed to generate webhook!").set_flags(dpp::m_ephemeral));
                             return;
                         }
                         const dpp::webhook webhook = callback.get<dpp::webhook>();
@@ -114,8 +115,8 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
         }
     }
     catch (const std::exception &exception) {
-        std::cerr << "Failed to process command /" << event.command.get_command_name() << ": " << exception.what() << std::endl;
-        event.reply(dpp::message("Failed to process command /" + event.command.get_command_name() + "\n" + exception.what()).set_flags(dpp::m_ephemeral));
+        std::cerr << "[dtranslatebot] Exception: " << exception.what() << std::endl;
+        event.reply(dpp::message("Exception while processing command:\n"s + exception.what()).set_flags(dpp::m_ephemeral));
     }
 }
 
@@ -123,7 +124,7 @@ void bot::slashcommands::register_commands(dpp::cluster *bot, bot::settings::set
 {
     settings->lock();
     const std::vector<bot::translator::language> languages = settings->get_translator()->get_languages();
-    const std::vector<std::string> preferred_languages = settings->get_preferred_languages();
+    const std::vector<std::string> preferred_languages = settings->preferred_languages();
     settings->unlock();
 
     std::vector<dpp::slashcommand> commands;

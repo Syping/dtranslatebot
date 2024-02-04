@@ -16,7 +16,9 @@
 * responsible for anything with use of the software, you are self responsible.
 *****************************************************************************/
 
+#ifndef NDEBUG
 #include <iostream>
+#endif
 #include "translator_core.h"
 using namespace bot::translator;
 
@@ -30,12 +32,16 @@ translator::~translator()
 
 const std::vector<language> translator::get_languages()
 {
-    std::cerr << "WARNING: translator::get_languages() have being called." << std::endl;
+#ifndef NDEBUG
+    std::cerr << "[DEBUG] translator::get_languages() have being called." << std::endl;
+#endif
     return {};
 }
 
 const std::string translator::translate(const std::string &text, const std::string &source, const std::string &target)
 {
-    std::cerr << "WARNING: translator:translate(const std::string&, const std::string&, const std::string&) have being called." << std::endl;
+#ifndef NDEBUG
+    std::cerr << "[DEBUG] translator:translate(const std::string&, const std::string&, const std::string&) have being called." << std::endl;
+#endif
     return {};
 }

@@ -20,15 +20,15 @@
                 "source": "en",
                 "target": {
                     "de": "https://discord.com/api/webhooks/$guild2_de_webhook_id/$guild2_de_webhook_token",
-                    "fr": "https://discord.com/api/webhooks/$guild2_fr_webhook_id/$guild2_fr_webhook_token",
-                    "ru": "https://discord.com/api/webhooks/$guild2_ru_webhook_id/$guild2_ru_webhook_token"
+                    "fr": "https://discord.com/api/webhooks/$guild2_fr_webhook_id/$guild2_fr_webhook_token"
                 }
             }
         }
     },
-    "preferred_lang": ["en", "de", "fr", "ru"],
+    "preferred_lang": ["en", "de", "fr", ...],
+    "storage": "$working_directory",
     "token": "$bot_token",
-    "translate": {
+    "translator": {
         "hostname": "127.0.0.1",
         "port": 80,
         "url": "/",

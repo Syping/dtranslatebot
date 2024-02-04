@@ -38,7 +38,7 @@ void process_guild_settings(const dpp::json &json, std::vector<guild> *guilds, s
                 else if (json_guild_id->is_string())
                     guild.id = std::stoull(std::string(*json_guild_id));
                 else
-                    throw std::invalid_argument("Guild id isvalue() not a number or a string");
+                    throw std::invalid_argument("Guild id is not a number or a string");
             }
             else
                 guild.id = std::stoull(json_guild.key());
@@ -92,41 +92,41 @@ void process_guild_settings(const dpp::json &json, std::vector<guild> *guilds, s
     }
 }
 
-void process_preflang_settings(const dpp::json &json, std::vector<std::string> *preflangs)
+void process_preflang_settings(const dpp::json &json, std::vector<std::string> *preferred_langs)
 {
-    for (auto json_preflang = json.begin(); json_preflang != json.end(); json_preflang++) {
-        if (std::distance(json.begin(), json_preflang) >= 25) {
-            std::cerr << "\"preferred_lang\" is limited to 25 languages" << std::endl;
+    for (auto json_preferred_lang = json.begin(); json_preferred_lang != json.end(); json_preferred_lang++) {
+        if (std::distance(json.begin(), json_preferred_lang) >= 25) {
+            std::cerr << "[dtranslatebot] Error: preferred_lang is limited to 25 languages" << std::endl;
             break;
         }
-        preflangs->push_back(*json_preflang);
+        preferred_langs->push_back(*json_preferred_lang);
     }
 }
 
 bool process_translator_settings(const dpp::json &json, translator *translator)
 {
     if (!json.is_object()) {
-        std::cerr << "Translate settings needs to be in a object" << std::endl;
+        std::cerr << "[dtranslatebot] Error: Translator settings needs to be in a object" << std::endl;
         return false;
     }
 
     auto json_translate_hostname = json.find("hostname");
     if (json_translate_hostname == json.end()) {
-        std::cerr << "\"hostname\" can not be found in Translate settings" << std::endl;
+        std::cerr << "[dtranslatebot] Error: hostname can not be found in Translator settings" << std::endl;
         return false;
     }
     translator->hostname = *json_translate_hostname;
 
     auto json_translate_port = json.find("port");
     if (json_translate_port == json.end()) {
-        std::cerr << "\"port\" can not be found in Translate settings" << std::endl;
+        std::cerr << "[dtranslatebot] Error: port can not be found in Translator settings" << std::endl;
         return false;
     }
     translator->port = *json_translate_port;
 
     auto json_translate_url = json.find("url");
     if (json_translate_url == json.end()) {
-        std::cerr << "\"url\" can not be found in Translate settings" << std::endl;
+        std::cerr << "[dtranslatebot] Error: url can not be found in Translate settings" << std::endl;
         return false;
     }
     translator->url = *json_translate_url;
@@ -148,6 +148,7 @@ bool process_translator_settings(const dpp::json &json, translator *translator)
 
 void settings::add_channel(const channel &channel, dpp::snowflake guild_id)
 {
+    const std::lock_guard<std::recursive_mutex> guard(m_mutex);
     for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
         if (guild->id == guild_id) {
             guild->channel.push_back(channel);
@@ -164,6 +165,7 @@ void settings::add_channel(const channel &channel, dpp::snowflake guild_id)
 
 bool settings::add_target(const target &target, dpp::snowflake guild_id, dpp::snowflake channel_id)
 {
+    const std::lock_guard<std::recursive_mutex> guard(m_mutex);
     for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
         if (guild->id == guild_id) {
             for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
@@ -180,16 +182,24 @@ bool settings::add_target(const target &target, dpp::snowflake guild_id, dpp::sn
 
 void settings::add_translatebot_webhook(dpp::snowflake webhook_id)
 {
+    const std::lock_guard<std::recursive_mutex> guard(m_mutex);
     m_webhookIds.push_back(webhook_id);
 }
 
-uint16_t settings::get_avatar_size()
+uint16_t settings::avatar_size()
 {
+    const std::lock_guard<std::recursive_mutex> guard(m_mutex);
     return m_avatarSize;
 }
 
-const channel* settings::get_channel(const guild *guild, dpp::snowflake channel_id)
+const channel* settings::get_channel(const guild *guild, dpp::snowflake channel_id) const
 {
+    if (!m_externallyLockedCount) {
+#ifndef NDEBUG
+        std::cerr << "[DEBUG] settings::get_channel(const guild*, dpp::snowflake) have being called without settings being locked." << std::endl;
+#endif
+        return nullptr;
+    }
     for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
         if (channel->id == channel_id)
             return &(*channel);
@@ -197,8 +207,14 @@ const channel* settings::get_channel(const guild *guild, dpp::snowflake channel_
     return nullptr;
 }
 
-const channel* settings::get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id)
+const channel* settings::get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id) const
 {
+    if (!m_externallyLockedCount) {
+#ifndef NDEBUG
+        std::cerr << "[DEBUG] settings::get_channel(dpp::snowflake, dpp::snowflake) have being called without settings being locked." << std::endl;
+#endif
+        return nullptr;
+    }
     for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
         if (guild->id == guild_id) {
             for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
@@ -211,8 +227,14 @@ const channel* settings::get_channel(dpp::snowflake guild_id, dpp::snowflake cha
     return nullptr;
 }
 
-const guild* settings::get_guild(dpp::snowflake guild_id)
+const guild* settings::get_guild(dpp::snowflake guild_id) const
 {
+    if (!m_externallyLockedCount) {
+#ifndef NDEBUG
+        std::cerr << "[DEBUG] settings::get_guild(dpp::snowflake) have being called without settings being locked." << std::endl;
+#endif
+        return nullptr;
+    }
     for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
         if (guild->id == guild_id)
             return &(*guild);
@@ -220,22 +242,19 @@ const guild* settings::get_guild(dpp::snowflake guild_id)
     return nullptr;
 }
 
-const std::vector<std::string> settings::get_preferred_languages()
+const std::vector<std::string> settings::preferred_languages() const
 {
-    return m_preflangs;
+    const std::lock_guard<std::recursive_mutex> guard(m_mutex);
+    return m_prefLangs;
 }
 
-const std::filesystem::path settings::get_storage_path()
+const std::filesystem::path settings::storage_path() const
 {
-    return m_storagepath;
+    const std::lock_guard<std::recursive_mutex> guard(m_mutex);
+    return m_storagePath;
 }
 
-const translator* settings::get_translate()
-{
-    return &m_translator;
-}
-
-std::unique_ptr<bot::translator::translator> settings::get_translator()
+std::unique_ptr<bot::translator::translator> settings::get_translator() const
 {
     const std::lock_guard<std::recursive_mutex> guard(m_mutex);
     std::unique_ptr<bot::translator::libretranslate> libretranslate(
@@ -243,13 +262,15 @@ std::unique_ptr<bot::translator::translator> settings::get_translator()
     return libretranslate;
 }
 
-const std::string settings::get_token()
+const std::string settings::token() const
 {
+    const std::lock_guard<std::recursive_mutex> guard(m_mutex);
     return m_token;
 }
 
-bool settings::is_translatebot(dpp::snowflake webhook_id)
+bool settings::is_translatebot(dpp::snowflake webhook_id) const
 {
+    const std::lock_guard<std::recursive_mutex> guard(m_mutex);
     for (auto id = m_webhookIds.begin(); id != m_webhookIds.end(); id++) {
         if (*id == webhook_id)
             return true;
@@ -260,6 +281,7 @@ bool settings::is_translatebot(dpp::snowflake webhook_id)
 void settings::lock()
 {
     m_mutex.lock();
+    m_externallyLockedCount++;
 }
 
 bool settings::parse(const std::string &data)
@@ -267,13 +289,13 @@ bool settings::parse(const std::string &data)
     try {
         const dpp::json json = dpp::json::parse(data);
         if (!json.is_object()) {
-            std::cerr << "JSON configuration file is corrupt" << std::endl;
+            std::cerr << "[dtranslatebot] Error: JSON configuration file is corrupt" << std::endl;
             return false;
         }
 
         auto json_token = json.find("token");
         if (json_token == json.end()) {
-            std::cerr << "Bot token can not be found" << std::endl;
+            std::cerr << "[dtranslatebot] Error: Bot token can not be found" << std::endl;
             return false;
         }
 
@@ -282,17 +304,17 @@ bool settings::parse(const std::string &data)
 
         auto json_storage = json.find("storage");
         if (json_storage != json.end())
-            m_storagepath = std::string(*json_storage);
+            m_storagePath = std::string(*json_storage);
         else if (char *storagepath = getenv("DTRANSLATEBOT_STORAGE"))
-            m_storagepath = storagepath;
+            m_storagePath = storagepath;
 
-        if (m_storagepath.empty())
-            m_storagepath = std::filesystem::current_path();
+        if (m_storagePath.empty())
+            m_storagePath = std::filesystem::current_path();
 
         // In future we should allow more services here, for now it's only LibreTranslate
         auto json_translator = json.find("translator");
         if (json_translator == json.end()) {
-            std::cerr << "Translator settings can not be found" << std::endl;
+            std::cerr << "[dtranslatebot] Error: Translator settings can not be found" << std::endl;
             return false;
         }
         if (!process_translator_settings(*json_translator, &m_translator))
@@ -310,7 +332,7 @@ bool settings::parse(const std::string &data)
             m_avatarSize = 256;
 
         m_guilds.clear();
-        m_preflangs.clear();
+        m_prefLangs.clear();
         m_webhookIds.clear();
 
         auto json_guilds = json.find("guilds");
@@ -319,15 +341,12 @@ bool settings::parse(const std::string &data)
 
         auto json_preflangs = json.find("preferred_lang");
         if (json_preflangs != json.end() && json_preflangs->is_array())
-            process_preflang_settings(*json_preflangs, &m_preflangs);
+            process_preflang_settings(*json_preflangs, &m_prefLangs);
 
         return true;
     }
-    catch (const dpp::json::exception &exception) {
-        std::cerr << "Exception thrown while parsing configuration: " << exception.what() << std::endl;
-    }
     catch (const std::exception &exception) {
-        std::cerr << "Exception thrown while parsing configuration: " << exception.what() << std::endl;
+        std::cerr << "[dtranslatebot] Exception: " << exception.what() << std::endl;
     }
     return false;
 }
@@ -336,7 +355,7 @@ bool settings::parse_file(const std::string &filename)
 {
     std::ifstream ifs(filename, std::ios::in | std::ios::binary);
     if (!ifs.is_open()) {
-        std::cerr << "Failed to open JSON configuration file located at " << filename << std::endl;
+        std::cerr << "[dtranslatebot] Error: Failed to open JSON configuration file located at " << filename << std::endl;
         return false;
     }
 
@@ -349,4 +368,5 @@ bool settings::parse_file(const std::string &filename)
 void settings::unlock()
 {
     m_mutex.unlock();
+    m_externallyLockedCount--;
 }
