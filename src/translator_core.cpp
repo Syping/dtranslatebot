@@ -16,27 +16,26 @@
 * responsible for anything with use of the software, you are self responsible.
 *****************************************************************************/
 
-#ifndef TRANSLATE_CORE_H
-#define TRANSLATE_CORE_H
+#include <iostream>
+#include "translator_core.h"
+using namespace bot::translator;
 
-#include <string>
-#include <vector>
-
-namespace bot {
-    namespace translate {
-        struct language {
-            std::string code;
-            std::string name;
-        };
-
-        class translator {
-        public:
-            explicit translator();
-            virtual ~translator();
-            virtual const std::vector<bot::translate::language> get_languages();
-            virtual const std::string translate(const std::string &text, const std::string &source, const std::string &target);
-        };
-    }
+translator::translator()
+{
 }
 
-#endif // TRANSLATE_CORE_H
+translator::~translator()
+{
+}
+
+const std::vector<language> translator::get_languages()
+{
+    std::cerr << "WARNING: translator::get_languages() have being called." << std::endl;
+    return {};
+}
+
+const std::string translator::translate(const std::string &text, const std::string &source, const std::string &target)
+{
+    std::cerr << "WARNING: translator:translate(const std::string&, const std::string&, const std::string&) have being called." << std::endl;
+    return {};
+}

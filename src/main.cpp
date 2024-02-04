@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
     }
 
     bot::settings::settings settings;
-    if (!settings.parse(argv[1]))
+    if (!settings.parse_file(argv[1]))
         return 1;
 
     if (settings.get_translator()->get_languages().empty()) {

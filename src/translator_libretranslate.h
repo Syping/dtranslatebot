@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2024 Syping
+* Copyright (C) 2023-2024 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -16,33 +16,30 @@
 * responsible for anything with use of the software, you are self responsible.
 *****************************************************************************/
 
-#ifndef SUBMIT_QUEUE_H
-#define SUBMIT_QUEUE_H
-#include <dpp/cluster.h>
-#include <dpp/webhook.h>
-#include <mutex>
+#ifndef TRANSLATOR_LIBRETRANSLATE_H
+#define TRANSLATOR_LIBRETRANSLATE_H
+
+#include <cstdint>
 #include <string>
-#include <queue>
+#include "translator_core.h"
 
 namespace bot {
-    struct translated_message {
-        std::string author;
-        std::string avatar;
-        std::string message;
-        dpp::webhook webhook;
-    };
+    namespace translator {
+        class libretranslate : public translator {
+        public:
+            explicit libretranslate(const std::string &hostname, uint16_t port, const std::string &url, bool tls, const std::string apiKey = {});
+            ~libretranslate() override;
+            const std::vector<language> get_languages() override;
+            const std::string translate(const std::string &text, const std::string &source, const std::string &target) override;
 
-    class submit_queue {
-    public:
-        void add(const translated_message &message);
-        void run(dpp::cluster *bot);
-        void terminate();
-
-    private:
-        bool m_running;
-        std::mutex m_mutex;
-        std::queue<translated_message> m_queue;
-    };
+        private:
+            std::string m_apiKey;
+            std::string m_hostname;
+            uint16_t m_port;
+            std::string m_url;
+            bool m_tls;
+        };
+    }
 }
 
-#endif // SUBMIT_QUEUE_H
+#endif // TRANSLATOR_LIBRETRANSLATE_H

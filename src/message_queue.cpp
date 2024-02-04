@@ -19,29 +19,30 @@
 #include <thread>
 #include "message_queue.h"
 #include "settings.h"
+using namespace bot;
 using namespace std::chrono_literals;
 
-void bot::message_queue::add(const bot::message &message)
+void message_queue::add(const message &message)
 {
     m_mutex.lock();
     m_queue.push(message);
     m_mutex.unlock();
 }
 
-void bot::message_queue::run(bot::settings::settings *settings, bot::submit_queue *submit_queue)
+void message_queue::run(bot::settings::settings *settings, submit_queue *submit_queue)
 {
     m_running = true;
     while (m_running) {
         m_mutex.lock();
         if (!m_queue.empty()) {
-            const bot::message message = m_queue.front();
+            const message message = m_queue.front();
             m_queue.pop();
             m_mutex.unlock();
 
-            std::unique_ptr<bot::translate::translator> translator = settings->get_translator();
+            std::unique_ptr<bot::translator::translator> translator = settings->get_translator();
 
             for (auto target = message.targets.begin(); target != message.targets.end(); target++) {
-                bot::translated_message tr_message;
+                translated_message tr_message;
                 tr_message.author = message.author;
                 tr_message.avatar = message.avatar;
                 tr_message.message = translator->translate(message.message, message.source, target->target);
@@ -58,7 +59,7 @@ void bot::message_queue::run(bot::settings::settings *settings, bot::submit_queu
     }
 }
 
-void bot::message_queue::terminate()
+void message_queue::terminate()
 {
     m_running = false;
 }

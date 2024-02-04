@@ -23,11 +23,10 @@
 #include "settings.h"
 
 namespace bot {
-    class slashcommands {
-    public:
-        static void process_translate_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event);
-        static void register_commands(dpp::cluster *bot, bot::settings::settings *settings);
-    };
+    namespace slashcommands {
+        extern void process_translate_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event);
+        extern void register_commands(dpp::cluster *bot, bot::settings::settings *settings);
+    }
 }
 
 #endif // SLASHCOMMANDS_H

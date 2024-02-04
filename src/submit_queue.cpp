@@ -19,22 +19,23 @@
 #include <thread>
 #include "submit_queue.h"
 #include "webhook_push.h"
+using namespace bot;
 using namespace std::chrono_literals;
 
-void bot::submit_queue::add(const bot::translated_message &message)
+void submit_queue::add(const translated_message &message)
 {
     m_mutex.lock();
     m_queue.push(message);
     m_mutex.unlock();
 }
 
-void bot::submit_queue::run(dpp::cluster *bot)
+void submit_queue::run(dpp::cluster *bot)
 {
     m_running = true;
     while (m_running) {
         m_mutex.lock();
         if (!m_queue.empty()) {
-            const bot::translated_message message = m_queue.front();
+            const translated_message message = m_queue.front();
             m_queue.pop();
             m_mutex.unlock();
 
@@ -49,7 +50,7 @@ void bot::submit_queue::run(dpp::cluster *bot)
     }
 }
 
-void bot::submit_queue::terminate()
+void submit_queue::terminate()
 {
     m_running = false;
 }

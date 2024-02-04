@@ -25,7 +25,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
-#include "translate_core.h"
+#include "translator_core.h"
 
 namespace bot {
     namespace settings {
@@ -42,7 +42,7 @@ namespace bot {
             dpp::snowflake id;
             std::vector<bot::settings::channel> channel;
         };
-        struct translate {
+        struct translator {
             std::string hostname;
             uint16_t port;
             std::string url;
@@ -52,30 +52,31 @@ namespace bot {
 
         class settings {
         public:
-            void add_channel(const bot::settings::channel &channel, dpp::snowflake guild_id);
-            bool add_target(const bot::settings::target &target, dpp::snowflake guild_id, dpp::snowflake channel_id);
+            void add_channel(const channel &channel, dpp::snowflake guild_id);
+            bool add_target(const target &target, dpp::snowflake guild_id, dpp::snowflake channel_id);
             void add_translatebot_webhook(dpp::snowflake webhook_id);
             uint16_t get_avatar_size();
-            const bot::settings::channel* get_channel(const bot::settings::guild *guild, dpp::snowflake channel_id);
-            const bot::settings::channel* get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id);
-            const bot::settings::guild* get_guild(dpp::snowflake guild_id);
+            const channel* get_channel(const guild *guild, dpp::snowflake channel_id);
+            const channel* get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id);
+            const guild* get_guild(dpp::snowflake guild_id);
             const std::vector<std::string> get_preferred_languages();
             const std::filesystem::path get_storage_path();
-            const bot::settings::translate* get_translate();
-            std::unique_ptr<bot::translate::translator> get_translator();
+            const translator* get_translate();
+            std::unique_ptr<bot::translator::translator> get_translator();
             const std::string get_token();
             bool is_translatebot(dpp::snowflake webhook_id);
             void lock();
-            bool parse(const std::string &filename);
+            bool parse(const std::string &data);
+            bool parse_file(const std::string &filename);
             void unlock();
 
         private:
             uint16_t m_avatarSize;
             std::recursive_mutex m_mutex;
-            std::vector<bot::settings::guild> m_guilds;
+            std::vector<guild> m_guilds;
             std::vector<std::string> m_preflangs;
             std::filesystem::path m_storagepath;
-            bot::settings::translate m_translate;
+            translator m_translator;
             std::string m_token;
             std::vector<dpp::snowflake> m_webhookIds;
         };

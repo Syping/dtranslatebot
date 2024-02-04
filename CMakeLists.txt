@@ -26,8 +26,8 @@ set(DTRANSLATEBOT_HEADERS
     src/settings.h
     src/slashcommands.h
     src/submit_queue.h
-    src/translate_core.h
-    src/translate_libretranslate.h
+    src/translator_core.h
+    src/translator_libretranslate.h
     src/webhook_push.h
 )
 set(DTRANSLATEBOT_SOURCES
@@ -36,8 +36,8 @@ set(DTRANSLATEBOT_SOURCES
     src/settings.cpp
     src/slashcommands.cpp
     src/submit_queue.cpp
-    src/translate_core.cpp
-    src/translate_libretranslate.cpp
+    src/translator_core.cpp
+    src/translator_libretranslate.cpp
     src/webhook_push.cpp
 )
 

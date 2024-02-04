@@ -22,9 +22,10 @@
 #include <fstream>
 #include <iostream>
 #include "settings.h"
-#include "translate_libretranslate.h"
+#include "translator_libretranslate.h"
+using namespace bot::settings;
 
-void bot::settings::settings::add_channel(const bot::settings::channel &channel, dpp::snowflake guild_id)
+void settings::add_channel(const channel &channel, dpp::snowflake guild_id)
 {
     for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
         if (guild->id == guild_id) {
@@ -34,13 +35,13 @@ void bot::settings::settings::add_channel(const bot::settings::channel &channel,
     }
 
     // We will create the guild structure when it is not in memory
-    bot::settings::guild guild;
+    guild guild;
     guild.id = guild_id;
     guild.channel.push_back(std::move(channel));
     m_guilds.push_back(std::move(guild));
 }
 
-bool bot::settings::settings::add_target(const bot::settings::target &target, dpp::snowflake guild_id, dpp::snowflake channel_id)
+bool settings::add_target(const target &target, dpp::snowflake guild_id, dpp::snowflake channel_id)
 {
     for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
         if (guild->id == guild_id) {
@@ -56,17 +57,17 @@ bool bot::settings::settings::add_target(const bot::settings::target &target, dp
     return false;
 }
 
-void bot::settings::settings::add_translatebot_webhook(dpp::snowflake webhook_id)
+void settings::add_translatebot_webhook(dpp::snowflake webhook_id)
 {
     m_webhookIds.push_back(webhook_id);
 }
 
-uint16_t bot::settings::settings::get_avatar_size()
+uint16_t settings::get_avatar_size()
 {
     return m_avatarSize;
 }
 
-const bot::settings::channel* bot::settings::settings::get_channel(const bot::settings::guild *guild, dpp::snowflake channel_id)
+const channel* settings::get_channel(const guild *guild, dpp::snowflake channel_id)
 {
     for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
         if (channel->id == channel_id)
@@ -75,7 +76,7 @@ const bot::settings::channel* bot::settings::settings::get_channel(const bot::se
     return nullptr;
 }
 
-const bot::settings::channel* bot::settings::settings::get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id)
+const channel* settings::get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id)
 {
     for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
         if (guild->id == guild_id) {
@@ -89,7 +90,7 @@ const bot::settings::channel* bot::settings::settings::get_channel(dpp::snowflak
     return nullptr;
 }
 
-const bot::settings::guild* bot::settings::settings::get_guild(dpp::snowflake guild_id)
+const guild* settings::get_guild(dpp::snowflake guild_id)
 {
     for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
         if (guild->id == guild_id)
@@ -98,35 +99,35 @@ const bot::settings::guild* bot::settings::settings::get_guild(dpp::snowflake gu
     return nullptr;
 }
 
-const std::vector<std::string> bot::settings::settings::get_preferred_languages()
+const std::vector<std::string> settings::get_preferred_languages()
 {
     return m_preflangs;
 }
 
-const std::filesystem::path bot::settings::settings::get_storage_path()
+const std::filesystem::path settings::get_storage_path()
 {
     return m_storagepath;
 }
 
-const bot::settings::translate* bot::settings::settings::get_translate()
+const translator* settings::get_translate()
 {
-    return &m_translate;
+    return &m_translator;
 }
 
-std::unique_ptr<bot::translate::translator> bot::settings::settings::get_translator()
+std::unique_ptr<bot::translator::translator> settings::get_translator()
 {
     const std::lock_guard<std::recursive_mutex> guard(m_mutex);
-    std::unique_ptr<bot::translate::libretranslate> libretranslate(
-                new bot::translate::libretranslate(m_translate.hostname, m_translate.port, m_translate.url, m_translate.tls, m_translate.apiKey));
+    std::unique_ptr<bot::translator::libretranslate> libretranslate(
+        new bot::translator::libretranslate(m_translator.hostname, m_translator.port, m_translator.url, m_translator.tls, m_translator.apiKey));
     return libretranslate;
 }
 
-const std::string bot::settings::settings::get_token()
+const std::string settings::get_token()
 {
     return m_token;
 }
 
-bool bot::settings::settings::is_translatebot(dpp::snowflake webhook_id)
+bool settings::is_translatebot(dpp::snowflake webhook_id)
 {
     for (auto id = m_webhookIds.begin(); id != m_webhookIds.end(); id++) {
         if (*id == webhook_id)
@@ -135,24 +136,15 @@ bool bot::settings::settings::is_translatebot(dpp::snowflake webhook_id)
     return false;
 }
 
-void bot::settings::settings::lock()
+void settings::lock()
 {
     m_mutex.lock();
 }
 
-bool bot::settings::settings::parse(const std::string &filename)
+bool settings::parse(const std::string &data)
 {
-    std::ifstream ifs(filename, std::ios::in | std::ios::binary);
-    if (!ifs.is_open()) {
-        std::cerr << "Failed to open JSON configuration file located at " << filename << std::endl;
-        return false;
-    }
-
-    std::string sdata(std::istreambuf_iterator<char>{ifs}, {});
-    ifs.close();
-
     try {
-        const dpp::json json = dpp::json::parse(sdata);
+        const dpp::json json = dpp::json::parse(data);
         if (!json.is_object()) {
             std::cerr << "JSON configuration file is corrupt" << std::endl;
             return false;
@@ -193,33 +185,33 @@ bool bot::settings::settings::parse(const std::string &filename)
             std::cerr << "\"hostname\" can not be found in Translate settings" << std::endl;
             return false;
         }
-        m_translate.hostname = json_translate_hostname.value();
+        m_translator.hostname = json_translate_hostname.value();
 
         auto json_translate_port = json_translate.value().find("port");
         if (json_translate_port == json_translate.value().end()) {
             std::cerr << "\"port\" can not be found in Translate settings" << std::endl;
             return false;
         }
-        m_translate.port = json_translate_port.value();
+        m_translator.port = json_translate_port.value();
 
         auto json_translate_url = json_translate.value().find("url");
         if (json_translate_url == json_translate.value().end()) {
             std::cerr << "\"url\" can not be found in Translate settings" << std::endl;
             return false;
         }
-        m_translate.url = json_translate_url.value();
+        m_translator.url = json_translate_url.value();
 
         auto json_translate_tls = json_translate.value().find("tls");
         if (json_translate_tls != json_translate.value().end())
-            m_translate.tls = json_translate_tls.value();
+            m_translator.tls = json_translate_tls.value();
         else
-            m_translate.tls = false;
+            m_translator.tls = false;
 
         auto json_translate_apiKey = json_translate.value().find("apiKey");
         if (json_translate_apiKey != json_translate.value().end())
-            m_translate.apiKey = json_translate_apiKey.value();
+            m_translator.apiKey = json_translate_apiKey.value();
         else
-            m_translate.apiKey.clear();
+            m_translator.apiKey.clear();
 
         auto json_avatarSize = json.find("avatar_size");
         if (json_avatarSize != json.end()) {
@@ -240,7 +232,7 @@ bool bot::settings::settings::parse(const std::string &filename)
         if (json_guilds != json.end()) {
             for (auto json_guild = json_guilds.value().begin(); json_guild != json_guilds.value().end(); json_guild++) {
                 if (json_guild.value().is_object()) {
-                    bot::settings::guild guild;
+                    guild guild;
 
                     auto json_guild_id = json_guild.value().find("id");
                     if (json_guild_id != json_guild.value().end()) {
@@ -256,7 +248,7 @@ bool bot::settings::settings::parse(const std::string &filename)
 
                     for (auto json_channel = json_guild.value().begin(); json_channel != json_guild.value().end(); json_channel++) {
                         if (json_channel.value().is_object()) {
-                            bot::settings::channel channel;
+                            channel channel;
 
                             auto json_channel_id = json_channel.value().find("id");
                             if (json_channel_id != json_channel.value().end()) {
@@ -277,7 +269,7 @@ bool bot::settings::settings::parse(const std::string &filename)
                             auto json_channel_target = json_channel.value().find("target");
                             if (json_channel_target != json_channel.value().end()) {
                                 if (json_channel_target.value().is_string()) {
-                                    bot::settings::target target;
+                                    target target;
                                     target.target = json_channel_target.value();
                                     target.webhook = dpp::webhook(json_channel->at("webhook"));
                                     m_webhookIds.push_back(target.webhook.id);
@@ -285,7 +277,7 @@ bool bot::settings::settings::parse(const std::string &filename)
                                 }
                                 else if (json_channel_target.value().is_object()) {
                                     for (auto json_target = json_channel_target.value().begin(); json_target != json_channel_target.value().end(); json_target++) {
-                                        bot::settings::target target;
+                                        target target;
                                         target.target = json_target.key();
                                         target.webhook = dpp::webhook(json_target.value());
                                         m_webhookIds.push_back(target.webhook.id);
@@ -327,7 +319,21 @@ bool bot::settings::settings::parse(const std::string &filename)
     return false;
 }
 
-void bot::settings::settings::unlock()
+bool settings::parse_file(const std::string &filename)
+{
+    std::ifstream ifs(filename, std::ios::in | std::ios::binary);
+    if (!ifs.is_open()) {
+        std::cerr << "Failed to open JSON configuration file located at " << filename << std::endl;
+        return false;
+    }
+
+    std::string sdata(std::istreambuf_iterator<char>{ifs}, {});
+    ifs.close();
+
+    return parse(std::move(sdata));
+}
+
+void settings::unlock()
 {
     m_mutex.unlock();
 }

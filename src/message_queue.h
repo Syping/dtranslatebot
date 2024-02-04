@@ -37,14 +37,14 @@ namespace bot {
 
     class message_queue {
     public:
-        void add(const bot::message &message);
-        void run(bot::settings::settings *settings, bot::submit_queue *submit_queue);
+        void add(const message &message);
+        void run(bot::settings::settings *settings, submit_queue *submit_queue);
         void terminate();
 
     private:
         bool m_running;
         std::mutex m_mutex;
-        std::queue<bot::message> m_queue;
+        std::queue<message> m_queue;
     };
 }
 

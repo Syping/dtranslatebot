@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2023-2024 Syping
+* Copyright (C) 2024 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -16,30 +16,27 @@
 * responsible for anything with use of the software, you are self responsible.
 *****************************************************************************/
 
-#ifndef TRANSLATE_LIBRETRANSLATE_H
-#define TRANSLATE_LIBRETRANSLATE_H
+#ifndef TRANSLATOR_CORE_H
+#define TRANSLATOR_CORE_H
 
-#include <cstdint>
 #include <string>
-#include "translate_core.h"
+#include <vector>
 
 namespace bot {
-    namespace translate {
-        class libretranslate : public translator {
-        public:
-            explicit libretranslate(const std::string &hostname, uint16_t port, const std::string &url, bool tls, const std::string apiKey = {});
-            ~libretranslate() override;
-            const std::vector<bot::translate::language> get_languages() override;
-            const std::string translate(const std::string &text, const std::string &source, const std::string &target) override;
+    namespace translator {
+        struct language {
+            std::string code;
+            std::string name;
+        };
 
-        private:
-            std::string m_apiKey;
-            std::string m_hostname;
-            uint16_t m_port;
-            std::string m_url;
-            bool m_tls;
+        class translator {
+        public:
+            explicit translator();
+            virtual ~translator();
+            virtual const std::vector<language> get_languages();
+            virtual const std::string translate(const std::string &text, const std::string &source, const std::string &target);
         };
     }
 }
 
-#endif // TRANSLATE_LIBRETRANSLATE_H
+#endif // TRANSLATOR_CORE_H

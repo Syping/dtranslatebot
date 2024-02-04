@@ -34,11 +34,11 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
             v_target = dpp::webhook(std::get<std::string>(event.get_parameter("webhook")));
         }
 
-        const std::vector<bot::translate::language> languages = settings->get_translator()->get_languages();
+        const std::vector<bot::translator::language> languages = settings->get_translator()->get_languages();
 
         std::ostringstream language_codes;
         bool source_valid = false, target_valid = false;
-        for (const bot::translate::language &language : languages) {
+        for (const bot::translator::language &language : languages) {
             if (language.code == source)
                 source_valid = true;
             if (language.code == target)
@@ -122,7 +122,7 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
 void bot::slashcommands::register_commands(dpp::cluster *bot, bot::settings::settings *settings)
 {
     settings->lock();
-    const std::vector<bot::translate::language> languages = settings->get_translator()->get_languages();
+    const std::vector<bot::translator::language> languages = settings->get_translator()->get_languages();
     const std::vector<std::string> preferred_languages = settings->get_preferred_languages();
     settings->unlock();
 
@@ -156,7 +156,7 @@ void bot::slashcommands::register_commands(dpp::cluster *bot, bot::settings::set
         dpp::command_option webhook_pref_subcommand(dpp::co_sub_command, "webhook", "Translate current channel to a webhook (Preferred languages)");
         dpp::command_option source_pref_option(dpp::co_string, "source", "Source language", true);
         dpp::command_option target_pref_option(dpp::co_string, "target", "Target language", true);
-        for (const bot::translate::language &language : languages) {
+        for (const bot::translator::language &language : languages) {
             if (std::find(preferred_languages.begin(), preferred_languages.end(), language.code) != preferred_languages.end()) {
                 source_pref_option.add_choice(dpp::command_option_choice(language.name, language.code));
                 target_pref_option.add_choice(dpp::command_option_choice(language.name, language.code));

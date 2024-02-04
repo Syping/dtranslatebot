@@ -18,21 +18,22 @@
 
 #include <dpp/json.h>
 #include <dpp/httpsclient.h>
-#include "translate_libretranslate.h"
+#include "translator_libretranslate.h"
+using namespace bot::translator;
 using namespace std::string_literals;
 
-bot::translate::libretranslate::libretranslate(const std::string &hostname, uint16_t port, const std::string &url, bool tls, const std::string apiKey) :
+libretranslate::libretranslate(const std::string &hostname, uint16_t port, const std::string &url, bool tls, const std::string apiKey) :
     m_hostname(hostname), m_port(port), m_url(url), m_tls(tls), m_apiKey(apiKey)
 {
 }
 
-bot::translate::libretranslate::~libretranslate()
+libretranslate::~libretranslate()
 {
 }
 
-const std::vector<bot::translate::language> bot::translate::libretranslate::get_languages()
+const std::vector<language> libretranslate::get_languages()
 {
-    std::vector<bot::translate::language> languages;
+    std::vector<language> languages;
 
     try {
         dpp::https_client http_request(m_hostname, m_port, m_url + "languages", "GET", {}, {}, !m_tls);
@@ -41,7 +42,7 @@ const std::vector<bot::translate::language> bot::translate::libretranslate::get_
             if (response.is_array()) {
                 for (const auto &json_language : response) {
                     if (json_language.is_object()) {
-                        bot::translate::language language;
+                        language language;
 
                         auto json_lang_code = json_language.find("code");
                         if (json_lang_code != json_language.end())
@@ -68,7 +69,7 @@ const std::vector<bot::translate::language> bot::translate::libretranslate::get_
     return languages;
 }
 
-const std::string bot::translate::libretranslate::translate(const std::string &text, const std::string &source, const std::string &target)
+const std::string libretranslate::translate(const std::string &text, const std::string &source, const std::string &target)
 {
     const dpp::http_headers http_headers = {
         {"Content-Type"s, "application/json"s}
