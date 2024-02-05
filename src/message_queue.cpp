@@ -24,9 +24,49 @@ using namespace std::chrono_literals;
 
 void message_queue::add(const message &message)
 {
-    m_mutex.lock();
+    const std::lock_guard<std::mutex> guard(m_mutex);
     m_queue.push(message);
-    m_mutex.unlock();
+}
+
+void message_queue::add(message &&message)
+{
+    const std::lock_guard<std::mutex> guard(m_mutex);
+    m_queue.push(message);
+}
+
+void message_queue::process_message_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::message_create_t &event)
+{
+    if (event.msg.webhook_id) {
+        const std::lock_guard<bot::settings::settings> guard(*settings);
+
+        // We will not translate messages from our own bot
+        if (settings->is_translatebot(event.msg.webhook_id))
+            return;
+    }
+
+    // Same as before, just without the involvement of webhooks
+    if (event.msg.author.id == bot->me.id)
+        return;
+
+    const std::lock_guard<bot::settings::settings> guard(*settings);
+    if (const bot::settings::channel *channel = settings->get_channel(event.msg.guild_id, event.msg.channel_id)) {
+        bot::message message;
+        message.id = event.msg.id;
+
+        message.author = event.msg.member.get_nickname();
+        if (message.author.empty())
+            message.author = event.msg.author.global_name;
+
+        message.avatar = event.msg.member.get_avatar_url(settings->avatar_size());
+        if (message.avatar.empty())
+            message.avatar = event.msg.author.get_avatar_url(settings->avatar_size());
+
+        message.message = event.msg.content;
+        message.source = channel->source;
+        message.targets = channel->targets;
+
+        add(std::move(message));
+    }
 }
 
 void message_queue::run(bot::settings::settings *settings, submit_queue *submit_queue)
@@ -39,7 +79,7 @@ void message_queue::run(bot::settings::settings *settings, submit_queue *submit_
             m_queue.pop();
             m_mutex.unlock();
 
-            std::unique_ptr<bot::translator::translator> translator = settings->get_translator();
+            auto translator = settings->get_translator();
 
             for (auto target = message.targets.begin(); target != message.targets.end(); target++) {
                 translated_message tr_message;

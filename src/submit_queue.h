@@ -35,6 +35,7 @@ namespace bot {
     class submit_queue {
     public:
         void add(const translated_message &message);
+        void add(translated_message &&message);
         void run(dpp::cluster *bot);
         void terminate();
 

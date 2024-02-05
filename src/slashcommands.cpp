@@ -19,6 +19,13 @@
 #include "slashcommands.h"
 using namespace std::string_literals;
 
+void bot::slashcommands::process_command_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event)
+{
+    if (event.command.get_command_name() == "translate" || event.command.get_command_name() == "translate_pref") {
+        bot::slashcommands::process_translate_command(bot, settings, event);
+    }
+}
+
 void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event)
 {
     try {

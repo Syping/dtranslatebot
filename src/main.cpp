@@ -31,23 +31,25 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
+    std::cout << "[Launch] Processing configuration..." << std::endl;
     bot::settings::settings settings;
     if (!settings.parse_file(argv[1]))
         return 1;
 
+    std::cout << "[Launch] Requesting supported languages..." << std::endl;
     if (settings.get_translator()->get_languages().empty()) {
         std::cerr << "[Error] Failed to initialise translateable languages" << std::endl;
         return 2;
     }
 
+    std::cout << "[Launch] Checking working directory..." << std::endl;
     if (!std::filesystem::exists(settings.storage_path())) {
         std::cerr << "[Error] Storage directory " << settings.storage_path() << " can not be found" << std::endl;
         return 2;
     }
 
     dpp::cluster bot(settings.token(), dpp::i_default_intents | dpp::i_message_content);
-
-    bot.on_log([&bot](const dpp::log_t &event){
+    bot.on_log([&bot](const dpp::log_t &event) {
         std::cerr << "[Log] " << event.message << std::endl;
     });
 
@@ -57,51 +59,15 @@ int main(int argc, char* argv[]) {
     bot::message_queue message_queue;
     std::thread message_queue_loop(&bot::message_queue::run, &message_queue, &settings, &submit_queue);
 
-    bot.on_message_create([&bot, &message_queue, &settings](const dpp::message_create_t &event) {
-        if (event.msg.webhook_id) {
-            const std::lock_guard<bot::settings::settings> guard(settings);
-
-            // We will not translate messages from our own bot
-            if (settings.is_translatebot(event.msg.webhook_id))
-                return;
-        }
-
-        // Same as before, just without the involvement of webhooks
-        if (event.msg.author.id == bot.me.id)
-            return;
-
-        const std::lock_guard<bot::settings::settings> guard(settings);
-        if (const bot::settings::channel *channel = settings.get_channel(event.msg.guild_id, event.msg.channel_id)) {
-            bot::message message;
-            message.id = event.msg.id;
-
-            message.author = event.msg.member.get_nickname();
-            if (message.author.empty())
-                message.author = event.msg.author.global_name;
-
-            message.avatar = event.msg.member.get_avatar_url(settings.avatar_size());
-            if (message.avatar.empty())
-                message.avatar = event.msg.author.get_avatar_url(settings.avatar_size());
-
-            message.message = event.msg.content;
-            message.source = channel->source;
-            message.targets = channel->targets;
-            message_queue.add(std::move(message));
-        }
-    });
-
-    bot.on_slashcommand([&bot, &settings](const dpp::slashcommand_t &event) {
-        if (event.command.get_command_name() == "translate" || event.command.get_command_name() == "translate_pref") {
-            bot::slashcommands::process_translate_command(&bot, &settings, event);
-        }
-    });
-
+    bot.on_message_create(std::bind(&bot::message_queue::process_message_event, &message_queue, &bot, &settings, std::placeholders::_1));
+    bot.on_slashcommand(std::bind(&bot::slashcommands::process_command_event, &bot, &settings, std::placeholders::_1));
     bot.on_ready([&bot, &settings](const dpp::ready_t &event) {
         if (dpp::run_once<struct register_bot_commands>()) {
             bot::slashcommands::register_commands(&bot, &settings);
         }
     });
 
+    std::cout << "[Launch] Starting bot..." << std::endl;
     bot.start(dpp::st_wait);
 
     // It's unneccessary, but we choose to exit clean anyway

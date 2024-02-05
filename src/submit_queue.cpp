@@ -24,9 +24,14 @@ using namespace std::chrono_literals;
 
 void submit_queue::add(const translated_message &message)
 {
-    m_mutex.lock();
+    const std::lock_guard<std::mutex> guard(m_mutex);
     m_queue.push(message);
-    m_mutex.unlock();
+}
+
+void submit_queue::add(translated_message &&message)
+{
+    const std::lock_guard<std::mutex> guard(m_mutex);
+    m_queue.push(message);
 }
 
 void submit_queue::run(dpp::cluster *bot)

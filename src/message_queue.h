@@ -18,6 +18,7 @@
 
 #ifndef MESSAGE_QUEUE_H
 #define MESSAGE_QUEUE_H
+#include <dpp/cluster.h>
 #include <mutex>
 #include <string>
 #include <queue>
@@ -38,6 +39,8 @@ namespace bot {
     class message_queue {
     public:
         void add(const message &message);
+        void add(message &&message);
+        void process_message_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::message_create_t &event);
         void run(bot::settings::settings *settings, submit_queue *submit_queue);
         void terminate();
 

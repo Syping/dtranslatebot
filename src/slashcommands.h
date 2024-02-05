@@ -24,6 +24,7 @@
 
 namespace bot {
     namespace slashcommands {
+        extern void process_command_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event);
         extern void process_translate_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event);
         extern void register_commands(dpp::cluster *bot, bot::settings::settings *settings);
     }
