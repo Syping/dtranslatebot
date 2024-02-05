@@ -22,6 +22,7 @@ include(GNUInstallDirs)
 
 # dtranslatebot Source files
 set(DTRANSLATEBOT_HEADERS
+    src/database_core.h
     src/message_queue.h
     src/settings.h
     src/slashcommands.h
@@ -31,6 +32,7 @@ set(DTRANSLATEBOT_HEADERS
     src/webhook_push.h
 )
 set(DTRANSLATEBOT_SOURCES
+    src/database_core.cpp
     src/main.cpp
     src/message_queue.cpp
     src/settings.cpp
