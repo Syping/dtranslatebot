@@ -27,7 +27,7 @@ using namespace bot::database;
 
 file::file(const std::filesystem::path &storage_path) : m_storagePath(storage_path)
 {
-    std::cout << "[Launch] Checking working directory..." << std::endl;
+    std::cout << "[Launch] Checking storage directory..." << std::endl;
     if (!std::filesystem::exists(storage_path)) {
         std::cerr << "[Error] Storage directory " << storage_path << " can not be found" << std::endl;
         throw std::runtime_error("Storage directory can not be found");
@@ -48,6 +48,7 @@ file::file(const std::filesystem::path &storage_path) : m_storagePath(storage_pa
         throw std::system_error(errno, std::system_category());
     }
     if (fcntl(fd, F_SETLK, &lock) == -1) {
+        close(fd);
         std::cerr << "[Error] Storage directory " << storage_path << " can not be locked" << std::endl;
         throw std::system_error(errno, std::system_category());
     }
