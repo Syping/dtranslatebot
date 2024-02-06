@@ -17,10 +17,9 @@
 *****************************************************************************/
 
 #include <dpp/json.h>
-#include <mutex>
-#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include "database_file.h"
 #include "settings.h"
 #include "translator_libretranslate.h"
 using namespace bot::settings;
@@ -260,18 +259,15 @@ const std::vector<std::string> settings::preferred_languages() const
     return m_prefLangs;
 }
 
-const std::filesystem::path settings::storage_path() const
+std::shared_ptr<bot::database::database> settings::get_database() const
 {
-    const std::lock_guard<std::recursive_mutex> guard(m_mutex);
-    return m_storagePath;
+    return m_database;
 }
 
 std::unique_ptr<bot::translator::translator> settings::get_translator() const
 {
     const std::lock_guard<std::recursive_mutex> guard(m_mutex);
-    std::unique_ptr<bot::translator::libretranslate> libretranslate(
-                new bot::translator::libretranslate(m_translator.hostname, m_translator.port, m_translator.url, m_translator.tls, m_translator.apiKey));
-    return libretranslate;
+    return std::make_unique<bot::translator::libretranslate>(m_translator.hostname, m_translator.port, m_translator.url, m_translator.tls, m_translator.apiKey);
 }
 
 const std::string settings::token() const
@@ -318,14 +314,18 @@ bool settings::parse(const std::string &data)
         const std::lock_guard<std::recursive_mutex> guard(m_mutex);
         m_token = *json_token;
 
+        // Support more Database systems in the future
+        std::filesystem::path storage_path;
         auto json_storage = json.find("storage");
         if (json_storage != json.end())
-            m_storagePath = std::string(*json_storage);
+            storage_path = std::string(*json_storage);
         else if (char *storagepath = getenv("DTRANSLATEBOT_STORAGE"))
-            m_storagePath = storagepath;
+            storage_path  = storagepath;
 
-        if (m_storagePath.empty())
-            m_storagePath = std::filesystem::current_path();
+        if (storage_path.empty())
+            storage_path = std::filesystem::current_path();
+
+        m_database = std::make_shared<bot::database::file>(storage_path);
 
         auto json_translator = json.find("translator");
         if (json_translator == json.end()) {

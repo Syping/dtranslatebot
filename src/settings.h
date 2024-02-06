@@ -18,38 +18,13 @@
 
 #ifndef SETTINGS_H
 #define SETTINGS_H
-#include <cstdint>
-#include <dpp/snowflake.h>
-#include <dpp/webhook.h>
-#include <filesystem>
 #include <mutex>
-#include <string>
-#include <vector>
+#include "database_core.h"
+#include "settings_types.h"
 #include "translator_core.h"
 
 namespace bot {
     namespace settings {
-        struct target {
-            std::string target;
-            dpp::webhook webhook;
-        };
-        struct channel {
-            dpp::snowflake id;
-            std::string source;
-            std::vector<bot::settings::target> targets;
-        };
-        struct guild {
-            dpp::snowflake id;
-            std::vector<bot::settings::channel> channel;
-        };
-        struct translator {
-            std::string hostname;
-            uint16_t port;
-            std::string url;
-            bool tls;
-            std::string apiKey;
-        };
-
         class settings {
         public:
             /* add functions */
@@ -63,7 +38,7 @@ namespace bot {
             const channel* get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id) const;
             const guild* get_guild(dpp::snowflake guild_id) const;
             const std::vector<std::string> preferred_languages() const;
-            const std::filesystem::path storage_path() const;
+            std::shared_ptr<bot::database::database> get_database() const;
             std::unique_ptr<bot::translator::translator> get_translator() const;
             const std::string token() const;
 
@@ -82,9 +57,9 @@ namespace bot {
             mutable std::recursive_mutex m_mutex;
             size_t m_externallyLockedCount;
             uint16_t m_avatarSize;
+            std::shared_ptr<bot::database::database> m_database;
             std::vector<guild> m_guilds;
             std::vector<std::string> m_prefLangs;
-            std::filesystem::path m_storagePath;
             bot::settings::translator m_translator;
             std::string m_token;
             std::vector<dpp::snowflake> m_webhookIds;

@@ -23,8 +23,10 @@ include(GNUInstallDirs)
 # dtranslatebot Source files
 set(DTRANSLATEBOT_HEADERS
     src/database_core.h
+    src/database_file.h
     src/message_queue.h
     src/settings.h
+    src/settings_types.h
     src/slashcommands.h
     src/submit_queue.h
     src/translator_core.h
@@ -33,6 +35,7 @@ set(DTRANSLATEBOT_HEADERS
 )
 set(DTRANSLATEBOT_SOURCES
     src/database_core.cpp
+    src/database_file.cpp
     src/main.cpp
     src/message_queue.cpp
     src/settings.cpp
@@ -55,7 +58,7 @@ find_package(Threads REQUIRED)
 
 # dtranslatebot Target + Installs
 add_executable(dtranslatebot ${DTRANSLATEBOT_HEADERS} ${DTRANSLATEBOT_SOURCES})
-target_link_libraries(dtranslatebot Threads::Threads ${DPP_LIBRARIES})
+target_link_libraries(dtranslatebot PRIVATE Threads::Threads ${DPP_LIBRARIES})
 target_include_directories(dtranslatebot PRIVATE ${DPP_INCLUDE_DIR})
 set_target_properties(dtranslatebot PROPERTIES
     CXX_STANDARD 17

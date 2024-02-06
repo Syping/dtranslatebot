@@ -42,12 +42,6 @@ int main(int argc, char* argv[]) {
         return 2;
     }
 
-    std::cout << "[Launch] Checking working directory..." << std::endl;
-    if (!std::filesystem::exists(settings.storage_path())) {
-        std::cerr << "[Error] Storage directory " << settings.storage_path() << " can not be found" << std::endl;
-        return 2;
-    }
-
     dpp::cluster bot(settings.token(), dpp::i_default_intents | dpp::i_message_content);
     bot.on_log([&bot](const dpp::log_t &event) {
         std::cerr << "[Log] " << event.message << std::endl;

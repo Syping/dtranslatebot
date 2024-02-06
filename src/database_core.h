@@ -19,8 +19,7 @@
 #ifndef DATABASE_CORE_H
 #define DATABASE_CORE_H
 
-#include <vector>
-#include "settings.h"
+#include "settings_types.h"
 
 namespace bot {
     namespace database {
