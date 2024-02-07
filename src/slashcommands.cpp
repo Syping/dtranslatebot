@@ -79,12 +79,17 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
                         bot::settings::target s_target;
                         s_target.target = target;
                         s_target.webhook = webhook;
-                        s_channel.targets.push_back(std::move(s_target));
+                        s_channel.targets.push_back(s_target);
 
                         settings->lock();
                         settings->add_channel(s_channel, event.command.guild_id);
                         settings->add_translatebot_webhook(webhook.id);
+                        auto database = settings->get_database();
                         settings->unlock();
+
+                        database->set_channel_source(event.command.guild_id, event.command.channel_id, source);
+                        database->add_channel_target(event.command.guild_id, event.command.channel_id, s_target);
+                        database->sync(); // do async later
 
                         event.reply(dpp::message("Channel will be now translated!").set_flags(dpp::m_ephemeral));
                     });
@@ -97,12 +102,17 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
                     bot::settings::target s_target;
                     s_target.target = target;
                     s_target.webhook = *webhook;
-                    s_channel.targets.push_back(std::move(s_target));
+                    s_channel.targets.push_back(s_target);
 
                     settings->lock();
                     settings->add_channel(s_channel, event.command.guild_id);
                     settings->add_translatebot_webhook(webhook->id);
+                    auto database = settings->get_database();
                     settings->unlock();
+
+                    database->set_channel_source(event.command.guild_id, event.command.channel_id, source);
+                    database->add_channel_target(event.command.guild_id, event.command.channel_id, s_target);
+                    database->sync(); // do async later
 
                     event.reply(dpp::message("Channel will be now translated!").set_flags(dpp::m_ephemeral));
                 }

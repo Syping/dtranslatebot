@@ -29,18 +29,30 @@ namespace bot {
         public:
             explicit file(const std::filesystem::path &storage_path);
             ~file();
-            bool add_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const bot::settings::target &target) override;
+            void add_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const bot::settings::target &target) override;
+            void delete_channel(dpp::snowflake guild_id, dpp::snowflake channel_id) override;
+            void delete_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &target) override;
+            void delete_guild(dpp::snowflake guild_id) override;
             std::variant<std::monostate,bot::settings::target> find_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &target) override;
             std::vector<dpp::snowflake> get_channels(dpp::snowflake guild_id) override;
             std::string get_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id) override;
             std::vector<bot::settings::target> get_channel_targets(dpp::snowflake guild_id, dpp::snowflake channel_id) override;
             std::vector<dpp::snowflake> get_guilds() override;
-            bool set_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &source) override;
+            void set_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &source) override;
+            bool sync() override;
 
         private:
+            void cache_add_channel(dpp::snowflake guild_id, dpp::snowflake channel_id);
+            void cache_delete_channel(dpp::snowflake guild_id, dpp::snowflake channel_id);
+            void cache_channel(dpp::snowflake channel_id, bot::settings::channel *channel);
+            void cache_guild(dpp::snowflake guild_id, std::vector<dpp::snowflake> *channels);
+            void list_guilds(std::vector<dpp::snowflake> *guilds);
+            void sync_exec_async();
 #ifdef __unix__
             int fd;
 #endif
+            std::vector<bot::database::guild> m_channelCache;
+            std::vector<bot::settings::guild> m_dataCache;
             std::mutex m_mutex;
             std::filesystem::path m_storagePath;
         };

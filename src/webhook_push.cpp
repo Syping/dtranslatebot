@@ -77,7 +77,8 @@ void bot::webhook_push::push_request(dpp::snowflake webhook_id, const std::strin
 {
     std::promise<dpp::http_request_completion_t> _p;
     std::future<dpp::http_request_completion_t> _f = _p.get_future();
-    bot->post_rest(API_PATH "/webhooks", std::to_string(webhook_id), dpp::utility::url_encode(webhook_token), dpp::m_post, json, [bot, &_p](dpp::json &json, const dpp::http_request_completion_t &event) {
+    bot->post_rest(API_PATH "/webhooks", std::to_string(webhook_id), dpp::utility::url_encode(webhook_token), dpp::m_post, json, [&bot, &_p](dpp::json &json, const dpp::http_request_completion_t &event) {
+        std::cout << event.body << std::endl;
         if (event.status != 204)
             std::cerr << "[Warning] Webhook push returned unexpected code " << event.status << std::endl;
         _p.set_value(event);

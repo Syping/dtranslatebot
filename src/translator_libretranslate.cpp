@@ -46,11 +46,11 @@ const std::vector<language> libretranslate::get_languages()
 
                         auto json_lang_code = json_language.find("code");
                         if (json_lang_code != json_language.end())
-                            language.code = json_lang_code.value();
+                            language.code = *json_lang_code;
 
                         auto json_lang_name = json_language.find("name");
                         if (json_lang_name != json_language.end())
-                            language.name = json_lang_name.value();
+                            language.name = *json_lang_name;
 
                         if (!language.code.empty() && !language.name.empty())
                             languages.push_back(std::move(language));
@@ -89,7 +89,7 @@ const std::string libretranslate::translate(const std::string &text, const std::
             if (response.is_object()) {
                 auto tr_text = response.find("translatedText");
                 if (tr_text != response.end())
-                    return tr_text.value();
+                    return *tr_text;
             }
         }
     }

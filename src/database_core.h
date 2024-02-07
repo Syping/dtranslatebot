@@ -23,17 +23,26 @@
 
 namespace bot {
     namespace database {
+        struct guild {
+            dpp::snowflake id;
+            std::vector<dpp::snowflake> channel;
+        };
+
         class database {
         public:
             explicit database();
             virtual ~database();
-            virtual bool add_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const bot::settings::target &target);
+            virtual void add_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const bot::settings::target &target);
+            virtual void delete_channel(dpp::snowflake guild_id, dpp::snowflake channel_id);
+            virtual void delete_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &target);
+            virtual void delete_guild(dpp::snowflake guild_id);
             virtual std::variant<std::monostate,bot::settings::target> find_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &target);
             virtual std::vector<dpp::snowflake> get_channels(dpp::snowflake guild_id);
             virtual std::string get_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id);
             virtual std::vector<bot::settings::target> get_channel_targets(dpp::snowflake guild_id, dpp::snowflake channel_id);
             virtual std::vector<dpp::snowflake> get_guilds();
-            virtual bool set_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &source);
+            virtual void set_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &source);
+            virtual bool sync();
         };
     }
 }

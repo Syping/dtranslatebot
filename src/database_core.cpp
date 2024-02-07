@@ -30,12 +30,32 @@ database::~database()
 {
 }
 
-bool database::add_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const bot::settings::target &target)
+void database::add_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const bot::settings::target &target)
 {
 #ifndef NDEBUG
     std::cerr << "[Debug] database::add_channel_target(dpp::snowflake, dpp::snowflake, const bot::settings::target&) have being called." << std::endl;
 #endif
-    return false;
+}
+
+void database::delete_channel(dpp::snowflake guild_id, dpp::snowflake channel_id)
+{
+#ifndef NDEBUG
+    std::cerr << "[Debug] database::delete_channel(dpp::snowflake, dpp::snowflake) have being called." << std::endl;
+#endif
+}
+
+void database::delete_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &target)
+{
+#ifndef NDEBUG
+    std::cerr << "[Debug] database::delete_channel_target(dpp::snowflake, dpp::snowflake, const std::string&) have being called." << std::endl;
+#endif
+}
+
+void database::delete_guild(dpp::snowflake guild_id)
+{
+#ifndef NDEBUG
+    std::cerr << "[Debug] database::delete_guild(dpp::snowflake) have being called." << std::endl;
+#endif
 }
 
 std::variant<std::monostate,bot::settings::target> database::find_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &target)
@@ -78,10 +98,17 @@ std::vector<dpp::snowflake> database::get_guilds()
     return {};
 }
 
-bool database::set_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &source)
+void database::set_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &source)
 {
 #ifndef NDEBUG
     std::cerr << "[Debug] database::set_channel_source(dpp::snowflake, dpp::snowflake, const std::string&) have being called." << std::endl;
+#endif
+}
+
+bool database::sync()
+{
+#ifndef NDEBUG
+    std::cerr << "[Debug] database::sync() have being called." << std::endl;
 #endif
     return false;
 }
