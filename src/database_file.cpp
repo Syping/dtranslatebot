@@ -90,7 +90,7 @@ void file::add_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id
             }
 
             bot::settings::channel channel;
-            cache_channel(channel_id, &channel);
+            cache_get_channel(channel_id, &channel);
             channel.targets.push_back(target);
             guild->channel.push_back(std::move(channel));
             cache_add_channel(guild_id, channel_id);
@@ -99,7 +99,7 @@ void file::add_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id
     }
 
     bot::settings::channel channel;
-    cache_channel(channel_id, &channel);
+    cache_get_channel(channel_id, &channel);
     channel.targets.push_back(target);
 
     bot::settings::guild guild;
@@ -175,7 +175,7 @@ void file::delete_channel_target(dpp::snowflake guild_id, dpp::snowflake channel
             }
 
             bot::settings::channel channel;
-            cache_channel(channel_id, &channel);
+            cache_get_channel(channel_id, &channel);
             for (auto _target = channel.targets.begin(); _target != channel.targets.end(); _target++) {
                 if (_target->target == target) {
                     channel.targets.erase(_target);
@@ -188,7 +188,7 @@ void file::delete_channel_target(dpp::snowflake guild_id, dpp::snowflake channel
     }
 
     bot::settings::channel channel;
-    cache_channel(channel_id, &channel);
+    cache_get_channel(channel_id, &channel);
     for (auto _target = channel.targets.begin(); _target != channel.targets.end(); _target++) {
         if (_target->target == target) {
             channel.targets.erase(_target);
@@ -244,7 +244,7 @@ std::variant<std::monostate,bot::settings::target> file::find_channel_target(dpp
     }
 
     bot::settings::channel channel;
-    cache_channel(channel_id, &channel);
+    cache_get_channel(channel_id, &channel);
     for (auto _target = channel.targets.begin(); _target != channel.targets.end(); _target++) {
         if (_target->target == target) {
             return *_target;
@@ -283,7 +283,7 @@ std::string file::get_channel_source(dpp::snowflake guild_id, dpp::snowflake cha
     }
 
     bot::settings::channel channel;
-    cache_channel(channel_id, &channel);
+    cache_get_channel(channel_id, &channel);
     return channel.source;
 }
 
@@ -303,7 +303,7 @@ std::vector<bot::settings::target> file::get_channel_targets(dpp::snowflake guil
     }
 
     bot::settings::channel channel;
-    cache_channel(channel_id, &channel);
+    cache_get_channel(channel_id, &channel);
     return channel.targets;
 }
 
@@ -329,7 +329,7 @@ void file::set_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id
             }
 
             bot::settings::channel channel;
-            cache_channel(channel_id, &channel);
+            cache_get_channel(channel_id, &channel);
             channel.source = source;
             guild->channel.push_back(std::move(channel));
             cache_add_channel(guild_id, channel_id);
@@ -338,7 +338,7 @@ void file::set_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id
     }
 
     bot::settings::channel channel;
-    cache_channel(channel_id, &channel);
+    cache_get_channel(channel_id, &channel);
     channel.source = source;
 
     bot::settings::guild guild;
@@ -353,76 +353,16 @@ bool file::sync()
 {
     const std::lock_guard<std::mutex> guard(m_mutex);
 
-    const std::filesystem::path channel_dir = m_storagePath / "channel";
-    bool channel_dir_exists = std::filesystem::is_directory(channel_dir);
-    if (!channel_dir_exists)
-        channel_dir_exists = std::filesystem::create_directory(channel_dir);
-
-    if (channel_dir_exists) {
-        for (auto guild = m_dataCache.begin(); guild != m_dataCache.end(); guild++) {
-            for (auto channel = guild->channel.begin(); channel != guild->channel.end();) {
-                dpp::json target_json;
-                for (auto target = channel->targets.begin(); target != channel->targets.end(); target++) {
-                    target_json[target->target] = {
-                        std::to_string(target->webhook.id), target->webhook.token
-                    };
-                }
-                dpp::json channel_json = {
-                    {"source"s, channel->source},
-                    {"target"s, target_json}
-                };
-
-                const std::filesystem::path channel_file = m_storagePath / "channel" / (std::to_string(channel->id) + ".json");
-                std::ofstream ofs(channel_file, std::ios::out | std::ios::binary | std::ios::trunc);
-                if (ofs.is_open()) {
-                    ofs << channel_json.dump();
-                    bool ok = ofs.good();
-                    ofs.close();
-                    if (ok)
-                        channel = guild->channel.erase(channel);
-                    else
-                        channel++;
-                }
-                else
-                    channel++;
-            }
-        }
+    try {
+        std::thread thread(&file::sync_cache, this);
+        thread.detach();
+        return true;
     }
-    else {
-        std::cerr << "[Error] Storage channel directory can not be created" << std::endl;
+    catch (const std::exception &exception) {
+        std::cerr << "[Exception] " << exception.what() << std::endl;
     }
 
-    const std::filesystem::path guild_dir = m_storagePath / "guild";
-    bool guild_dir_exists = std::filesystem::is_directory(guild_dir);
-    if (!guild_dir_exists)
-        guild_dir_exists = std::filesystem::create_directory(guild_dir);
-
-    if (guild_dir_exists) {
-        for (auto guild = m_channelCache.begin(); guild != m_channelCache.end();) {
-            dpp::json guild_json;
-            for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++)
-                guild_json.push_back(std::to_string(*channel));
-
-            const std::filesystem::path guild_file = m_storagePath / "guild" / (std::to_string(guild->id) + ".json");
-            std::ofstream ofs(guild_file, std::ios::out | std::ios::binary | std::ios::trunc);
-            if (ofs.is_open()) {
-                ofs << guild_json.dump();
-                bool ok = ofs.good();
-                ofs.close();
-                if (ok)
-                    guild = m_channelCache.erase(guild);
-                else
-                    guild++;
-            }
-            else
-                guild++;
-        }
-    }
-    else {
-        std::cerr << "[Error] Storage guild directory can not be created" << std::endl;
-    }
-
-    return true;
+    return false;
 }
 
 void file::cache_add_channel(dpp::snowflake guild_id, dpp::snowflake channel_id)
@@ -446,7 +386,7 @@ void file::cache_add_channel(dpp::snowflake guild_id, dpp::snowflake channel_id)
     m_channelCache.push_back(std::move(guild));
 }
 
-void file::cache_channel(dpp::snowflake channel_id, bot::settings::channel *channel)
+void file::cache_get_channel(dpp::snowflake channel_id, bot::settings::channel *channel)
 {
     channel->id = channel_id;
 
@@ -549,8 +489,76 @@ void file::list_guilds(std::vector<dpp::snowflake> *guilds)
     }
 }
 
-void file::sync_exec_async()
+void file::sync_cache()
 {
-    std::thread thread(&file::sync, this);
-    thread.detach();
+    const std::lock_guard<std::mutex> guard(m_mutex);
+
+    const std::filesystem::path channel_dir = m_storagePath / "channel";
+    bool channel_dir_exists = std::filesystem::is_directory(channel_dir);
+    if (!channel_dir_exists)
+        channel_dir_exists = std::filesystem::create_directory(channel_dir);
+
+    if (channel_dir_exists) {
+        for (auto guild = m_dataCache.begin(); guild != m_dataCache.end(); guild++) {
+            for (auto channel = guild->channel.begin(); channel != guild->channel.end();) {
+                dpp::json target_json;
+                for (auto target = channel->targets.begin(); target != channel->targets.end(); target++) {
+                    target_json[target->target] = {
+                        std::to_string(target->webhook.id), target->webhook.token
+                    };
+                }
+                dpp::json channel_json = {
+                    {"source"s, channel->source},
+                    {"target"s, target_json}
+                };
+
+                const std::filesystem::path channel_file = m_storagePath / "channel" / (std::to_string(channel->id) + ".json");
+                std::ofstream ofs(channel_file, std::ios::out | std::ios::binary | std::ios::trunc);
+                if (ofs.is_open()) {
+                    ofs << channel_json.dump();
+                    bool ok = ofs.good();
+                    ofs.close();
+                    if (ok)
+                        channel = guild->channel.erase(channel);
+                    else
+                        channel++;
+                }
+                else
+                    channel++;
+            }
+        }
+    }
+    else {
+        std::cerr << "[Error] Storage channel directory can not be created" << std::endl;
+    }
+
+    const std::filesystem::path guild_dir = m_storagePath / "guild";
+    bool guild_dir_exists = std::filesystem::is_directory(guild_dir);
+    if (!guild_dir_exists)
+        guild_dir_exists = std::filesystem::create_directory(guild_dir);
+
+    if (guild_dir_exists) {
+        for (auto guild = m_channelCache.begin(); guild != m_channelCache.end();) {
+            dpp::json guild_json;
+            for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++)
+                guild_json.push_back(std::to_string(*channel));
+
+            const std::filesystem::path guild_file = m_storagePath / "guild" / (std::to_string(guild->id) + ".json");
+            std::ofstream ofs(guild_file, std::ios::out | std::ios::binary | std::ios::trunc);
+            if (ofs.is_open()) {
+                ofs << guild_json.dump();
+                bool ok = ofs.good();
+                ofs.close();
+                if (ok)
+                    guild = m_channelCache.erase(guild);
+                else
+                    guild++;
+            }
+            else
+                guild++;
+        }
+    }
+    else {
+        std::cerr << "[Error] Storage guild directory can not be created" << std::endl;
+    }
 }
