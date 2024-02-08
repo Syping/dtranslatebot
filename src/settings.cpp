@@ -24,6 +24,65 @@
 #include "translator_libretranslate.h"
 using namespace bot::settings;
 
+void process_database_channels(std::shared_ptr<bot::database::database> database, bot::settings::guild *guild, std::vector<dpp::snowflake> *webhookIds)
+{
+    const std::vector<dpp::snowflake> db_channels = database->get_channels(guild->id);
+    for (auto db_channel_id = db_channels.begin(); db_channel_id != db_channels.end(); db_channel_id++) {
+        bool channel_found = false;
+        for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
+            if (channel->id == *db_channel_id) {
+                const bot::settings::channel db_channel = database->get_channel(guild->id, channel->id);
+                channel->source = db_channel.source;
+                for (auto db_target = db_channel.targets.begin(); db_target != db_channel.targets.end(); db_target++) {
+                    bool target_found = false;
+                    for (auto target = channel->targets.begin(); target != channel->targets.end(); target++) {
+                        if (target->target == db_target->target) {
+                            target->webhook = db_target->webhook;
+                            webhookIds->push_back(db_target->webhook.id);
+                            target_found = true;
+                            break;
+                        }
+                    }
+                    if (!target_found) {
+                        channel->targets.push_back(*db_target);
+                        webhookIds->push_back(db_target->webhook.id);
+                    }
+                }
+                channel_found = true;
+                break;
+            }
+        }
+        if (!channel_found) {
+            const bot::settings::channel db_channel = database->get_channel(guild->id, *db_channel_id);
+            guild->channel.push_back(db_channel);
+            for (auto db_target = db_channel.targets.begin(); db_target != db_channel.targets.end(); db_target++)
+                webhookIds->push_back(db_target->webhook.id);
+        }
+    }
+}
+
+void process_database(std::shared_ptr<bot::database::database> database, std::vector<guild> *guilds, std::vector<dpp::snowflake> *webhookIds)
+{
+    std::cout << "[Launch] Loading database..." << std::endl;
+    const std::vector<dpp::snowflake> db_guilds = database->get_guilds();
+    for (auto db_guild_id = db_guilds.begin(); db_guild_id != db_guilds.end(); db_guild_id++) {
+        bool guild_found = false;
+        for (auto guild = guilds->begin(); guild != guilds->end(); guild++) {
+            if (guild->id == *db_guild_id) {
+                process_database_channels(database, &*guild, webhookIds);
+                guild_found = true;
+                break;
+            }
+        }
+        if (!guild_found) {
+            bot::settings::guild guild;
+            guild.id = *db_guild_id;
+            process_database_channels(database, &guild, webhookIds);
+            guilds->push_back(std::move(guild));
+        }
+    }
+}
+
 void process_guild_settings(const dpp::json &json, std::vector<guild> *guilds, std::vector<dpp::snowflake> *webhookIds)
 {
     for (auto json_guild = json.begin(); json_guild != json.end(); json_guild++) {
@@ -213,7 +272,7 @@ const channel* settings::get_channel(const guild *guild, dpp::snowflake channel_
     }
     for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
         if (channel->id == channel_id)
-            return &(*channel);
+            return &*channel;
     }
     return nullptr;
 }
@@ -230,7 +289,7 @@ const channel* settings::get_channel(dpp::snowflake guild_id, dpp::snowflake cha
         if (guild->id == guild_id) {
             for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
                 if (channel->id == channel_id)
-                    return &(*channel);
+                    return &*channel;
             }
             return nullptr;
         }
@@ -248,7 +307,7 @@ const guild* settings::get_guild(dpp::snowflake guild_id) const
     }
     for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
         if (guild->id == guild_id)
-            return &(*guild);
+            return &*guild;
     }
     return nullptr;
 }
@@ -261,6 +320,7 @@ const std::vector<std::string> settings::preferred_languages() const
 
 std::shared_ptr<bot::database::database> settings::get_database() const
 {
+    const std::lock_guard<std::recursive_mutex> guard(m_mutex);
     return m_database;
 }
 
@@ -351,6 +411,8 @@ bool settings::parse(const std::string &data)
         auto json_user = json.find("user");
         if (json_user != json.end() && json_user->is_object())
             process_user_settings(*json_user, &m_avatarSize);
+
+        process_database(m_database, &m_guilds, &m_webhookIds);
 
         return true;
     }

@@ -84,12 +84,12 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
                         settings->lock();
                         settings->add_channel(s_channel, event.command.guild_id);
                         settings->add_translatebot_webhook(webhook.id);
-                        auto database = settings->get_database();
                         settings->unlock();
 
+                        std::shared_ptr<bot::database::database> database = settings->get_database();
                         database->set_channel_source(event.command.guild_id, event.command.channel_id, source);
                         database->add_channel_target(event.command.guild_id, event.command.channel_id, s_target);
-                        database->sync(); // do async later
+                        database->sync();
 
                         event.reply(dpp::message("Channel will be now translated!").set_flags(dpp::m_ephemeral));
                     });
@@ -107,12 +107,12 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
                     settings->lock();
                     settings->add_channel(s_channel, event.command.guild_id);
                     settings->add_translatebot_webhook(webhook->id);
-                    auto database = settings->get_database();
                     settings->unlock();
 
+                    std::shared_ptr<bot::database::database> database = settings->get_database();
                     database->set_channel_source(event.command.guild_id, event.command.channel_id, source);
                     database->add_channel_target(event.command.guild_id, event.command.channel_id, s_target);
-                    database->sync(); // do async later
+                    database->sync();
 
                     event.reply(dpp::message("Channel will be now translated!").set_flags(dpp::m_ephemeral));
                 }

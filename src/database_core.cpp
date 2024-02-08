@@ -66,6 +66,14 @@ std::variant<std::monostate,bot::settings::target> database::find_channel_target
     return {};
 }
 
+bot::settings::channel database::get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id)
+{
+#ifndef NDEBUG
+    std::cerr << "[Debug] database::get_channel(dpp::snowflake, dpp::snowflake) have being called." << std::endl;
+#endif
+    return {};
+}
+
 std::vector<dpp::snowflake> database::get_channels(dpp::snowflake guild_id)
 {
 #ifndef NDEBUG

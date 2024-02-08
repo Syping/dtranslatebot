@@ -24,7 +24,6 @@
 #include <cctype>
 #include <dpp/discordclient.h>
 #include <dpp/json.h>
-#include <dpp/utility.h>
 #include <fstream>
 #include <iostream>
 #include <thread>
@@ -253,6 +252,25 @@ std::variant<std::monostate,bot::settings::target> file::find_channel_target(dpp
     return {};
 }
 
+bot::settings::channel file::get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id)
+{
+    const std::lock_guard<std::mutex> guard(m_mutex);
+
+    for (auto guild = m_dataCache.begin(); guild != m_dataCache.end(); guild++) {
+        if (guild->id == guild_id) {
+            for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
+                if (channel->id == channel_id)
+                    return *channel;
+            }
+            break;
+        }
+    }
+
+    bot::settings::channel channel;
+    cache_get_channel(channel_id, &channel);
+    return std::move(channel);
+}
+
 std::vector<dpp::snowflake> file::get_channels(dpp::snowflake guild_id)
 {
     const std::lock_guard<std::mutex> guard(m_mutex);
@@ -415,11 +433,9 @@ void file::cache_get_channel(dpp::snowflake channel_id, bot::settings::channel *
                     for (auto json_target = json_channel_target->begin(); json_target != json_channel_target->end(); json_target++) {
                         bot::settings::target target;
                         target.target = json_target.key();
-                        if (json_target->is_array()) {
-                            if (json_target->size() == 2) {
-                                target.webhook.id = std::stoull(std::string(json_target->front()));
-                                target.webhook.token = json_target->back();
-                            }
+                        if (json_target->is_array() && json_target->size() == 2) {
+                            target.webhook.id = std::stoull(std::string(json_target->front()));
+                            target.webhook.token = json_target->back();
                         }
                         else if (json_target->is_string()) {
                             target.webhook = dpp::webhook(*json_target);
@@ -474,8 +490,8 @@ void file::list_guilds(std::vector<dpp::snowflake> *guilds)
 
     for (const auto &guild_file : std::filesystem::directory_iterator(guild_dir)) {
         const std::filesystem::path &guild_file_path = guild_file.path();
-        if (guild_file_path.extension() == "json") {
-            const std::string &guild_filename = guild_file_path.filename();
+        if (guild_file_path.extension() == ".json") {
+            const std::string &guild_filename = guild_file_path.stem();
             if (std::all_of(guild_filename.begin(), guild_filename.end(), ::isdigit)) {
                 try {
                     dpp::snowflake guild_id = std::stoull(guild_filename);
