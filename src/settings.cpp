@@ -32,7 +32,8 @@ void process_database_channels(std::shared_ptr<bot::database::database> database
         for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
             if (channel->id == *db_channel_id) {
                 const bot::settings::channel db_channel = database->get_channel(guild->id, channel->id);
-                channel->source = db_channel.source;
+                if (!db_channel.source.empty())
+                    channel->source = db_channel.source;
                 for (auto db_target = db_channel.targets.begin(); db_target != db_channel.targets.end(); db_target++) {
                     bool target_found = false;
                     for (auto target = channel->targets.begin(); target != channel->targets.end(); target++) {

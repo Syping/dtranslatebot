@@ -82,6 +82,7 @@ std::vector<dpp::snowflake> database::get_channels(dpp::snowflake guild_id)
     return {};
 }
 
+/*
 std::string database::get_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id)
 {
 #ifndef NDEBUG
@@ -97,6 +98,7 @@ std::vector<bot::settings::target> database::get_channel_targets(dpp::snowflake 
 #endif
     return {};
 }
+*/
 
 std::vector<dpp::snowflake> database::get_guilds()
 {

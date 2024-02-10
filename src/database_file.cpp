@@ -286,6 +286,7 @@ std::vector<dpp::snowflake> file::get_channels(dpp::snowflake guild_id)
     return channels;
 }
 
+/*
 std::string file::get_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id)
 {
     const std::lock_guard<std::mutex> guard(m_mutex);
@@ -324,6 +325,7 @@ std::vector<bot::settings::target> file::get_channel_targets(dpp::snowflake guil
     cache_get_channel(channel_id, &channel);
     return channel.targets;
 }
+*/
 
 std::vector<dpp::snowflake> file::get_guilds()
 {

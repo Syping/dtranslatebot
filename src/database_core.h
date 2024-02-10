@@ -39,8 +39,10 @@ namespace bot {
             virtual std::variant<std::monostate,bot::settings::target> find_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &target);
             virtual bot::settings::channel get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id);
             virtual std::vector<dpp::snowflake> get_channels(dpp::snowflake guild_id);
+            /* unused atm.
             virtual std::string get_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id);
             virtual std::vector<bot::settings::target> get_channel_targets(dpp::snowflake guild_id, dpp::snowflake channel_id);
+            */
             virtual std::vector<dpp::snowflake> get_guilds();
             virtual void set_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &source);
             virtual bool sync();
