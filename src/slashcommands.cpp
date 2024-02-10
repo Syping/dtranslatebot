@@ -146,26 +146,42 @@ void bot::slashcommands::register_commands(dpp::cluster *bot, bot::settings::set
 
     std::vector<dpp::slashcommand> commands;
 
-    dpp::slashcommand command_translate("translate", "Translate current channel (ISO 639-1)", bot->me.id);
+    /*
+    dpp::slashcommand command_edit("edit", "Edit current channel settings", bot->me.id);
+    command_edit.set_default_permissions(dpp::p_manage_webhooks);
+    dpp::command_option source_edit_subcommand(dpp::co_sub_command, "source", "Edit current channel source language");
+    command_edit.add_option(source_edit_subcommand);
+    commands.push_back(command_edit);
+
+    dpp::slashcommand command_list("list", "List channel settings", bot->me.id);
+    command_list.set_default_permissions(dpp::p_manage_webhooks);
+    dpp::command_option all_list_subcommand(dpp::co_sub_command, "all", "List all translated channel");
+    dpp::command_option channel_list_subcommand(dpp::co_sub_command, "channel", "List current channel translation settings");
+    command_list.add_option(all_list_subcommand);
+    command_list.add_option(channel_list_subcommand);
+    commands.push_back(command_list);
+    */
+
+    dpp::slashcommand command_translate("translate", "Translate current channel", bot->me.id);
     command_translate.set_default_permissions(dpp::p_manage_webhooks);
-    dpp::command_option channel_subcommand(dpp::co_sub_command, "channel", "Translate current channel to a channel (ISO 639-1)");
-    dpp::command_option webhook_subcommand(dpp::co_sub_command, "webhook", "Translate current channel to a webhook (ISO 639-1)");
-    dpp::command_option source_option(dpp::co_string, "source", "Source language", true);
+    dpp::command_option channel_translate_subcommand(dpp::co_sub_command, "channel", "Translate current channel to a channel");
+    dpp::command_option webhook_translate_subcommand(dpp::co_sub_command, "webhook", "Translate current channel to a webhook");
+    dpp::command_option source_option(dpp::co_string, "source", "Source language (ISO 639-1)", true);
     source_option.set_max_length(2).set_min_length(2);
-    dpp::command_option target_option(dpp::co_string, "target", "Target language", true);
+    dpp::command_option target_option(dpp::co_string, "target", "Target language (ISO 639-1)", true);
     target_option.set_max_length(2).set_min_length(2);
     dpp::command_option channel_option(dpp::co_channel, "channel", "Target channel", true);
     channel_option.add_channel_type(dpp::CHANNEL_TEXT);
     dpp::command_option webhook_option(dpp::co_string, "webhook", "Target webhook", true);
-    channel_subcommand.add_option(source_option);
-    channel_subcommand.add_option(target_option);
-    channel_subcommand.add_option(channel_option);
-    webhook_subcommand.add_option(source_option);
-    webhook_subcommand.add_option(target_option);
-    webhook_subcommand.add_option(webhook_option);
-    command_translate.add_option(channel_subcommand);
-    command_translate.add_option(webhook_subcommand);
-    commands.push_back(std::move(command_translate));
+    channel_translate_subcommand.add_option(source_option);
+    channel_translate_subcommand.add_option(target_option);
+    channel_translate_subcommand.add_option(channel_option);
+    webhook_translate_subcommand.add_option(source_option);
+    webhook_translate_subcommand.add_option(target_option);
+    webhook_translate_subcommand.add_option(webhook_option);
+    command_translate.add_option(channel_translate_subcommand);
+    command_translate.add_option(webhook_translate_subcommand);
+    commands.push_back(command_translate);
 
     if (preferred_languages.size() > 1) {
         dpp::slashcommand command_translate_pref("translate_pref", "Translate current channel (Preferred languages)", bot->me.id);
@@ -188,7 +204,7 @@ void bot::slashcommands::register_commands(dpp::cluster *bot, bot::settings::set
         webhook_pref_subcommand.add_option(webhook_option);
         command_translate_pref.add_option(channel_pref_subcommand);
         command_translate_pref.add_option(webhook_pref_subcommand);
-        commands.push_back(std::move(command_translate_pref));
+        commands.push_back(command_translate_pref);
     }
 
     bot->global_bulk_command_create(commands);
