@@ -39,7 +39,7 @@ file::file(const std::filesystem::path &storage_path) : m_storagePath(storage_pa
         throw std::runtime_error("Storage directory can not be found");
     }
 
-#ifdef __unix__
+#if defined(__unix__)
     struct flock lock;
     lock.l_start = 0;
     lock.l_len = 0;
@@ -47,7 +47,7 @@ file::file(const std::filesystem::path &storage_path) : m_storagePath(storage_pa
     lock.l_type = F_WRLCK;
     lock.l_whence = SEEK_SET;
 
-    const std::string lock_file = storage_path / ".lock";
+    const std::filesystem::path lock_file = storage_path / ".lock";
     fd = open(lock_file.c_str(), O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (fd == -1) {
         std::cerr << "[Error] Storage directory " << storage_path << " can not be locked" << std::endl;
@@ -58,14 +58,29 @@ file::file(const std::filesystem::path &storage_path) : m_storagePath(storage_pa
         std::cerr << "[Error] Storage directory " << storage_path << " can not be locked" << std::endl;
         throw std::system_error(errno, std::system_category());
     }
+#elif defined(_WIN32)
+    const std::filesystem::path lock_file = storage_path / ".lock";
+
+    fh = CreateFileW(lock_file.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_HIDDEN, NULL);
+    if (fh == INVALID_HANDLE_VALUE) {
+        std::cerr << "[Error] Storage directory " << storage_path << " can not be locked" << std::endl;
+        throw std::system_error(GetLastError(), std::system_category());
+    }
+    if (!LockFile(fh, NULL, NULL, NULL, NULL)) {
+        CloseHandle(fh);
+        std::cerr << "[Error] Storage directory " << storage_path << " can not be locked" << std::endl;
+        throw std::system_error(GetLastError(), std::system_category());
+    }
 #endif
 }
 
 file::~file()
 {
     const std::lock_guard<std::mutex> guard(m_mutex);
-#ifdef __unix__
+#if defined(__unix__)
     close(fd);
+#elif defined(_WIN32)
+    CloseHandle(fh);
 #endif
 }
 
@@ -268,7 +283,7 @@ bot::settings::channel file::get_channel(dpp::snowflake guild_id, dpp::snowflake
 
     bot::settings::channel channel;
     cache_get_channel(channel_id, &channel);
-    return std::move(channel);
+    return channel;
 }
 
 std::vector<dpp::snowflake> file::get_channels(dpp::snowflake guild_id)

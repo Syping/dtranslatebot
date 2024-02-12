@@ -21,6 +21,11 @@
 
 #include <mutex>
 #include <filesystem>
+#ifdef _WIN32
+#define VC_EXTRALEAN
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
 #include "database_core.h"
 
 namespace bot {
@@ -46,13 +51,14 @@ namespace bot {
 
         private:
             void cache_add_channel(dpp::snowflake guild_id, dpp::snowflake channel_id);
-            void cache_delete_channel(dpp::snowflake guild_id, dpp::snowflake channel_id);
             void cache_get_channel(dpp::snowflake channel_id, bot::settings::channel *channel);
             void cache_guild(dpp::snowflake guild_id, std::vector<dpp::snowflake> *channels);
             void list_guilds(std::vector<dpp::snowflake> *guilds);
             void sync_cache();
-#ifdef __unix__
+#if defined(__unix__)
             int fd;
+#elif defined(_WIN32)
+            HANDLE fh;
 #endif
             std::vector<bot::database::guild> m_channelCache;
             std::vector<bot::settings::guild> m_dataCache;
