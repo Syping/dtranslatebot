@@ -93,7 +93,7 @@ void process_guild_settings(const dpp::json &json, std::vector<guild> *guilds, s
             auto json_guild_id = json_guild->find("id");
             if (json_guild_id != json_guild->end()) {
                 if (json_guild_id->is_number())
-                    guild.id = *json_guild_id;
+                    guild.id = static_cast<uint64_t>(*json_guild_id);
                 else if (json_guild_id->is_string())
                     guild.id = std::stoull(std::string(*json_guild_id));
                 else
@@ -109,7 +109,7 @@ void process_guild_settings(const dpp::json &json, std::vector<guild> *guilds, s
                     auto json_channel_id = json_channel->find("id");
                     if (json_channel_id != json_channel->end()) {
                         if (json_channel_id->is_number())
-                            channel.id = *json_channel_id;
+                            channel.id = static_cast<uint64_t>(*json_channel_id);
                         else if (json_channel_id->is_string())
                             channel.id = std::stoull(std::string(*json_channel_id));
                         else
@@ -230,7 +230,7 @@ void settings::add_channel(const channel &channel, dpp::snowflake guild_id)
     // We will create the guild structure when it is not in memory
     guild guild;
     guild.id = guild_id;
-    guild.channel.push_back(std::move(channel));
+    guild.channel.push_back(channel);
     m_guilds.push_back(std::move(guild));
 }
 

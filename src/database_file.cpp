@@ -493,7 +493,7 @@ void file::list_guilds(std::vector<dpp::snowflake> *guilds)
     for (const auto &guild_file : std::filesystem::directory_iterator(guild_dir)) {
         const std::filesystem::path &guild_file_path = guild_file.path();
         if (guild_file_path.extension() == ".json") {
-            const std::string &guild_filename = guild_file_path.stem();
+            const std::string guild_filename = guild_file_path.stem().generic_string();
             if (std::all_of(guild_filename.begin(), guild_filename.end(), ::isdigit)) {
                 try {
                     dpp::snowflake guild_id = std::stoull(guild_filename);

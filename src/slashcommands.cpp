@@ -16,6 +16,7 @@
 * responsible for anything with use of the software, you are self responsible.
 *****************************************************************************/
 
+#include <sstream>
 #include "slashcommands.h"
 using namespace std::string_literals;
 
@@ -167,9 +168,9 @@ void bot::slashcommands::register_commands(dpp::cluster *bot, bot::settings::set
     dpp::command_option channel_translate_subcommand(dpp::co_sub_command, "channel", "Translate current channel to a channel");
     dpp::command_option webhook_translate_subcommand(dpp::co_sub_command, "webhook", "Translate current channel to a webhook");
     dpp::command_option source_option(dpp::co_string, "source", "Source language (ISO 639-1)", true);
-    source_option.set_max_length(2).set_min_length(2);
+    source_option.set_max_length(static_cast<int64_t>(2)).set_min_length(static_cast<int64_t>(2));
     dpp::command_option target_option(dpp::co_string, "target", "Target language (ISO 639-1)", true);
-    target_option.set_max_length(2).set_min_length(2);
+    target_option.set_max_length(static_cast<int64_t>(2)).set_min_length(static_cast<int64_t>(2));
     dpp::command_option channel_option(dpp::co_channel, "channel", "Target channel", true);
     channel_option.add_channel_type(dpp::CHANNEL_TEXT);
     dpp::command_option webhook_option(dpp::co_string, "webhook", "Target webhook", true);
