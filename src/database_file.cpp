@@ -60,14 +60,8 @@ file::file(const std::filesystem::path &storage_path) : m_storagePath(storage_pa
     }
 #elif defined(_WIN32)
     const std::filesystem::path lock_file = storage_path / ".lock";
-
     fh = CreateFileW(lock_file.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_HIDDEN, NULL);
     if (fh == INVALID_HANDLE_VALUE) {
-        std::cerr << "[Error] Storage directory " << storage_path << " can not be locked" << std::endl;
-        throw std::system_error(GetLastError(), std::system_category());
-    }
-    if (!LockFile(fh, NULL, NULL, NULL, NULL)) {
-        CloseHandle(fh);
         std::cerr << "[Error] Storage directory " << storage_path << " can not be locked" << std::endl;
         throw std::system_error(GetLastError(), std::system_category());
     }
