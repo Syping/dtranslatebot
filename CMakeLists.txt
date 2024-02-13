@@ -25,6 +25,7 @@ set(DTRANSLATEBOT_HEADERS
     src/database_core.h
     src/database_file.h
     src/message_queue.h
+    src/regex.h
     src/settings.h
     src/settings_types.h
     src/slashcommands.h
@@ -49,6 +50,18 @@ set(DTRANSLATEBOT_SOURCES
 # dtranslatebot Module Path
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+# Boost C++ Libraries
+option(WITH_BOOST "Build with Boost C++ Libraries" OFF)
+if (WITH_BOOST)
+    find_package(Boost COMPONENTS regex)
+    if (Boost_regex_FOUND)
+        list(APPEND DTRANSLATEBOT_LIBRARIES
+            Boost::regex
+        )
+        set(DTRANSLATEBOT_USE_BOOST_REGEX TRUE)
+    endif()
+endif()
+
 # D++ Discord API Library for Bots
 find_package(DPP REQUIRED)
 
@@ -58,10 +71,13 @@ find_package(Threads REQUIRED)
 
 # dtranslatebot Target + Installs
 add_executable(dtranslatebot ${DTRANSLATEBOT_HEADERS} ${DTRANSLATEBOT_SOURCES})
+target_compile_definitions(dtranslatebot PRIVATE
+    $<$<BOOL:${DTRANSLATEBOT_USE_BOOST_REGEX}>:DTRANSLATEBOT_USE_BOOST_REGEX>
+)
 if (MSVC AND MSVC_VERSION GREATER_EQUAL 1914)
     target_compile_options(dtranslatebot PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/Zc:__cplusplus>)
 endif()
-target_link_libraries(dtranslatebot PRIVATE Threads::Threads ${DPP_LIBRARIES})
+target_link_libraries(dtranslatebot PRIVATE Threads::Threads ${DPP_LIBRARIES} ${DTRANSLATEBOT_LIBRARIES})
 target_include_directories(dtranslatebot PRIVATE ${DPP_INCLUDE_DIR})
 set_target_properties(dtranslatebot PROPERTIES
     CXX_STANDARD 17

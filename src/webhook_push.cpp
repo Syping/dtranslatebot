@@ -17,7 +17,7 @@
 *****************************************************************************/
 
 #include <future>
-#include <regex>
+#include "regex.h"
 #include "webhook_push.h"
 using namespace std::string_literals;
 using namespace std::string_view_literals;
@@ -40,16 +40,16 @@ void bot::webhook_push::run(const bot::translated_message &message, dpp::cluster
                 message_v = message_v.substr(1333 + pos);
             }
             else {
-                std::match_results<std::string_view::const_iterator> match;
-                if (std::regex_match(message_eov.begin(), message_eov.end(), match, std::regex("^.*(\\.|\\?|\\!|\\。)\\s.*$"s))) {
+                bot::svmatch match;
+                if (bot::regex_match(message_eov.begin(), message_eov.end(), match, bot::regex("^.*(\\.|\\?|\\!|\\。)\\s.*$"s))) {
                     json_body["content"] = message_v.substr(0, 1334 + match.position(1));
                     message_v = message_v.substr(1334 + match.position(1));
                 }
-                else if (std::regex_match(message_eov.begin(), message_eov.end(), match, std::regex("^.*(\\,)\\s.*$"s))) {
+                else if (bot::regex_match(message_eov.begin(), message_eov.end(), match, bot::regex("^.*(\\,)\\s.*$"s))) {
                     json_body["content"] = message_v.substr(0, 1334 + match.position(1));
                     message_v = message_v.substr(1334 + match.position(1));
                 }
-                else if (std::regex_match(message_eov.begin(), message_eov.end(), match, std::regex("^.*()\\s.*$"s))) {
+                else if (bot::regex_match(message_eov.begin(), message_eov.end(), match, bot::regex("^.*()\\s.*$"s))) {
                     json_body["content"] = message_v.substr(0, 1334 + match.position(1));
                     message_v = message_v.substr(1334 + match.position(1));
                 }
