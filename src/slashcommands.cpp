@@ -59,7 +59,8 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
 
         if (source_valid && target_valid) {
             const std::lock_guard<bot::settings::settings> guard(*settings);
-            if (!settings->get_channel(event.command.guild_id, event.command.channel_id)) {
+            const bot::settings::channel *channel = settings->get_channel(event.command.guild_id, event.command.channel_id);
+            if (!channel) {
                 if (dpp::channel *channel = std::get_if<dpp::channel>(&v_target)) {
                     dpp::webhook webhook;
                     webhook.channel_id = channel->id;
@@ -118,8 +119,58 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
                     event.reply(dpp::message("Channel will be now translated!").set_flags(dpp::m_ephemeral));
                 }
             }
+            else if (!settings->get_target(channel, target)) {
+                if (channel->source != source) {
+                    event.reply(dpp::message("The current channel is already being translated from a different source language!").set_flags(dpp::m_ephemeral));
+                }
+                else if (dpp::channel *channel = std::get_if<dpp::channel>(&v_target)) {
+                    dpp::webhook webhook;
+                    webhook.channel_id = channel->id;
+                    webhook.guild_id = channel->guild_id;
+                    webhook.name = "Translate Bot Webhook <" + std::to_string(event.command.channel_id) + ":" + source + ":" + target + ">";
+
+                    bot->create_webhook(webhook, [&bot, &settings, event, source, target](const dpp::confirmation_callback_t &callback) {
+                        if (callback.is_error()) {
+                            event.reply(dpp::message("Failed to generate webhook!").set_flags(dpp::m_ephemeral));
+                            return;
+                        }
+                        const dpp::webhook webhook = callback.get<dpp::webhook>();
+
+                        bot::settings::target s_target;
+                        s_target.target = target;
+                        s_target.webhook = webhook;
+
+                        settings->lock();
+                        settings->add_target(s_target, event.command.guild_id, event.command.channel_id);
+                        settings->add_translatebot_webhook(webhook.id);
+                        settings->unlock();
+
+                        std::shared_ptr<bot::database::database> database = settings->get_database();
+                        database->add_channel_target(event.command.guild_id, event.command.channel_id, s_target);
+                        database->sync();
+
+                        event.reply(dpp::message("Channel will be now translated!").set_flags(dpp::m_ephemeral));
+                    });
+                }
+                else if (dpp::webhook *webhook = std::get_if<dpp::webhook>(&v_target)) {
+                    bot::settings::target s_target;
+                    s_target.target = target;
+                    s_target.webhook = *webhook;
+
+                    settings->lock();
+                    settings->add_target(s_target, event.command.guild_id, event.command.channel_id);
+                    settings->add_translatebot_webhook(webhook->id);
+                    settings->unlock();
+
+                    std::shared_ptr<bot::database::database> database = settings->get_database();
+                    database->add_channel_target(event.command.guild_id, event.command.channel_id, s_target);
+                    database->sync();
+
+                    event.reply(dpp::message("Channel will be now translated!").set_flags(dpp::m_ephemeral));
+                }
+            }
             else {
-                event.reply(dpp::message("The current channel is already being translated!").set_flags(dpp::m_ephemeral));
+                event.reply(dpp::message("The current channel is already being translated to the target language!").set_flags(dpp::m_ephemeral));
             }
         }
         else if (!source_valid && !target_valid) {

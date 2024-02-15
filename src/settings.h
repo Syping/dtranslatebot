@@ -37,6 +37,8 @@ namespace bot {
             const channel* get_channel(const guild *guild, dpp::snowflake channel_id) const;
             const channel* get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id) const;
             const guild* get_guild(dpp::snowflake guild_id) const;
+            const target* get_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &target) const;
+            const target* get_target(const channel *channel, const std::string &target) const;
             const std::vector<std::string> preferred_languages() const;
             std::shared_ptr<bot::database::database> get_database() const;
             std::unique_ptr<bot::translator::translator> get_translator() const;

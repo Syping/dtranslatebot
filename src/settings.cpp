@@ -265,12 +265,6 @@ uint16_t settings::avatar_size()
 
 const channel* settings::get_channel(const guild *guild, dpp::snowflake channel_id) const
 {
-    if (!m_externallyLockedCount) {
-#ifndef NDEBUG
-        std::cerr << "[Debug] settings::get_channel(const guild*, dpp::snowflake) have being called without settings being locked." << std::endl;
-#endif
-        return nullptr;
-    }
     for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
         if (channel->id == channel_id)
             return &*channel;
@@ -309,6 +303,40 @@ const guild* settings::get_guild(dpp::snowflake guild_id) const
     for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
         if (guild->id == guild_id)
             return &*guild;
+    }
+    return nullptr;
+}
+
+const target* settings::get_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &target) const
+{
+    if (!m_externallyLockedCount) {
+#ifndef NDEBUG
+        std::cerr << "[Debug] settings::get_target(dpp::snowflake, dpp::snowflake, const std::string&) have being called without settings being locked." << std::endl;
+#endif
+        return nullptr;
+    }
+    for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
+        if (guild->id == guild_id) {
+            for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
+                if (channel->id == channel_id) {
+                    for (auto _target = channel->targets.begin(); _target != channel->targets.end(); _target++) {
+                        if (_target->target == target)
+                            return &*_target;
+                    }
+                    return nullptr;
+                }
+            }
+            return nullptr;
+        }
+    }
+    return nullptr;
+}
+
+const target* settings::get_target(const channel *channel, const std::string &target) const
+{
+    for (auto _target = channel->targets.begin(); _target != channel->targets.end(); _target++) {
+        if (_target->target == target)
+            return &*_target;
     }
     return nullptr;
 }
@@ -434,7 +462,7 @@ bool settings::parse_file(const std::string &filename)
     std::string sdata(std::istreambuf_iterator<char>{ifs}, {});
     ifs.close();
 
-    return parse(std::move(sdata));
+    return parse(sdata);
 }
 
 void settings::unlock()
