@@ -25,7 +25,10 @@
 namespace bot {
     namespace slashcommands {
         extern void process_command_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event);
+        extern void process_list_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event);
         extern void process_translate_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event);
+        extern void process_translate_webhook_add_target(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event, const std::string &target, const dpp::confirmation_callback_t &callback);
+        extern void process_translate_webhook_new_channel(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event, const std::string &source, const std::string &target, const dpp::confirmation_callback_t &callback);
         extern void register_commands(dpp::cluster *bot, bot::settings::settings *settings);
     }
 }

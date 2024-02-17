@@ -22,8 +22,76 @@ using namespace std::string_literals;
 
 void bot::slashcommands::process_command_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event)
 {
-    if (event.command.get_command_name() == "translate" || event.command.get_command_name() == "translate_pref") {
+    if (event.command.get_command_name() == "list")
+        bot::slashcommands::process_list_command(bot, settings, event);
+    else if (event.command.get_command_name() == "translate" || event.command.get_command_name() == "translate_pref")
         bot::slashcommands::process_translate_command(bot, settings, event);
+}
+
+void bot::slashcommands::process_list_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event)
+{
+    try {
+        dpp::command_interaction interaction = event.command.get_command_interaction();
+        if (interaction.options[0].name == "channel") {
+            const std::lock_guard<bot::settings::settings> guard(*settings);
+            if (const bot::settings::channel *channel = settings->get_channel(event.command.guild_id, event.command.channel_id)) {
+                std::ostringstream reply_translated;
+                reply_translated << "**Channel <#" << channel->id << ">**\n";
+                reply_translated << "Source: " << channel->source << '\n';
+                reply_translated << "Targets: " << channel->targets.size();
+
+                std::shared_ptr<bot::database::database> database = settings->get_database();
+                const bot::settings::channel db_channel = database->get_channel(event.command.guild_id, event.command.channel_id);
+
+                for (auto target = channel->targets.begin(); target != channel->targets.end(); target++) {
+                    reply_translated << "\n\n";
+                    reply_translated << "**Target " << target->target << "**\n";
+                    bool db_found = false;
+                    for (auto db_target = db_channel.targets.begin(); db_target != db_channel.targets.end(); db_target++) {
+                        if (db_target->target == target->target) {
+                            db_found = true;
+                            break;
+                        }
+                    }
+                    reply_translated << "Deleteable: " << (db_found ? "Yes" : "No") << '\n';
+                    reply_translated << "Webhook: " << target->webhook.id;
+                }
+
+                event.reply(dpp::message(reply_translated.str()).set_flags(dpp::m_ephemeral));
+            }
+            else {
+                event.reply(dpp::message("The current channel is not being translated!").set_flags(dpp::m_ephemeral));
+            }
+        }
+        else if (interaction.options[0].name == "guild") {
+            const std::lock_guard<bot::settings::settings> guard(*settings);
+            if (const bot::settings::guild *guild = settings->get_guild(event.command.guild_id)) {
+                if (!guild->channel.empty()) {
+                    std::ostringstream reply_translated;
+                    for (auto channel = guild->channel.begin(); channel != guild->channel.end();) {
+                        reply_translated << "**Channel <#" << channel->id << ">**\n";
+                        reply_translated << "Source: " << channel->source << '\n';
+                        reply_translated << "Targets: " << channel->targets.size();
+                        if (++channel != guild->channel.end())
+                            reply_translated << "\n\n";
+                    }
+                    event.reply(dpp::message(reply_translated.str()).set_flags(dpp::m_ephemeral));
+                }
+                else {
+                    event.reply(dpp::message("The current guild have no translated channel!").set_flags(dpp::m_ephemeral));
+                }
+            }
+            else {
+                event.reply(dpp::message("The current guild have no translated channel!").set_flags(dpp::m_ephemeral));
+            }
+        }
+        else {
+            throw std::invalid_argument("Option " + interaction.options[0].name + " is not known");
+        }
+    }
+    catch (const std::exception& exception) {
+        std::cerr << "[Exception] " << exception.what() << std::endl;
+        event.reply(dpp::message("Exception while processing command:\n"s + exception.what()).set_flags(dpp::m_ephemeral));
     }
 }
 
@@ -67,49 +135,14 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
                     webhook.guild_id = channel->guild_id;
                     webhook.name = "Translate Bot Webhook <" + std::to_string(event.command.channel_id) + ":" + source + ":" + target + ">";
 
-                    bot->create_webhook(webhook, [&bot, &settings, event, source, target](const dpp::confirmation_callback_t &callback) {
-                        if (callback.is_error()) {
-                            event.reply(dpp::message("Failed to generate webhook!").set_flags(dpp::m_ephemeral));
-                            return;
-                        }
-                        const dpp::webhook webhook = callback.get<dpp::webhook>();
-
-                        bot::settings::channel s_channel;
-                        s_channel.id = event.command.channel_id;
-                        s_channel.source = source;
-
-                        bot::settings::target s_target;
-                        s_target.target = target;
-                        s_target.webhook = webhook;
-                        s_channel.targets.push_back(s_target);
-
-                        settings->lock();
-                        settings->add_channel(s_channel, event.command.guild_id);
-                        settings->add_translatebot_webhook(webhook.id);
-                        settings->unlock();
-
-                        std::shared_ptr<bot::database::database> database = settings->get_database();
-                        database->set_channel_source(event.command.guild_id, event.command.channel_id, source);
-                        database->add_channel_target(event.command.guild_id, event.command.channel_id, s_target);
-                        database->sync();
-
-                        event.reply(dpp::message("Channel will be now translated!").set_flags(dpp::m_ephemeral));
-                    });
+                    bot->create_webhook(webhook, std::bind(&bot::slashcommands::process_translate_webhook_new_channel, bot, settings, event, source, target, std::placeholders::_1));
                 }
                 else if (dpp::webhook *webhook = std::get_if<dpp::webhook>(&v_target)) {
-                    bot::settings::channel s_channel;
-                    s_channel.id = event.command.channel_id;
-                    s_channel.source = source;
+                    const bot::settings::target s_target = { target, *webhook };
+                    const bot::settings::channel s_channel = { event.command.channel_id, source, { s_target } };
 
-                    bot::settings::target s_target;
-                    s_target.target = target;
-                    s_target.webhook = *webhook;
-                    s_channel.targets.push_back(s_target);
-
-                    settings->lock();
                     settings->add_channel(s_channel, event.command.guild_id);
                     settings->add_translatebot_webhook(webhook->id);
-                    settings->unlock();
 
                     std::shared_ptr<bot::database::database> database = settings->get_database();
                     database->set_channel_source(event.command.guild_id, event.command.channel_id, source);
@@ -129,38 +162,13 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
                     webhook.guild_id = channel->guild_id;
                     webhook.name = "Translate Bot Webhook <" + std::to_string(event.command.channel_id) + ":" + source + ":" + target + ">";
 
-                    bot->create_webhook(webhook, [&bot, &settings, event, source, target](const dpp::confirmation_callback_t &callback) {
-                        if (callback.is_error()) {
-                            event.reply(dpp::message("Failed to generate webhook!").set_flags(dpp::m_ephemeral));
-                            return;
-                        }
-                        const dpp::webhook webhook = callback.get<dpp::webhook>();
-
-                        bot::settings::target s_target;
-                        s_target.target = target;
-                        s_target.webhook = webhook;
-
-                        settings->lock();
-                        settings->add_target(s_target, event.command.guild_id, event.command.channel_id);
-                        settings->add_translatebot_webhook(webhook.id);
-                        settings->unlock();
-
-                        std::shared_ptr<bot::database::database> database = settings->get_database();
-                        database->add_channel_target(event.command.guild_id, event.command.channel_id, s_target);
-                        database->sync();
-
-                        event.reply(dpp::message("Channel will be now translated!").set_flags(dpp::m_ephemeral));
-                    });
+                    bot->create_webhook(webhook, std::bind(&bot::slashcommands::process_translate_webhook_add_target, bot, settings, event, target, std::placeholders::_1));
                 }
                 else if (dpp::webhook *webhook = std::get_if<dpp::webhook>(&v_target)) {
-                    bot::settings::target s_target;
-                    s_target.target = target;
-                    s_target.webhook = *webhook;
+                    const bot::settings::target s_target = { target, *webhook };
 
-                    settings->lock();
                     settings->add_target(s_target, event.command.guild_id, event.command.channel_id);
                     settings->add_translatebot_webhook(webhook->id);
-                    settings->unlock();
 
                     std::shared_ptr<bot::database::database> database = settings->get_database();
                     database->add_channel_target(event.command.guild_id, event.command.channel_id, s_target);
@@ -189,6 +197,50 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
     }
 }
 
+void bot::slashcommands::process_translate_webhook_add_target(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event, const std::string &target, const dpp::confirmation_callback_t &callback)
+{
+    if (callback.is_error()) {
+        event.reply(dpp::message("Failed to generate webhook!").set_flags(dpp::m_ephemeral));
+        return;
+    }
+    const dpp::webhook webhook = callback.get<dpp::webhook>();
+
+    const bot::settings::target s_target = { target, webhook };
+
+    const std::lock_guard<bot::settings::settings> guard(*settings);
+    settings->add_target(s_target, event.command.guild_id, event.command.channel_id);
+    settings->add_translatebot_webhook(webhook.id);
+
+    std::shared_ptr<bot::database::database> database = settings->get_database();
+    database->add_channel_target(event.command.guild_id, event.command.channel_id, s_target);
+    database->sync();
+
+    event.reply(dpp::message("Channel will be now translated!").set_flags(dpp::m_ephemeral));
+}
+
+void bot::slashcommands::process_translate_webhook_new_channel(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event, const std::string &source, const std::string &target, const dpp::confirmation_callback_t &callback)
+{
+    if (callback.is_error()) {
+        event.reply(dpp::message("Failed to generate webhook!").set_flags(dpp::m_ephemeral));
+        return;
+    }
+    const dpp::webhook webhook = callback.get<dpp::webhook>();
+
+    const bot::settings::target s_target = { target, webhook };
+    const bot::settings::channel s_channel = { event.command.channel_id, source, { s_target } };
+
+    const std::lock_guard<bot::settings::settings> guard(*settings);
+    settings->add_channel(s_channel, event.command.guild_id);
+    settings->add_translatebot_webhook(webhook.id);
+
+    std::shared_ptr<bot::database::database> database = settings->get_database();
+    database->set_channel_source(event.command.guild_id, event.command.channel_id, source);
+    database->add_channel_target(event.command.guild_id, event.command.channel_id, s_target);
+    database->sync();
+
+    event.reply(dpp::message("Channel will be now translated!").set_flags(dpp::m_ephemeral));
+}
+
 void bot::slashcommands::register_commands(dpp::cluster *bot, bot::settings::settings *settings)
 {
     settings->lock();
@@ -204,15 +256,15 @@ void bot::slashcommands::register_commands(dpp::cluster *bot, bot::settings::set
     dpp::command_option source_edit_subcommand(dpp::co_sub_command, "source", "Edit current channel source language");
     command_edit.add_option(source_edit_subcommand);
     commands.push_back(command_edit);
-
-    dpp::slashcommand command_list("list", "List channel settings", bot->me.id);
-    command_list.set_default_permissions(dpp::p_manage_webhooks);
-    dpp::command_option all_list_subcommand(dpp::co_sub_command, "all", "List all translated channel");
-    dpp::command_option channel_list_subcommand(dpp::co_sub_command, "channel", "List current channel translation settings");
-    command_list.add_option(all_list_subcommand);
-    command_list.add_option(channel_list_subcommand);
-    commands.push_back(command_list);
     */
+
+    dpp::slashcommand command_list("list", "List translation settings", bot->me.id);
+    command_list.set_default_permissions(dpp::p_manage_webhooks);
+    dpp::command_option channel_list_subcommand(dpp::co_sub_command, "channel", "List current channel translation settings");
+    dpp::command_option guild_list_subcommand(dpp::co_sub_command, "guild", "List current guild translation settings");
+    command_list.add_option(channel_list_subcommand);
+    command_list.add_option(guild_list_subcommand);
+    commands.push_back(command_list);
 
     dpp::slashcommand command_translate("translate", "Translate current channel", bot->me.id);
     command_translate.set_default_permissions(dpp::p_manage_webhooks);
