@@ -100,8 +100,8 @@ void file::add_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id
             bot::settings::channel channel;
             cache_get_channel(channel_id, &channel);
             channel.targets.push_back(target);
-            guild->channel.push_back(std::move(channel));
             cache_add_channel(guild_id, channel_id);
+            guild->channel.push_back(std::move(channel));
             return;
         }
     }
@@ -109,13 +109,8 @@ void file::add_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id
     bot::settings::channel channel;
     cache_get_channel(channel_id, &channel);
     channel.targets.push_back(target);
-
-    bot::settings::guild guild;
-    guild.id = guild_id;
-    guild.channel.push_back(std::move(channel));
     cache_add_channel(guild_id, channel_id);
-
-    m_dataCache.push_back(std::move(guild));
+    m_dataCache.push_back({ guild_id, { std::move(channel) } });
 }
 
 void file::delete_channel(dpp::snowflake guild_id, dpp::snowflake channel_id)
@@ -154,10 +149,7 @@ void file::delete_channel(dpp::snowflake guild_id, dpp::snowflake channel_id)
             }
         }
 
-        bot::database::guild _guild;
-        _guild.id = guild_id;
-        _guild.channel = std::move(channels);
-        m_channelCache.push_back(std::move(_guild));
+        m_channelCache.push_back({ guild_id, std::move(channels) });
     }
 
     const std::filesystem::path channel_file = m_storagePath / "channel" / (std::to_string(channel_id) + ".json");
@@ -204,11 +196,7 @@ void file::delete_channel_target(dpp::snowflake guild_id, dpp::snowflake channel
         }
     }
 
-    bot::settings::guild guild;
-    guild.id = guild_id;
-    guild.channel.push_back(std::move(channel));
-
-    m_dataCache.push_back(std::move(guild));
+    m_dataCache.push_back({ guild_id, { std::move(channel) } });
 }
 
 void file::delete_guild(dpp::snowflake guild_id)
@@ -360,8 +348,8 @@ void file::set_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id
             bot::settings::channel channel;
             cache_get_channel(channel_id, &channel);
             channel.source = source;
-            guild->channel.push_back(std::move(channel));
             cache_add_channel(guild_id, channel_id);
+            guild->channel.push_back(std::move(channel));
             return;
         }
     }
@@ -369,13 +357,8 @@ void file::set_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id
     bot::settings::channel channel;
     cache_get_channel(channel_id, &channel);
     channel.source = source;
-
-    bot::settings::guild guild;
-    guild.id = guild_id;
-    guild.channel.push_back(std::move(channel));
     cache_add_channel(guild_id, channel_id);
-
-    m_dataCache.push_back(std::move(guild));
+    m_dataCache.push_back({ guild_id, { std::move(channel) } });
 }
 
 bool file::sync()
@@ -409,10 +392,7 @@ void file::cache_add_channel(dpp::snowflake guild_id, dpp::snowflake channel_id)
     if (std::find(channels.begin(), channels.end(), channel_id) == channels.end())
         channels.push_back(channel_id);
 
-    bot::database::guild guild;
-    guild.id = guild_id;
-    guild.channel = std::move(channels);
-    m_channelCache.push_back(std::move(guild));
+    m_channelCache.push_back({ guild_id, std::move(channels) });
 }
 
 void file::cache_get_channel(dpp::snowflake channel_id, bot::settings::channel *channel)

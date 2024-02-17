@@ -228,10 +228,7 @@ void settings::add_channel(const channel &channel, dpp::snowflake guild_id)
     }
 
     // We will create the guild structure when it is not in memory
-    guild guild;
-    guild.id = guild_id;
-    guild.channel.push_back(channel);
-    m_guilds.push_back(std::move(guild));
+    m_guilds.push_back({ guild_id, { channel } });
 }
 
 bool settings::add_target(const target &target, dpp::snowflake guild_id, dpp::snowflake channel_id)
