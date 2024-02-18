@@ -40,21 +40,25 @@ void bot::slashcommands::process_list_command(dpp::cluster *bot, bot::settings::
                 reply_translated << "Source: " << channel->source << '\n';
                 reply_translated << "Targets: " << channel->targets.size();
 
-                std::shared_ptr<bot::database::database> database = settings->get_database();
-                const bot::settings::channel db_channel = database->get_channel(event.command.guild_id, event.command.channel_id);
+                // We want give more information to users who can Manage Webhooks
+                dpp::permission user_permissions = event.command.get_resolved_permission(event.command.usr.id);
+                if (user_permissions.has(dpp::p_manage_webhooks)) {
+                    std::shared_ptr<bot::database::database> database = settings->get_database();
+                    const bot::settings::channel db_channel = database->get_channel(event.command.guild_id, event.command.channel_id);
 
-                for (auto target = channel->targets.begin(); target != channel->targets.end(); target++) {
-                    reply_translated << "\n\n";
-                    reply_translated << "**Target " << target->target << "**\n";
-                    bool db_found = false;
-                    for (auto db_target = db_channel.targets.begin(); db_target != db_channel.targets.end(); db_target++) {
-                        if (db_target->target == target->target) {
-                            db_found = true;
-                            break;
+                    for (auto target = channel->targets.begin(); target != channel->targets.end(); target++) {
+                        reply_translated << "\n\n";
+                        reply_translated << "**Target " << target->target << "**\n";
+                        bool db_found = false;
+                        for (auto db_target = db_channel.targets.begin(); db_target != db_channel.targets.end(); db_target++) {
+                            if (db_target->target == target->target) {
+                                db_found = true;
+                                break;
+                            }
                         }
+                        reply_translated << "Deleteable: " << (db_found ? "Yes" : "No") << '\n';
+                        reply_translated << "Webhook: " << target->webhook.id;
                     }
-                    reply_translated << "Deleteable: " << (db_found ? "Yes" : "No") << '\n';
-                    reply_translated << "Webhook: " << target->webhook.id;
                 }
 
                 event.reply(dpp::message(reply_translated.str()).set_flags(dpp::m_ephemeral));
@@ -259,7 +263,6 @@ void bot::slashcommands::register_commands(dpp::cluster *bot, bot::settings::set
     */
 
     dpp::slashcommand command_list("list", "List translation settings", bot->me.id);
-    command_list.set_default_permissions(dpp::p_manage_webhooks);
     dpp::command_option channel_list_subcommand(dpp::co_sub_command, "channel", "List current channel translation settings");
     dpp::command_option guild_list_subcommand(dpp::co_sub_command, "guild", "List current guild translation settings");
     command_list.add_option(channel_list_subcommand);
