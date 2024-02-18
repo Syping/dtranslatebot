@@ -38,7 +38,9 @@ namespace bot {
             void delete_channel(dpp::snowflake guild_id, dpp::snowflake channel_id) override;
             void delete_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &target) override;
             void delete_guild(dpp::snowflake guild_id) override;
+            /* unused atm.
             std::variant<std::monostate,bot::settings::target> find_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &target) override;
+            */
             bot::settings::channel get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id) override;
             std::vector<dpp::snowflake> get_channels(dpp::snowflake guild_id) override;
             /* unused atm.

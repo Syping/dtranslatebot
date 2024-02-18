@@ -260,7 +260,7 @@ uint16_t settings::avatar_size()
     return m_avatarSize;
 }
 
-const channel* settings::get_channel(const guild *guild, dpp::snowflake channel_id) const
+channel* settings::get_channel(guild *guild, dpp::snowflake channel_id)
 {
     for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
         if (channel->id == channel_id)
@@ -269,7 +269,7 @@ const channel* settings::get_channel(const guild *guild, dpp::snowflake channel_
     return nullptr;
 }
 
-const channel* settings::get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id) const
+channel* settings::get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id)
 {
     if (!m_externallyLockedCount) {
 #ifndef NDEBUG
@@ -289,7 +289,7 @@ const channel* settings::get_channel(dpp::snowflake guild_id, dpp::snowflake cha
     return nullptr;
 }
 
-const guild* settings::get_guild(dpp::snowflake guild_id) const
+guild* settings::get_guild(dpp::snowflake guild_id)
 {
     if (!m_externallyLockedCount) {
 #ifndef NDEBUG
@@ -304,7 +304,7 @@ const guild* settings::get_guild(dpp::snowflake guild_id) const
     return nullptr;
 }
 
-const target* settings::get_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &target) const
+target* settings::get_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &target)
 {
     if (!m_externallyLockedCount) {
 #ifndef NDEBUG
@@ -329,7 +329,16 @@ const target* settings::get_target(dpp::snowflake guild_id, dpp::snowflake chann
     return nullptr;
 }
 
-const target* settings::get_target(const channel *channel, const std::string &target) const
+target* settings::get_target(channel *channel, const std::string &target)
+{
+    for (auto _target = channel->targets.begin(); _target != channel->targets.end(); _target++) {
+        if (_target->target == target)
+            return &*_target;
+    }
+    return nullptr;
+}
+
+const target* settings::get_target(const channel *channel, const std::string &target)
 {
     for (auto _target = channel->targets.begin(); _target != channel->targets.end(); _target++) {
         if (_target->target == target)

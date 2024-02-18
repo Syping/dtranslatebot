@@ -58,6 +58,7 @@ void database::delete_guild(dpp::snowflake guild_id)
 #endif
 }
 
+/*
 std::variant<std::monostate,bot::settings::target> database::find_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &target)
 {
 #ifndef NDEBUG
@@ -65,6 +66,7 @@ std::variant<std::monostate,bot::settings::target> database::find_channel_target
 #endif
     return {};
 }
+*/
 
 bot::settings::channel database::get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id)
 {

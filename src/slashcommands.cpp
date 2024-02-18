@@ -22,10 +22,125 @@ using namespace std::string_literals;
 
 void bot::slashcommands::process_command_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event)
 {
-    if (event.command.get_command_name() == "list")
+    if (event.command.get_command_name() == "edit")
+        bot::slashcommands::process_edit_command(bot, settings, event);
+    else if (event.command.get_command_name() == "list")
         bot::slashcommands::process_list_command(bot, settings, event);
     else if (event.command.get_command_name() == "translate" || event.command.get_command_name() == "translate_pref")
         bot::slashcommands::process_translate_command(bot, settings, event);
+}
+
+void bot::slashcommands::process_edit_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event)
+{
+    try {
+        dpp::command_interaction interaction = event.command.get_command_interaction();
+        if (interaction.options[0].name == "delete") {
+            const std::lock_guard<bot::settings::settings> guard(*settings);
+            if (bot::settings::channel *channel = settings->get_channel(event.command.guild_id, event.command.channel_id)) {
+                const std::string target = std::get<std::string>(event.get_parameter("target"));
+
+                std::shared_ptr<bot::database::database> database = settings->get_database();
+                const bot::settings::channel db_channel = database->get_channel(event.command.guild_id, event.command.channel_id);
+
+                if (db_channel.targets.empty()) {
+                    event.reply(dpp::message("The current channel has no deleteable targets!").set_flags(dpp::m_ephemeral));
+                }
+                else if (target == "**") {
+                    std::vector<std::string> targets;
+                    for (auto db_target = db_channel.targets.begin(); db_target != db_channel.targets.end(); db_target++) {
+                        targets.push_back(db_target->target);
+                    }
+                    for (auto target = channel->targets.begin(); target != channel->targets.end();) {
+                        if (std::find(targets.begin(), targets.end(), target->target) != targets.end()) {
+                            bot->delete_webhook(target->webhook.id);
+                            target = channel->targets.erase(target);
+                        }
+                        else {
+                            target++;
+                        }
+                    }
+
+                    database->delete_channel(event.command.guild_id, event.command.channel_id);
+                    database->sync();
+
+                    event.reply(dpp::message("Deleteable targets have being deleted!").set_flags(dpp::m_ephemeral));
+                }
+                else {
+                    bool target_found = false;
+                    for (auto db_target = db_channel.targets.begin(); db_target != db_channel.targets.end(); db_target++) {
+                        if (db_target->target == target) {
+                            target_found = true;
+                            break;
+                        }
+                    }
+
+                    if (target_found) {
+                        for (auto _target = channel->targets.begin(); _target != channel->targets.end(); _target++) {
+                            if (_target->target == target) {
+                                bot->delete_webhook(_target->webhook.id);
+                                channel->targets.erase(_target);
+                                break;
+                            }
+                        }
+
+                        if (db_channel.targets.size() == 1)
+                            database->delete_channel(event.command.guild_id, event.command.channel_id);
+                        else
+                            database->delete_channel_target(event.command.guild_id, event.command.channel_id, target);
+                        database->sync();
+
+                        event.reply(dpp::message("Target have being deleted!").set_flags(dpp::m_ephemeral));
+                    }
+                    else {
+                        event.reply(dpp::message("Target language is not being found or deleteable!").set_flags(dpp::m_ephemeral));
+                    }
+                }
+            }
+            else {
+                event.reply(dpp::message("The current channel is not being translated!").set_flags(dpp::m_ephemeral));
+            }
+        }
+        else if (interaction.options[0].name == "source") {
+            const std::lock_guard<bot::settings::settings> guard(*settings);
+            if (bot::settings::channel *channel = settings->get_channel(event.command.guild_id, event.command.channel_id)) {
+                const std::string source = std::get<std::string>(event.get_parameter("source"));
+                const std::vector<bot::translator::language> languages = settings->get_translator()->get_languages();
+
+                std::ostringstream language_codes;
+                bool source_valid = false;
+                for (const bot::translator::language &language : languages) {
+                    if (language.code == source) {
+                        source_valid = true;
+                        break;
+                    }
+                    language_codes << " " << language.code;
+                }
+
+                if (source_valid) {
+                    channel->source = source;
+
+                    std::shared_ptr<bot::database::database> database = settings->get_database();
+                    database->set_channel_source(event.command.guild_id, event.command.channel_id, source);
+                    database->sync();
+
+                    event.reply(dpp::message("Source language have being updated!").set_flags(dpp::m_ephemeral));
+                }
+                else {
+                    event.reply(dpp::message("Source language is not valid!\nAvailable languages are:" + language_codes.str()).set_flags(dpp::m_ephemeral));
+                }
+            }
+            else {
+                event.reply(dpp::message("The current channel is not being translated!").set_flags(dpp::m_ephemeral));
+            }
+        }
+        else {
+            throw std::invalid_argument("Option " + interaction.options[0].name + " is not known");
+        }
+    }
+    catch (const std::exception& exception) {
+        std::cerr << "[Exception] " << exception.what() << std::endl;
+        event.reply(dpp::message("Exception while processing command:\n"s + exception.what()).set_flags(dpp::m_ephemeral));
+    }
 }
 
 void bot::slashcommands::process_list_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event)
@@ -254,13 +369,20 @@ void bot::slashcommands::register_commands(dpp::cluster *bot, bot::settings::set
 
     std::vector<dpp::slashcommand> commands;
 
-    /*
+    dpp::command_option source_option(dpp::co_string, "source", "Source language (ISO 639-1)", true);
+    source_option.set_max_length(static_cast<int64_t>(2)).set_min_length(static_cast<int64_t>(2));
+    dpp::command_option target_option(dpp::co_string, "target", "Target language (ISO 639-1)", true);
+    target_option.set_max_length(static_cast<int64_t>(2)).set_min_length(static_cast<int64_t>(2));
+
     dpp::slashcommand command_edit("edit", "Edit current channel settings", bot->me.id);
     command_edit.set_default_permissions(dpp::p_manage_webhooks);
+    dpp::command_option delete_edit_subcommand(dpp::co_sub_command, "delete", "Delete current channel target language");
     dpp::command_option source_edit_subcommand(dpp::co_sub_command, "source", "Edit current channel source language");
+    delete_edit_subcommand.add_option(target_option);
+    source_edit_subcommand.add_option(source_option);
+    command_edit.add_option(delete_edit_subcommand);
     command_edit.add_option(source_edit_subcommand);
     commands.push_back(command_edit);
-    */
 
     dpp::slashcommand command_list("list", "List translation settings", bot->me.id);
     dpp::command_option channel_list_subcommand(dpp::co_sub_command, "channel", "List current channel translation settings");
@@ -273,10 +395,6 @@ void bot::slashcommands::register_commands(dpp::cluster *bot, bot::settings::set
     command_translate.set_default_permissions(dpp::p_manage_webhooks);
     dpp::command_option channel_translate_subcommand(dpp::co_sub_command, "channel", "Translate current channel to a channel");
     dpp::command_option webhook_translate_subcommand(dpp::co_sub_command, "webhook", "Translate current channel to a webhook");
-    dpp::command_option source_option(dpp::co_string, "source", "Source language (ISO 639-1)", true);
-    source_option.set_max_length(static_cast<int64_t>(2)).set_min_length(static_cast<int64_t>(2));
-    dpp::command_option target_option(dpp::co_string, "target", "Target language (ISO 639-1)", true);
-    target_option.set_max_length(static_cast<int64_t>(2)).set_min_length(static_cast<int64_t>(2));
     dpp::command_option channel_option(dpp::co_channel, "channel", "Target channel", true);
     channel_option.add_channel_type(dpp::CHANNEL_TEXT);
     dpp::command_option webhook_option(dpp::co_string, "webhook", "Target webhook", true);

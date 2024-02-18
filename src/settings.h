@@ -34,11 +34,12 @@ namespace bot {
 
             /* get functions */
             uint16_t avatar_size();
-            const channel* get_channel(const guild *guild, dpp::snowflake channel_id) const;
-            const channel* get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id) const;
-            const guild* get_guild(dpp::snowflake guild_id) const;
-            const target* get_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &target) const;
-            const target* get_target(const channel *channel, const std::string &target) const;
+            static channel* get_channel(guild *guild, dpp::snowflake channel_id);
+            channel* get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id);
+            guild* get_guild(dpp::snowflake guild_id);
+            target* get_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &target);
+            static target* get_target(channel *channel, const std::string &target);
+            static const target* get_target(const channel *channel, const std::string &target);
             const std::vector<std::string> preferred_languages() const;
             std::shared_ptr<bot::database::database> get_database() const;
             std::unique_ptr<bot::translator::translator> get_translator() const;

@@ -221,6 +221,7 @@ void file::delete_guild(dpp::snowflake guild_id)
     std::filesystem::remove(guild_file);
 }
 
+/*
 std::variant<std::monostate,bot::settings::target> file::find_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &target)
 {
     const std::lock_guard<std::mutex> guard(m_mutex);
@@ -248,6 +249,7 @@ std::variant<std::monostate,bot::settings::target> file::find_channel_target(dpp
     }
     return {};
 }
+*/
 
 bot::settings::channel file::get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id)
 {
