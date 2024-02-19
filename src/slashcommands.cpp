@@ -34,7 +34,7 @@ void bot::slashcommands::process_edit_command(dpp::cluster *bot, bot::settings::
 {
     try {
         dpp::permission user_permissions = event.command.get_resolved_permission(event.command.usr.id);
-        if (user_permissions.has(dpp::p_manage_webhooks))
+        if (!user_permissions.has(dpp::p_manage_webhooks))
             throw dpp::exception("Unauthorized to use command");
 
         dpp::command_interaction interaction = event.command.get_command_interaction();
@@ -231,7 +231,7 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
 {
     try {
         dpp::permission user_permissions = event.command.get_resolved_permission(event.command.usr.id);
-        if (user_permissions.has(dpp::p_manage_webhooks))
+        if (!user_permissions.has(dpp::p_manage_webhooks))
             throw dpp::exception("Unauthorized to use command");
 
         std::variant<dpp::channel,dpp::webhook> v_target;
