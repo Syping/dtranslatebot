@@ -33,6 +33,10 @@ void bot::slashcommands::process_command_event(dpp::cluster *bot, bot::settings:
 void bot::slashcommands::process_edit_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event)
 {
     try {
+        dpp::permission user_permissions = event.command.get_resolved_permission(event.command.usr.id);
+        if (user_permissions.has(dpp::p_manage_webhooks))
+            throw dpp::exception("Unauthorized to use command");
+
         dpp::command_interaction interaction = event.command.get_command_interaction();
         if (interaction.options[0].name == "delete") {
             const std::lock_guard<bot::settings::settings> guard(*settings);
@@ -52,7 +56,7 @@ void bot::slashcommands::process_edit_command(dpp::cluster *bot, bot::settings::
                     }
                     for (auto target = channel->targets.begin(); target != channel->targets.end();) {
                         if (std::find(targets.begin(), targets.end(), target->target) != targets.end()) {
-                            bot->delete_webhook(target->webhook.id);
+                            bot->delete_webhook(target->webhook.id, std::bind(&bot::slashcommands::process_deleted_webhook, settings, target->webhook.id, std::placeholders::_1));
                             target = channel->targets.erase(target);
                         }
                         else {
@@ -77,7 +81,7 @@ void bot::slashcommands::process_edit_command(dpp::cluster *bot, bot::settings::
                     if (target_found) {
                         for (auto _target = channel->targets.begin(); _target != channel->targets.end(); _target++) {
                             if (_target->target == target) {
-                                bot->delete_webhook(_target->webhook.id);
+                                bot->delete_webhook(_target->webhook.id, std::bind(&bot::slashcommands::process_deleted_webhook, settings, _target->webhook.id, std::placeholders::_1));
                                 channel->targets.erase(_target);
                                 break;
                             }
@@ -137,10 +141,19 @@ void bot::slashcommands::process_edit_command(dpp::cluster *bot, bot::settings::
             throw std::invalid_argument("Option " + interaction.options[0].name + " is not known");
         }
     }
-    catch (const std::exception& exception) {
+    catch (const std::exception &exception) {
         std::cerr << "[Exception] " << exception.what() << std::endl;
         event.reply(dpp::message("Exception while processing command:\n"s + exception.what()).set_flags(dpp::m_ephemeral));
     }
+}
+
+void bot::slashcommands::process_deleted_webhook(bot::settings::settings *settings, dpp::snowflake webhook_id, const dpp::confirmation_callback_t &callback)
+{
+    if (callback.is_error()) {
+        std::cerr << "[Error] Failed to delete Webhook " << webhook_id << std::endl;
+        return;
+    }
+    settings->erase_translatebot_webhook(webhook_id);
 }
 
 void bot::slashcommands::process_list_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event)
@@ -217,6 +230,10 @@ void bot::slashcommands::process_list_command(dpp::cluster *bot, bot::settings::
 void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event)
 {
     try {
+        dpp::permission user_permissions = event.command.get_resolved_permission(event.command.usr.id);
+        if (user_permissions.has(dpp::p_manage_webhooks))
+            throw dpp::exception("Unauthorized to use command");
+
         std::variant<dpp::channel,dpp::webhook> v_target;
         const std::string source = std::get<std::string>(event.get_parameter("source"));
         const std::string target = std::get<std::string>(event.get_parameter("target"));

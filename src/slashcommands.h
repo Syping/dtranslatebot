@@ -25,7 +25,8 @@
 namespace bot {
     namespace slashcommands {
         extern void process_command_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event);
-        extern void process_edit_command(dpp::cluster* bot, bot::settings::settings* settings, const dpp::slashcommand_t &event);
+        extern void process_edit_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event);
+        extern void process_deleted_webhook(bot::settings::settings *settings, dpp::snowflake webhook_id, const dpp::confirmation_callback_t &callback);
         extern void process_list_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event);
         extern void process_translate_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event);
         extern void process_translate_webhook_add_target(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event, const std::string &target, const dpp::confirmation_callback_t &callback);

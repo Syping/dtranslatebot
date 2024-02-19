@@ -254,6 +254,14 @@ void settings::add_translatebot_webhook(dpp::snowflake webhook_id)
     m_webhookIds.push_back(webhook_id);
 }
 
+void settings::erase_translatebot_webhook(dpp::snowflake webhook_id)
+{
+    const std::lock_guard<std::recursive_mutex> guard(m_mutex);
+    auto webhook_it = std::find(m_webhookIds.begin(), m_webhookIds.end(), webhook_id);
+    if (webhook_it != m_webhookIds.end())
+        m_webhookIds.erase(webhook_it);
+}
+
 uint16_t settings::avatar_size()
 {
     const std::lock_guard<std::recursive_mutex> guard(m_mutex);

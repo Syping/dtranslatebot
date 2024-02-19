@@ -32,6 +32,9 @@ namespace bot {
             bool add_target(const target &target, dpp::snowflake guild_id, dpp::snowflake channel_id);
             void add_translatebot_webhook(dpp::snowflake webhook_id);
 
+            /* erase functions */
+            void erase_translatebot_webhook(dpp::snowflake webhook_id);
+
             /* get functions */
             uint16_t avatar_size();
             static channel* get_channel(guild *guild, dpp::snowflake channel_id);
