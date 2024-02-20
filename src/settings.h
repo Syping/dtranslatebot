@@ -56,8 +56,8 @@ namespace bot {
             void unlock();
 
             /* parse functions */
-            bool parse(const std::string &data);
-            bool parse_file(const std::string &filename);
+            bool parse(const std::string &data, bool initialize = true);
+            bool parse_file(const std::string &filename, bool initialize = true);
 
         private:
             mutable std::recursive_mutex m_mutex;

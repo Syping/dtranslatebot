@@ -271,7 +271,7 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
                     webhook.guild_id = channel->guild_id;
                     webhook.name = "Translate Bot Webhook <" + std::to_string(event.command.channel_id) + ":" + source + ":" + target + ">";
 
-                    bot->create_webhook(webhook, std::bind(&bot::slashcommands::process_translate_webhook_new_channel, bot, settings, event, source, target, std::placeholders::_1));
+                    bot->create_webhook(webhook, std::bind(&bot::slashcommands::process_translate_webhook_new_channel, settings, event, source, target, std::placeholders::_1));
                 }
                 else if (dpp::webhook *webhook = std::get_if<dpp::webhook>(&v_target)) {
                     const bot::settings::target s_target = { target, *webhook };
@@ -298,7 +298,7 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
                     webhook.guild_id = channel->guild_id;
                     webhook.name = "Translate Bot Webhook <" + std::to_string(event.command.channel_id) + ":" + source + ":" + target + ">";
 
-                    bot->create_webhook(webhook, std::bind(&bot::slashcommands::process_translate_webhook_add_target, bot, settings, event, target, std::placeholders::_1));
+                    bot->create_webhook(webhook, std::bind(&bot::slashcommands::process_translate_webhook_add_target, settings, event, target, std::placeholders::_1));
                 }
                 else if (dpp::webhook *webhook = std::get_if<dpp::webhook>(&v_target)) {
                     const bot::settings::target s_target = { target, *webhook };
@@ -333,7 +333,7 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
     }
 }
 
-void bot::slashcommands::process_translate_webhook_add_target(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event, const std::string &target, const dpp::confirmation_callback_t &callback)
+void bot::slashcommands::process_translate_webhook_add_target(bot::settings::settings *settings, const dpp::slashcommand_t &event, const std::string &target, const dpp::confirmation_callback_t &callback)
 {
     if (callback.is_error()) {
         event.reply(dpp::message("Failed to generate webhook!").set_flags(dpp::m_ephemeral));
@@ -354,7 +354,7 @@ void bot::slashcommands::process_translate_webhook_add_target(dpp::cluster *bot,
     event.reply(dpp::message("Channel will be now translated!").set_flags(dpp::m_ephemeral));
 }
 
-void bot::slashcommands::process_translate_webhook_new_channel(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event, const std::string &source, const std::string &target, const dpp::confirmation_callback_t &callback)
+void bot::slashcommands::process_translate_webhook_new_channel(bot::settings::settings *settings, const dpp::slashcommand_t &event, const std::string &source, const std::string &target, const dpp::confirmation_callback_t &callback)
 {
     if (callback.is_error()) {
         event.reply(dpp::message("Failed to generate webhook!").set_flags(dpp::m_ephemeral));

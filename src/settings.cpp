@@ -174,6 +174,49 @@ void process_user_settings(const dpp::json &json, uint16_t *avatar_size)
     }
 }
 
+void process_url(const std::string &url, translator *translator)
+{
+    std::string_view url_v = url;
+    if (url_v.substr(0, 7) == "http://") {
+        translator->tls = false;
+        if (!translator->port)
+            translator->port = 80;
+        url_v = url_v.substr(7);
+    }
+    else if (url_v.substr(0, 8) == "https://") {
+        translator->tls = true;
+        if (!translator->port)
+            translator->port = 443;
+        url_v = url_v.substr(8);
+    }
+    else {
+        translator->tls = false;
+        if (!translator->port)
+            translator->port = 80;
+    }
+    auto slash_pos = url_v.find_first_of('/');
+    if (slash_pos != std::string_view::npos) {
+        translator->url = url_v.substr(slash_pos);
+        url_v = url_v.substr(0, slash_pos);
+    }
+    else {
+        translator->url = "/";
+        url_v = url_v.substr(0, slash_pos);
+    }
+    auto colon_pos = url_v.find_first_of(':');
+    if (colon_pos != std::string_view::npos) {
+        translator->hostname = url_v.substr(0, colon_pos);
+        const int port = std::stoi(std::string(url_v.substr(colon_pos + 1)));
+        if (port > 0 && port < 65536)
+            translator->port = static_cast<uint16_t>(port);
+        else
+            throw std::invalid_argument("Port is out of range");
+    }
+    else {
+        translator->hostname = url_v;
+    }
+}
+
 bool process_translator_settings(const dpp::json &json, translator *translator)
 {
     if (!json.is_object()) {
@@ -182,31 +225,34 @@ bool process_translator_settings(const dpp::json &json, translator *translator)
     }
 
     auto json_translate_hostname = json.find("hostname");
-    if (json_translate_hostname == json.end()) {
-        std::cerr << "[Error] Value hostname not found in translator object" << std::endl;
-        return false;
-    }
-    translator->hostname = *json_translate_hostname;
-
-    auto json_translate_port = json.find("port");
-    if (json_translate_port == json.end()) {
-        std::cerr << "[Error] Value port not found in translator object" << std::endl;
-        return false;
-    }
-    translator->port = *json_translate_port;
-
-    auto json_translate_url = json.find("url");
-    if (json_translate_url == json.end()) {
-        std::cerr << "[Error] Value url not found in translator object" << std::endl;
-        return false;
-    }
-    translator->url = *json_translate_url;
+    if (json_translate_hostname != json.end())
+        translator->hostname = *json_translate_hostname;
+    else
+        translator->hostname = {};
 
     auto json_translate_tls = json.find("tls");
     if (json_translate_tls != json.end())
         translator->tls = *json_translate_tls;
     else
         translator->tls = false;
+
+    auto json_translate_port = json.find("port");
+    if (json_translate_port != json.end())
+        translator->port = *json_translate_port;
+    else
+        translator->port = 0;
+
+    auto json_translate_url = json.find("url");
+    if (json_translate_url == json.end()) {
+        std::cerr << "[Error] Value url not found in translator object" << std::endl;
+        return false;
+    }
+    if (translator->hostname.empty()) {
+        process_url(*json_translate_url, translator);
+    }
+    else {
+        translator->url = *json_translate_url;
+    }
 
     auto json_translate_apiKey = json.find("apiKey");
     if (json_translate_apiKey != json.end())
@@ -395,7 +441,7 @@ void settings::lock()
     m_externallyLockedCount++;
 }
 
-bool settings::parse(const std::string &data)
+bool settings::parse(const std::string &data, bool initialize)
 {
     try {
         dpp::json json;
@@ -417,7 +463,6 @@ bool settings::parse(const std::string &data)
         const std::lock_guard<std::recursive_mutex> guard(m_mutex);
         m_token = *json_token;
 
-        // Support more Database systems in the future
         std::filesystem::path storage_path;
         auto json_storage = json.find("storage");
         if (json_storage != json.end())
@@ -439,9 +484,6 @@ bool settings::parse(const std::string &data)
             return false;
 
         m_avatarSize = 256;
-        m_guilds.clear();
-        m_prefLangs.clear();
-        m_webhookIds.clear();
 
         auto json_guilds = json.find("guilds");
         if (json_guilds != json.end() && json_guilds->is_object())
@@ -465,7 +507,7 @@ bool settings::parse(const std::string &data)
     return false;
 }
 
-bool settings::parse_file(const std::string &filename)
+bool settings::parse_file(const std::string &filename, bool initialize)
 {
     std::ifstream ifs(filename, std::ios::in | std::ios::binary);
     if (!ifs.is_open()) {
@@ -476,7 +518,7 @@ bool settings::parse_file(const std::string &filename)
     std::string sdata(std::istreambuf_iterator<char>{ifs}, {});
     ifs.close();
 
-    return parse(sdata);
+    return parse(sdata, initialize);
 }
 
 void settings::unlock()
