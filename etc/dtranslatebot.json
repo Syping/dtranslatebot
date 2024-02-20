@@ -1,40 +1,7 @@
 {
-    "guilds": {
-        "$guild1_id": {
-            "$channel1_id": {
-                "source": "en",
-                "target": "de",
-                "webhook": "https://discord.com/api/webhooks/$guild1_de_webhook_id/$guild1_de_webhook_token"
-            },
-            "$channel2_id": {
-                "source": "de",
-                "target": "en",
-                "webhook": "https://discord.com/api/webhooks/$guild1_en_webhook_id/$guild1_en_webhook_token"
-            }
-        },
-        "My Discord Guild": {
-            "id": "$guild2_id",
-            "General English": {
-                "id": "$channel3_id",
-                "source": "en",
-                "target": {
-                    "de": "https://discord.com/api/webhooks/$guild2_de_webhook_id/$guild2_de_webhook_token",
-                    "fr": "https://discord.com/api/webhooks/$guild2_fr_webhook_id/$guild2_fr_webhook_token"
-                }
-            }
-        }
-    },
-    "preferred_lang": ["en", "de", "fr", ...],
-    "storage": "$working_directory",
-    "user": {
-        "avatar_size": 256
-    },
-    "token": "$bot_token",
+    "token": "",
     "translator": {
-        "hostname": "127.0.0.1",
-        "port": 80,
-        "url": "/",
-        "tls": false,
+        "url": "http://127.0.0.1:5000/",
         "apiKey": ""
     }
 }
