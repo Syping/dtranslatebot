@@ -37,7 +37,7 @@ void message_queue::add(message &&message)
 void message_queue::process_message_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::message_create_t &event)
 {
     // We check for conditions we want to skip translation for
-    if (event.msg.content.empty() || event.msg.has_thread())
+    if (event.msg.author.id == bot->me.id || event.msg.content.empty() || event.msg.has_thread())
         return;
 
     if (event.msg.webhook_id) {
@@ -47,10 +47,6 @@ void message_queue::process_message_event(dpp::cluster *bot, bot::settings::sett
         if (settings->is_translatebot(event.msg.webhook_id))
             return;
     }
-
-    // Same as before, just without the involvement of webhooks
-    if (event.msg.author.id == bot->me.id)
-        return;
 
     const std::lock_guard<bot::settings::settings> guard(*settings);
     if (const bot::settings::channel *channel = settings->get_channel(event.msg.guild_id, event.msg.channel_id)) {
