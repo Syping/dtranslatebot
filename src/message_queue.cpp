@@ -36,6 +36,10 @@ void message_queue::add(message &&message)
 
 void message_queue::process_message_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::message_create_t &event)
 {
+    // We check for conditions we want to skip translation for
+    if (event.msg.content.empty() || event.msg.has_thread())
+        return;
+
     if (event.msg.webhook_id) {
         const std::lock_guard<bot::settings::settings> guard(*settings);
 

@@ -203,7 +203,8 @@ void process_url(const std::string &url, translator *translator)
         translator->url = "/";
         url_v = url_v.substr(0, slash_pos);
     }
-    auto colon_pos = url_v.find_first_of(':');
+    // We don't have IPv6 support here yet
+    auto colon_pos = url_v.find_last_of(':');
     if (colon_pos != std::string_view::npos) {
         translator->hostname = url_v.substr(0, colon_pos);
         const int port = std::stoi(std::string(url_v.substr(colon_pos + 1)));

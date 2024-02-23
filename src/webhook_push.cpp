@@ -25,9 +25,11 @@ using namespace std::string_view_literals;
 void bot::webhook_push::run(const bot::translated_message &message, dpp::cluster *bot)
 {
     dpp::json json_body = {
-        {"username"s, message.author},
-        {"avatar_url"s, message.avatar}
+        {"username"s, message.author}
     };
+
+    if (!message.avatar.empty())
+        json_body["avatar_url"] = message.avatar;
 
     // We will split too long messages into multiple messages
     if (message.message.length() > 2000) {
@@ -73,14 +75,18 @@ void bot::webhook_push::run(const bot::translated_message &message, dpp::cluster
     }
 }
 
+void webhook_request_completed(std::promise<dpp::http_request_completion_t> &promise, dpp::json &json, const dpp::http_request_completion_t &event)
+{
+    if (event.status != 204)
+        std::cerr << "[Warning] Webhook push returned unexpected code " << event.status << std::endl;
+    promise.set_value(event);
+}
+
 void bot::webhook_push::push_request(dpp::snowflake webhook_id, const std::string &webhook_token, const std::string &json, dpp::cluster *bot)
 {
-    std::promise<dpp::http_request_completion_t> _p;
-    std::future<dpp::http_request_completion_t> _f = _p.get_future();
-    bot->post_rest(API_PATH "/webhooks", std::to_string(webhook_id), dpp::utility::url_encode(webhook_token), dpp::m_post, json, [&bot, &_p](dpp::json &json, const dpp::http_request_completion_t &event) {
-        if (event.status != 204)
-            std::cerr << "[Warning] Webhook push returned unexpected code " << event.status << std::endl;
-        _p.set_value(event);
-    });
-    _f.wait();
+    std::promise<dpp::http_request_completion_t> promise;
+    std::future<dpp::http_request_completion_t> future = promise.get_future();
+    bot->post_rest(API_PATH "/webhooks", std::to_string(webhook_id), dpp::utility::url_encode(webhook_token), dpp::m_post, json,
+                   std::bind(&webhook_request_completed, std::ref(promise), std::placeholders::_1, std::placeholders::_2));
+    future.wait();
 }

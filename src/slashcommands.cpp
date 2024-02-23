@@ -117,7 +117,7 @@ void bot::slashcommands::process_edit_command(dpp::cluster *bot, bot::settings::
                         source_valid = true;
                         break;
                     }
-                    language_codes << " " << language.code;
+                    language_codes << ' ' << language.code;
                 }
 
                 if (source_valid) {
@@ -217,11 +217,38 @@ void bot::slashcommands::process_list_command(dpp::cluster *bot, bot::settings::
                 event.reply(dpp::message("The current guild have no translated channel!").set_flags(dpp::m_ephemeral));
             }
         }
+        else if (interaction.options[0].name == "languages") {
+            dpp::permission user_permissions = event.command.get_resolved_permission(event.command.usr.id);
+            if (user_permissions.has(dpp::p_manage_webhooks)) {
+                const std::vector<bot::translator::language> languages = settings->get_translator()->get_languages();
+                std::ostringstream reply_languages;
+                reply_languages << "**Available Languages**\n";
+                for (auto language = languages.begin(); language != languages.end();) {
+                    reply_languages << language->name << ": " << language->code;
+                    if (++language != languages.end())
+                        reply_languages << '\n';
+                }
+                if (reply_languages.str().length() <= 2000) {
+                    event.reply(dpp::message(reply_languages.str()).set_flags(dpp::m_ephemeral));
+                }
+                else {
+                    reply_languages.str({});
+                    reply_languages << "Available Languages:";
+                    for (auto language = languages.begin(); language != languages.end(); language++) {
+                        reply_languages << ' ' << language->code;
+                    }
+                    event.reply(dpp::message(reply_languages.str()).set_flags(dpp::m_ephemeral));
+                }
+            }
+            else {
+                event.reply(dpp::message("Unauthorized to list available languages!"));
+            }
+        }
         else {
             throw std::invalid_argument("Option " + interaction.options[0].name + " is not known");
         }
     }
-    catch (const std::exception& exception) {
+    catch (const std::exception &exception) {
         std::cerr << "[Exception] " << exception.what() << std::endl;
         event.reply(dpp::message("Exception while processing command:\n"s + exception.what()).set_flags(dpp::m_ephemeral));
     }
@@ -258,7 +285,7 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
                 target_valid = true;
             if (source_valid && target_valid)
                 break;
-            language_codes << " " << language.code;
+            language_codes << ' ' << language.code;
         }
 
         if (source_valid && target_valid) {
@@ -404,8 +431,10 @@ void bot::slashcommands::register_commands(dpp::cluster *bot, bot::settings::set
     dpp::slashcommand command_list("list", "List translation settings", bot->me.id);
     dpp::command_option channel_list_subcommand(dpp::co_sub_command, "channel", "List current channel translation settings");
     dpp::command_option guild_list_subcommand(dpp::co_sub_command, "guild", "List current guild translation settings");
+    dpp::command_option languages_list_subcommand(dpp::co_sub_command, "languages", "List available languages to translate");
     command_list.add_option(channel_list_subcommand);
     command_list.add_option(guild_list_subcommand);
+    command_list.add_option(languages_list_subcommand);
     commands.push_back(command_list);
 
     dpp::slashcommand command_translate("translate", "Translate current channel", bot->me.id);
