@@ -241,7 +241,7 @@ void bot::slashcommands::process_list_command(dpp::cluster *bot, bot::settings::
                 }
             }
             else {
-                event.reply(dpp::message("Unauthorized to list available languages!"));
+                event.reply(dpp::message("Unauthorized to list available languages!").set_flags(dpp::m_ephemeral));
             }
         }
         else {
