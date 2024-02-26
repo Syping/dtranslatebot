@@ -61,8 +61,8 @@ namespace bot {
 
         private:
             mutable std::recursive_mutex m_mutex;
-            size_t m_externallyLockedCount;
-            uint16_t m_avatarSize;
+            size_t m_externallyLockedCount = 0;
+            uint16_t m_avatarSize = 256;
             std::shared_ptr<bot::database::database> m_database;
             std::vector<guild> m_guilds;
             std::vector<std::string> m_prefLangs;

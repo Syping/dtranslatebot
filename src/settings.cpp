@@ -455,21 +455,24 @@ bool settings::parse(const std::string &data, bool initialize)
             return false;
         }
 
+        const std::lock_guard<std::recursive_mutex> guard(m_mutex);
         auto json_token = json.find("token");
-        if (json_token == json.end()) {
-            std::cerr << "[Error] Value token not found" << std::endl;
+        if (json_token != json.end())
+            m_token = *json_token;
+        else if (char *token = getenv("DTRANSLATEBOT_TOKEN"))
+            m_token = token;
+
+        if (m_token.empty()) {
+            std::cerr << "[Error] Discord Bot Token is not configured" << std::endl;
             return false;
         }
-
-        const std::lock_guard<std::recursive_mutex> guard(m_mutex);
-        m_token = *json_token;
 
         std::filesystem::path storage_path;
         auto json_storage = json.find("storage");
         if (json_storage != json.end())
             storage_path = std::string(*json_storage);
         else if (char *storagepath = getenv("DTRANSLATEBOT_STORAGE"))
-            storage_path  = storagepath;
+            storage_path = storagepath;
 
         if (storage_path.empty())
             storage_path = std::filesystem::current_path();
@@ -483,8 +486,6 @@ bool settings::parse(const std::string &data, bool initialize)
         }
         if (!process_translator_settings(*json_translator, &m_translator))
             return false;
-
-        m_avatarSize = 256;
 
         auto json_guilds = json.find("guilds");
         if (json_guilds != json.end() && json_guilds->is_object())

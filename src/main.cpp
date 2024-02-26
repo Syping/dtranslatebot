@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
     std::cout << "[Launch] Requesting supported languages..." << std::endl;
     if (settings.get_translator()->get_languages().empty()) {
         std::cerr << "[Error] Failed to initialise translateable languages" << std::endl;
-        return 2;
+        return 1;
     }
 
     dpp::cluster bot(settings.token(), dpp::i_default_intents | dpp::i_message_content);
