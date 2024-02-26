@@ -1,0 +1,16 @@
+* text=auto eol=lf
+
+# Configuration files
+*.json text eol=crlf
+
+# Development files
+CMakeLists.txt text eol=lf
+*.cmake text eol=lf
+*.cpp text eol=lf
+*.h text eol=lf
+
+# BSD and Linux development files
+*.pc.in text eol=lf
+
+# Windows development files
+*.rc.in text encoding=cp1252 eol=crlf

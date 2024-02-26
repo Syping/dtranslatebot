@@ -19,9 +19,9 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 #include <mutex>
-#include "database_core.h"
+#include "database.h"
 #include "settings_types.h"
-#include "translator_core.h"
+#include "translator.h"
 
 namespace bot {
     namespace settings {

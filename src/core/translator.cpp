@@ -19,7 +19,7 @@
 #ifndef NDEBUG
 #include <iostream>
 #endif
-#include "translator_core.h"
+#include "translator.h"
 using namespace bot::translator;
 
 translator::translator()

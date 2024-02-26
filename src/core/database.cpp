@@ -19,7 +19,7 @@
 #ifndef NDEBUG
 #include <iostream>
 #endif
-#include "database_core.h"
+#include "database.h"
 using namespace bot::database;
 
 database::database()

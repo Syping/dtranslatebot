@@ -16,8 +16,8 @@
 * responsible for anything with use of the software, you are self responsible.
 *****************************************************************************/
 
-#ifndef DATABASE_CORE_H
-#define DATABASE_CORE_H
+#ifndef DATABASE_H
+#define DATABASE_H
 
 #include "settings_types.h"
 
@@ -52,4 +52,4 @@ namespace bot {
     }
 }
 
-#endif // DATABASE_CORE_H
+#endif // DATABASE_H

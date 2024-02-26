@@ -19,9 +19,9 @@
 #include <dpp/json.h>
 #include <fstream>
 #include <iostream>
-#include "database_file.h"
 #include "settings.h"
-#include "translator_libretranslate.h"
+#include "../database/file/file.h"
+#include "../translator/libretranslate/libretranslate.h"
 using namespace bot::settings;
 
 void process_database_channels(std::shared_ptr<bot::database::database> database, bot::settings::guild *guild, std::vector<dpp::snowflake> *webhookIds)

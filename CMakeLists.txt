@@ -17,34 +17,34 @@
 ****************************************************************************]]
 
 cmake_minimum_required(VERSION 3.16)
-project(dtranslatebot VERSION 0.2 LANGUAGES CXX)
+project(dtranslatebot VERSION 0.2.0 LANGUAGES CXX)
 include(GNUInstallDirs)
 
 # dtranslatebot Source files
 set(DTRANSLATEBOT_HEADERS
-    src/database_core.h
-    src/database_file.h
-    src/message_queue.h
-    src/regex.h
-    src/settings.h
-    src/settings_types.h
-    src/slashcommands.h
-    src/submit_queue.h
-    src/translator_core.h
-    src/translator_libretranslate.h
-    src/webhook_push.h
+    src/core/database.h
+    src/core/message_queue.h
+    src/core/regex.h
+    src/core/settings.h
+    src/core/settings_types.h
+    src/core/slashcommands.h
+    src/core/submit_queue.h
+    src/core/translator.h
+    src/core/webhook_push.h
+    src/database/file/file.h
+    src/translator/libretranslate/libretranslate.h
 )
 set(DTRANSLATEBOT_SOURCES
-    src/database_core.cpp
-    src/database_file.cpp
-    src/main.cpp
-    src/message_queue.cpp
-    src/settings.cpp
-    src/slashcommands.cpp
-    src/submit_queue.cpp
-    src/translator_core.cpp
-    src/translator_libretranslate.cpp
-    src/webhook_push.cpp
+    src/core/database.cpp
+    src/core/main.cpp
+    src/core/message_queue.cpp
+    src/core/settings.cpp
+    src/core/slashcommands.cpp
+    src/core/submit_queue.cpp
+    src/core/translator.cpp
+    src/core/webhook_push.cpp
+    src/database/file/file.cpp
+    src/translator/libretranslate/libretranslate.cpp
 )
 
 # dtranslatebot Module Path
@@ -69,8 +69,16 @@ find_package(DPP REQUIRED)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
+# dtranslatebot Win32 Shared Resources
+if (WIN32)
+    configure_file(src/resources/win32/dtranslatebot.rc.in "${dtranslatebot_BINARY_DIR}/resources/win32/dtranslatebot.rc" @ONLY)
+    list(APPEND DTRANSLATEBOT_RESOURCES
+        "${dtranslatebot_BINARY_DIR}/resources/win32/dtranslatebot.rc"
+    )
+endif()
+
 # dtranslatebot Target + Installs
-add_executable(dtranslatebot ${DTRANSLATEBOT_HEADERS} ${DTRANSLATEBOT_SOURCES})
+add_executable(dtranslatebot ${DTRANSLATEBOT_HEADERS} ${DTRANSLATEBOT_SOURCES} ${DTRANSLATEBOT_RESOURCES})
 target_compile_definitions(dtranslatebot PRIVATE
     $<$<BOOL:${DTRANSLATEBOT_USE_BOOST_REGEX}>:DTRANSLATEBOT_USE_BOOST_REGEX>
 )

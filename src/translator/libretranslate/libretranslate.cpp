@@ -18,7 +18,7 @@
 
 #include <dpp/json.h>
 #include <dpp/httpsclient.h>
-#include "translator_libretranslate.h"
+#include "libretranslate.h"
 using namespace bot::translator;
 using namespace std::string_literals;
 
