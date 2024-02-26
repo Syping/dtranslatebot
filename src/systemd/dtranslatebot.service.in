@@ -1,0 +1,13 @@
+[Unit]
+Description=Discord Translation Bot
+After=network.target
+
+[Service]
+User=dtranslatebot
+Group=dtranslatebot
+WorkingDirectory="@CMAKE_INSTALL_FULL_RUNSTATEDIR@/dtranslatebot"
+ExecStart="@CMAKE_INSTALL_FULL_BINDIR@/dtranslatebot" "@CMAKE_INSTALL_FULL_SYSCONFDIR@/dtranslatebot.json"
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

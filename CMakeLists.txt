@@ -77,6 +77,15 @@ if (WIN32)
     )
 endif()
 
+# dtranslatebot systemd Service
+if (UNIX AND NOT APPLE)
+    option(WITH_SYSTEMD "Build with systemd Support" OFF)
+    if (WITH_SYSTEMD)
+        configure_file(src/systemd/dtranslatebot.service.in "${dtranslatebot_BINARY_DIR}/systemd/dtranslatebot.service" @ONLY)
+        install(FILES "${dtranslatebot_BINARY_DIR}/systemd/dtranslatebot.service" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system")
+    endif()
+endif()
+
 # dtranslatebot Target + Installs
 add_executable(dtranslatebot ${DTRANSLATEBOT_HEADERS} ${DTRANSLATEBOT_SOURCES} ${DTRANSLATEBOT_RESOURCES})
 target_compile_definitions(dtranslatebot PRIVATE

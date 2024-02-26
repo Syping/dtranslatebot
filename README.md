@@ -23,4 +23,5 @@ sudo cmake --install dtranslatebot-build
 ```
 
 ##### Optional CMake flags
-`-DWITH_BOOST=TRUE`
+`-DWITH_BOOST=TRUE`  
+`-DWITH_SYSTEMD=TRUE`
