@@ -102,7 +102,7 @@ target_compile_definitions(dtranslatebot PRIVATE
 if (MSVC AND MSVC_VERSION GREATER_EQUAL 1914)
     target_compile_options(dtranslatebot PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/Zc:__cplusplus>)
 endif()
-target_link_libraries(dtranslatebot PRIVATE Threads::Threads ${DPP_LIBRARIES} ${DTRANSLATEBOT_LIBRARIES})
+target_link_libraries(dtranslatebot PRIVATE ${DPP_LIBRARIES} ${DTRANSLATEBOT_LIBRARIES} Threads::Threads)
 target_include_directories(dtranslatebot PRIVATE ${DPP_INCLUDE_DIR})
 set_target_properties(dtranslatebot PROPERTIES
     CXX_STANDARD 17

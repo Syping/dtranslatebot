@@ -2,7 +2,7 @@
 Open Source Discord Translation Bot
 
 - Translate incoming channel messages to a Webhook
-- Support configuration through slashcommands and JSON
+- Support configuration through slash commands and JSON
 - Cross-Platform
 
 #### Build Dependencies
@@ -24,4 +24,5 @@ sudo cmake --install dtranslatebot-build
 
 ##### Optional CMake flags
 `-DWITH_BOOST=TRUE`  
+`-DWITH_DPP_AS_EXTERNAL_PROJECT=TRUE`  
 `-DWITH_SYSTEMD=TRUE`

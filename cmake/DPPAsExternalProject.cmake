@@ -16,7 +16,17 @@
 * responsible for anything with use of the software, you are self responsible.
 ****************************************************************************]]
 
-# OpenSSL needs to build with make
+# Needed for compiler passthrough
+if (DEFINED CMAKE_C_COMPILER)
+    set(CC_ENV "CC=${CMAKE_C_COMPILER}")
+    set(DEFINE_CMAKE_C_COMPILER "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}")
+endif()
+
+if (DEFINED CMAKE_CXX_COMPILER)
+    set(DEFINE_CMAKE_CXX_COMPILER "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}")
+endif()
+
+# OpenSSL needs to be build with make
 find_program(MAKE_EXECUTABLE NAMES make gmake)
 if (NOT MAKE_EXECUTABLE)
     message(SEND_ERROR "make not found")
@@ -36,9 +46,10 @@ include(ExternalProject)
 ExternalProject_Add(ZLIB
     URL https://www.zlib.net/zlib-1.3.1.tar.xz
     URL_HASH SHA256=38ef96b8dfe510d42707d9c781877914792541133e1870841463bfa73f883e32
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
+        "-DCMAKE_BUILD_TYPE=$<CONFIG>"
+        "${DEFINE_CMAKE_C_COMPILER}"
         "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
         -DZLIB_BUILD_EXAMPLES=OFF
 )
@@ -48,12 +59,15 @@ set(ZLIB_INSTALL_DIR "${INSTALL_DIR}")
 ExternalProject_Add(OpenSSL
     URL https://www.openssl.org/source/openssl-3.0.13.tar.gz
     URL_HASH SHA256=88525753f79d3bec27d2fa7c66aa0b92b3aa9498dafd93d7cfa4b3780cdae313
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     CONFIGURE_COMMAND
+        "${CC_ENV}"
         "<SOURCE_DIR>/config"
         "--prefix=<INSTALL_DIR>"
+        $<$<CONFIG:Debug>:-d>
         no-deprecated
         no-dtls
+        no-dso
+        no-engine
         no-shared
         no-zlib
     BUILD_COMMAND ${MAKE_EXECUTABLE} ${JOBS_ARGUMENT}
@@ -63,11 +77,13 @@ ExternalProject_Get_Property(OpenSSL INSTALL_DIR)
 set(OpenSSL_INSTALL_DIR "${INSTALL_DIR}")
 
 ExternalProject_Add(DPP
-    GIT_REPOSITORY https://github.com/Syping/DPP.git
-    GIT_TAG dcd00001dfa145a03f80a0ad5317bc3e63252ead
+    URL https://github.com/Syping/DPP/archive/dcd00001dfa145a03f80a0ad5317bc3e63252ead.tar.gz
+    URL_HASH SHA256=42ff04b13a384591e819c100c4f40e12e31c8076769c168631eef85a8eeb0be3
     CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
         -DBUILD_VOICE_SUPPORT=OFF
+        "-DCMAKE_BUILD_TYPE=$<CONFIG>"
+        "${DEFINE_CMAKE_CXX_COMPILER}"
         "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
         -DDPP_NO_VCPKG=ON
         -DRUN_LDCONFIG=OFF
@@ -80,6 +96,7 @@ ExternalProject_Get_Property(DPP INSTALL_DIR)
 set(DPP_INSTALL_DIR "${INSTALL_DIR}")
 set(DPP_INCLUDE_DIR "${DPP_INSTALL_DIR}/include")
 set(DPP_LIBRARIES
+    -Wl,-Bstatic
     "-L${DPP_INSTALL_DIR}/lib"
     "-L${DPP_INSTALL_DIR}/lib64"
     -ldpp
@@ -90,4 +107,5 @@ set(DPP_LIBRARIES
     "-L${ZLIB_INSTALL_DIR}/lib"
     "-L${ZLIB_INSTALL_DIR}/lib64"
     -lz
+    -Wl,-Bdynamic
 )
