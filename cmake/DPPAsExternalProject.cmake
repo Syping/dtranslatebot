@@ -28,7 +28,8 @@ if (NPROC_EXECUTABLE)
         COMMAND ${NPROC_EXECUTABLE}
         OUTPUT_VARIABLE NPROC
     )
-    set(JOBS_ARGUMENT "-j${NPROC}" CACHE STRING "make jobs argument")
+    string(STRIP ${NPROC} NPROC)
+    set(JOBS_ARGUMENT "-j${NPROC}" CACHE INTERNAL "make jobs argument")
 endif()
 
 include(ExternalProject)
@@ -42,7 +43,7 @@ ExternalProject_Add(ZLIB
         -DZLIB_BUILD_EXAMPLES=OFF
 )
 ExternalProject_Get_Property(ZLIB INSTALL_DIR)
-set(ZLIB_INSTALL_DIR ${INSTALL_DIR})
+set(ZLIB_INSTALL_DIR "${INSTALL_DIR}")
 
 ExternalProject_Add(OpenSSL
     URL https://www.openssl.org/source/openssl-3.0.13.tar.gz
@@ -51,7 +52,6 @@ ExternalProject_Add(OpenSSL
     CONFIGURE_COMMAND
         "<SOURCE_DIR>/config"
         "--prefix=<INSTALL_DIR>"
-        "--api=1.1.1"
         no-deprecated
         no-dtls
         no-shared
@@ -60,18 +60,34 @@ ExternalProject_Add(OpenSSL
     INSTALL_COMMAND ${MAKE_EXECUTABLE} ${JOBS_ARGUMENT} install_sw
 )
 ExternalProject_Get_Property(OpenSSL INSTALL_DIR)
-set(OpenSSL_INSTALL_DIR ${INSTALL_DIR})
+set(OpenSSL_INSTALL_DIR "${INSTALL_DIR}")
 
 ExternalProject_Add(DPP
-    GIT_REPOSITORY https://github.com/brainboxdotcc/DPP.git
-    GIT_TAG 46044c8f80134633f7b396b4d5814f83d54a96d3
+    GIT_REPOSITORY https://github.com/Syping/DPP.git
+    GIT_TAG dcd00001dfa145a03f80a0ad5317bc3e63252ead
     CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
         -DBUILD_VOICE_SUPPORT=OFF
         "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
         -DDPP_NO_VCPKG=ON
+        -DRUN_LDCONFIG=OFF
         "-DOpenSSL_ROOT=${OpenSSL_INSTALL_DIR}"
         "-DZLIB_ROOT=${ZLIB_INSTALL_DIR}"
     DEPENDS OpenSSL
     DEPENDS ZLIB
+)
+ExternalProject_Get_Property(DPP INSTALL_DIR)
+set(DPP_INSTALL_DIR "${INSTALL_DIR}")
+set(DPP_INCLUDE_DIR "${DPP_INSTALL_DIR}/include")
+set(DPP_LIBRARIES
+    "-L${DPP_INSTALL_DIR}/lib"
+    "-L${DPP_INSTALL_DIR}/lib64"
+    -ldpp
+    "-L${OpenSSL_INSTALL_DIR}/lib"
+    "-L${OpenSSL_INSTALL_DIR}/lib64"
+    -lssl
+    -lcrypto
+    "-L${ZLIB_INSTALL_DIR}/lib"
+    "-L${ZLIB_INSTALL_DIR}/lib64"
+    -lz
 )

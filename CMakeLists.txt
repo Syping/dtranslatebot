@@ -93,6 +93,9 @@ endif()
 
 # dtranslatebot Target + Installs
 add_executable(dtranslatebot ${DTRANSLATEBOT_HEADERS} ${DTRANSLATEBOT_SOURCES} ${DTRANSLATEBOT_RESOURCES})
+if (WITH_DPP_AS_EXTERNAL_PROJECT)
+    add_dependencies(dtranslatebot DPP)
+endif()
 target_compile_definitions(dtranslatebot PRIVATE
     $<$<BOOL:${DTRANSLATEBOT_USE_BOOST_REGEX}>:DTRANSLATEBOT_USE_BOOST_REGEX>
 )
