@@ -18,7 +18,7 @@
 
 # Needed for compiler passthrough
 if (DEFINED CMAKE_C_COMPILER)
-    set(CC_ENV "CC=${CMAKE_C_COMPILER}")
+    set(CMAKE_ENV_CC_COMMAND "${CMAKE_COMMAND}" -E env "CC=${CMAKE_C_COMPILER}")
     set(DEFINE_CMAKE_C_COMPILER "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}")
 endif()
 
@@ -26,14 +26,15 @@ if (DEFINED CMAKE_CXX_COMPILER)
     set(DEFINE_CMAKE_CXX_COMPILER "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}")
 endif()
 
-# OpenSSL needs to be build with make
+# OpenSSL needs to be configured with perl and build with make
+find_package(Perl REQUIRED)
 find_program(MAKE_EXECUTABLE NAMES make gmake)
-if (NOT MAKE_EXECUTABLE)
+if (NOT DEFINED MAKE_EXECUTABLE)
     message(SEND_ERROR "make not found")
 endif()
 
 find_program(NPROC_EXECUTABLE nproc)
-if (NPROC_EXECUTABLE)
+if (DEFINED NPROC_EXECUTABLE)
     execute_process(
         COMMAND ${NPROC_EXECUTABLE}
         OUTPUT_VARIABLE NPROC
@@ -60,18 +61,19 @@ ExternalProject_Add(OpenSSL
     URL https://www.openssl.org/source/openssl-3.0.13.tar.gz
     URL_HASH SHA256=88525753f79d3bec27d2fa7c66aa0b92b3aa9498dafd93d7cfa4b3780cdae313
     CONFIGURE_COMMAND
-        "${CC_ENV}"
-        "<SOURCE_DIR>/config"
+        ${CMAKE_ENV_CC_COMMAND}
+        "${PERL_EXECUTABLE}"
+        "<SOURCE_DIR>/Configure"
         "--prefix=<INSTALL_DIR>"
         $<$<CONFIG:Debug>:-d>
         no-deprecated
-        no-dtls
         no-dso
+        no-dtls
         no-engine
         no-shared
         no-zlib
-    BUILD_COMMAND ${MAKE_EXECUTABLE} ${JOBS_ARGUMENT}
-    INSTALL_COMMAND ${MAKE_EXECUTABLE} ${JOBS_ARGUMENT} install_sw
+    BUILD_COMMAND "${MAKE_EXECUTABLE}" "${JOBS_ARGUMENT}"
+    INSTALL_COMMAND "${MAKE_EXECUTABLE}" "${JOBS_ARGUMENT}" install_sw
 )
 ExternalProject_Get_Property(OpenSSL INSTALL_DIR)
 set(OpenSSL_INSTALL_DIR "${INSTALL_DIR}")
