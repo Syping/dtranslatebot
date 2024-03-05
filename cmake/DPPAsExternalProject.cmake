@@ -16,15 +16,7 @@
 * responsible for anything with use of the software, you are self responsible.
 ****************************************************************************]]
 
-# Needed for compiler passthrough
-if (DEFINED CMAKE_C_COMPILER)
-    set(CMAKE_ENV_CC_COMMAND "${CMAKE_COMMAND}" -E env "CC=${CMAKE_C_COMPILER}")
-    set(DEFINE_CMAKE_C_COMPILER "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}")
-endif()
-
-if (DEFINED CMAKE_CXX_COMPILER)
-    set(DEFINE_CMAKE_CXX_COMPILER "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}")
-endif()
+include(ArgumentPassthrough)
 
 # OpenSSL needs to be configured with perl and build with make
 find_package(Perl REQUIRED)
@@ -36,10 +28,10 @@ endif()
 find_program(NPROC_EXECUTABLE nproc)
 if (DEFINED NPROC_EXECUTABLE)
     execute_process(
-        COMMAND ${NPROC_EXECUTABLE}
+        COMMAND "${NPROC_EXECUTABLE}"
         OUTPUT_VARIABLE NPROC
     )
-    string(STRIP ${NPROC} NPROC)
+    string(STRIP "${NPROC}" NPROC)
     set(JOBS_ARGUMENT "-j${NPROC}" CACHE INTERNAL "make jobs argument")
 endif()
 
@@ -49,8 +41,7 @@ ExternalProject_Add(ZLIB
     URL_HASH SHA256=38ef96b8dfe510d42707d9c781877914792541133e1870841463bfa73f883e32
     CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
-        "-DCMAKE_BUILD_TYPE=$<CONFIG>"
-        "${DEFINE_CMAKE_C_COMPILER}"
+        "${CMAKE_PASSTHROUGH_ARGS}"
         "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
         -DZLIB_BUILD_EXAMPLES=OFF
 )
@@ -61,7 +52,7 @@ ExternalProject_Add(OpenSSL
     URL https://www.openssl.org/source/openssl-3.0.13.tar.gz
     URL_HASH SHA256=88525753f79d3bec27d2fa7c66aa0b92b3aa9498dafd93d7cfa4b3780cdae313
     CONFIGURE_COMMAND
-        ${CMAKE_ENV_CC_COMMAND}
+        ${CMAKE_PASSTHROUGH_ENV}
         "${PERL_EXECUTABLE}"
         "<SOURCE_DIR>/Configure"
         "--prefix=<INSTALL_DIR>"
@@ -84,8 +75,7 @@ ExternalProject_Add(DPP
     CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
         -DBUILD_VOICE_SUPPORT=OFF
-        "-DCMAKE_BUILD_TYPE=$<CONFIG>"
-        "${DEFINE_CMAKE_CXX_COMPILER}"
+        "${CMAKE_PASSTHROUGH_ARGS}"
         "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
         -DDPP_NO_VCPKG=ON
         -DRUN_LDCONFIG=OFF
