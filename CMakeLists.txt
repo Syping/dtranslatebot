@@ -98,12 +98,13 @@ if (WITH_DPP_AS_EXTERNAL_PROJECT)
     add_dependencies(dtranslatebot DPP)
 endif()
 target_compile_definitions(dtranslatebot PRIVATE
+    ${DPP_DEFINITIONS}
     $<$<BOOL:${DTRANSLATEBOT_USE_BOOST_REGEX}>:DTRANSLATEBOT_USE_BOOST_REGEX>
 )
 if (MSVC AND MSVC_VERSION GREATER_EQUAL 1914)
     target_compile_options(dtranslatebot PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/Zc:__cplusplus>)
 endif()
-target_link_libraries(dtranslatebot PRIVATE ${DPP_LIBRARIES} ${DTRANSLATEBOT_LIBRARIES} Threads::Threads)
+target_link_libraries(dtranslatebot PRIVATE ${DTRANSLATEBOT_LIBRARIES} ${DPP_LIBRARIES} Threads::Threads)
 target_include_directories(dtranslatebot PRIVATE ${DPP_INCLUDE_DIR})
 set_target_properties(dtranslatebot PROPERTIES
     CXX_STANDARD 17

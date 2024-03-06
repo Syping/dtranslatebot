@@ -77,6 +77,7 @@ ExternalProject_Add(DPP
         -DBUILD_VOICE_SUPPORT=OFF
         "${CMAKE_PASSTHROUGH_ARGS}"
         "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
+        -DDPP_BUILD_TEST=OFF
         -DDPP_NO_VCPKG=ON
         -DRUN_LDCONFIG=OFF
         "-DOpenSSL_ROOT=${OpenSSL_INSTALL_DIR}"
@@ -91,13 +92,21 @@ set(DPP_LIBRARIES
     -Wl,-Bstatic
     "-L${DPP_INSTALL_DIR}/lib"
     "-L${DPP_INSTALL_DIR}/lib64"
-    -ldpp
+    dpp
     "-L${OpenSSL_INSTALL_DIR}/lib"
     "-L${OpenSSL_INSTALL_DIR}/lib64"
-    -lssl
-    -lcrypto
+    ssl
+    crypto
     "-L${ZLIB_INSTALL_DIR}/lib"
     "-L${ZLIB_INSTALL_DIR}/lib64"
-    -lz
+    $<IF:$<BOOL:WIN32>,zlibstatic,z>
     -Wl,-Bdynamic
 )
+if (WIN32)
+    set(DPP_DEFINITIONS DPP_STATIC)
+    list(APPEND DPP_LIBRARIES
+        ws2_32
+        gdi32
+        crypt32
+    )
+endif()
