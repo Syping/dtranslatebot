@@ -99,7 +99,7 @@ set(DPP_LIBRARIES
     crypto
     "-L${ZLIB_INSTALL_DIR}/lib"
     "-L${ZLIB_INSTALL_DIR}/lib64"
-    $<IF:$<BOOL:WIN32>,zlibstatic,z>
+    $<IF:$<BOOL:${WIN32}>,zlibstatic,z>
     -Wl,-Bdynamic
 )
 if (WIN32)
