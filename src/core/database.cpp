@@ -22,14 +22,6 @@
 #include "database.h"
 using namespace bot::database;
 
-database::database()
-{
-}
-
-database::~database()
-{
-}
-
 void database::add_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const bot::settings::target &target)
 {
 #ifndef NDEBUG

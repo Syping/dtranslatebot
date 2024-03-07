@@ -33,11 +33,12 @@ namespace bot {
             void add_translatebot_webhook(dpp::snowflake webhook_id);
 
             /* erase functions */
+            static void erase_channel(guild *guild, dpp::snowflake channel_id);
             void erase_translatebot_webhook(dpp::snowflake webhook_id);
 
             /* get functions */
             uint16_t avatar_size();
-            static channel* get_channel(guild *guild, dpp::snowflake channel_id);
+            static channel* get_channel(guild &guild, dpp::snowflake channel_id);
             channel* get_channel(dpp::snowflake guild_id, dpp::snowflake channel_id);
             guild* get_guild(dpp::snowflake guild_id);
             target* get_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &target);
@@ -58,6 +59,11 @@ namespace bot {
             /* parse functions */
             bool parse(const std::string &data, bool initialize = true);
             bool parse_file(const std::string &filename, bool initialize = true);
+
+            /* prevent copies */
+            settings() = default;
+            settings(const settings&) = delete;
+            settings& operator=(const settings&) = delete;
 
         private:
             mutable std::recursive_mutex m_mutex;

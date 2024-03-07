@@ -40,64 +40,75 @@ void bot::slashcommands::process_edit_command(dpp::cluster *bot, bot::settings::
         dpp::command_interaction interaction = event.command.get_command_interaction();
         if (interaction.options[0].name == "delete") {
             const std::lock_guard<bot::settings::settings> guard(*settings);
-            if (bot::settings::channel *channel = settings->get_channel(event.command.guild_id, event.command.channel_id)) {
-                const std::string target = std::get<std::string>(event.get_parameter("target"));
+            if (bot::settings::guild *guild = settings->get_guild(event.command.guild_id)) {
+                if (bot::settings::channel *channel = settings->get_channel(*guild, event.command.channel_id)) {
+                    const std::string target = std::get<std::string>(event.get_parameter("target"));
 
-                std::shared_ptr<bot::database::database> database = settings->get_database();
-                const bot::settings::channel db_channel = database->get_channel(event.command.guild_id, event.command.channel_id);
+                    auto database = settings->get_database();
+                    const bot::settings::channel db_channel = database->get_channel(event.command.guild_id, event.command.channel_id);
 
-                if (db_channel.targets.empty()) {
-                    event.reply(dpp::message("The current channel has no deleteable targets!").set_flags(dpp::m_ephemeral));
-                }
-                else if (target == "**") {
-                    std::vector<std::string> targets;
-                    for (auto db_target = db_channel.targets.begin(); db_target != db_channel.targets.end(); db_target++) {
-                        targets.push_back(db_target->target);
+                    if (db_channel.targets.empty()) {
+                        event.reply(dpp::message("The current channel has no deleteable targets!").set_flags(dpp::m_ephemeral));
                     }
-                    for (auto target = channel->targets.begin(); target != channel->targets.end();) {
-                        if (std::find(targets.begin(), targets.end(), target->target) != targets.end()) {
-                            bot->delete_webhook(target->webhook.id, std::bind(&bot::slashcommands::process_deleted_webhook, settings, target->webhook.id, std::placeholders::_1));
-                            target = channel->targets.erase(target);
+                    else if (target == "**") {
+                        std::vector<std::string> targets;
+                        for (auto db_target = db_channel.targets.begin(); db_target != db_channel.targets.end(); db_target++) {
+                            targets.push_back(db_target->target);
                         }
-                        else {
-                            target++;
+                        for (auto target = channel->targets.begin(); target != channel->targets.end();) {
+                            if (std::find(targets.begin(), targets.end(), target->target) != targets.end()) {
+                                bot->delete_webhook(target->webhook.id, std::bind(&bot::slashcommands::process_deleted_webhook, settings, target->webhook.id, std::placeholders::_1));
+                                target = channel->targets.erase(target);
+                            }
+                            else {
+                                target++;
+                            }
                         }
+
+                        database->delete_channel(event.command.guild_id, event.command.channel_id);
+                        database->sync();
+
+                        if (channel->targets.empty())
+                            settings->erase_channel(guild, event.command.channel_id);
+
+                        event.reply(dpp::message("Deleteable targets have being deleted!").set_flags(dpp::m_ephemeral));
                     }
-
-                    database->delete_channel(event.command.guild_id, event.command.channel_id);
-                    database->sync();
-
-                    event.reply(dpp::message("Deleteable targets have being deleted!").set_flags(dpp::m_ephemeral));
-                }
-                else {
-                    bool target_found = false;
-                    for (auto db_target = db_channel.targets.begin(); db_target != db_channel.targets.end(); db_target++) {
-                        if (db_target->target == target) {
-                            target_found = true;
-                            break;
-                        }
-                    }
-
-                    if (target_found) {
-                        for (auto _target = channel->targets.begin(); _target != channel->targets.end(); _target++) {
-                            if (_target->target == target) {
-                                bot->delete_webhook(_target->webhook.id, std::bind(&bot::slashcommands::process_deleted_webhook, settings, _target->webhook.id, std::placeholders::_1));
-                                channel->targets.erase(_target);
+                    else {
+                        bool target_found = false;
+                        for (auto db_target = db_channel.targets.begin(); db_target != db_channel.targets.end(); db_target++) {
+                            if (db_target->target == target) {
+                                target_found = true;
                                 break;
                             }
                         }
 
-                        if (db_channel.targets.size() == 1)
-                            database->delete_channel(event.command.guild_id, event.command.channel_id);
-                        else
-                            database->delete_channel_target(event.command.guild_id, event.command.channel_id, target);
-                        database->sync();
+                        if (target_found) {
+                            for (auto _target = channel->targets.begin(); _target != channel->targets.end(); _target++) {
+                                if (_target->target == target) {
+                                    bot->delete_webhook(_target->webhook.id, std::bind(&bot::slashcommands::process_deleted_webhook, settings, _target->webhook.id, std::placeholders::_1));
+                                    channel->targets.erase(_target);
+                                    break;
+                                }
+                            }
 
-                        event.reply(dpp::message("Target have being deleted!").set_flags(dpp::m_ephemeral));
+                            if (db_channel.targets.size() == 1)
+                                database->delete_channel(event.command.guild_id, event.command.channel_id);
+                            else
+                                database->delete_channel_target(event.command.guild_id, event.command.channel_id, target);
+                            database->sync();
+
+                            if (channel->targets.empty())
+                                settings->erase_channel(guild, event.command.channel_id);
+
+                            event.reply(dpp::message("Target have being deleted!").set_flags(dpp::m_ephemeral));
+                        }
+                        else {
+                            event.reply(dpp::message("Target language is not being found or deleteable!").set_flags(dpp::m_ephemeral));
+                        }
                     }
-                    else {
-                        event.reply(dpp::message("Target language is not being found or deleteable!").set_flags(dpp::m_ephemeral));
-                    }
+                }
+                else {
+                    event.reply(dpp::message("The current channel is not being translated!").set_flags(dpp::m_ephemeral));
                 }
             }
             else {
@@ -123,7 +134,7 @@ void bot::slashcommands::process_edit_command(dpp::cluster *bot, bot::settings::
                 if (source_valid) {
                     channel->source = source;
 
-                    std::shared_ptr<bot::database::database> database = settings->get_database();
+                    auto database = settings->get_database();
                     database->set_channel_source(event.command.guild_id, event.command.channel_id, source);
                     database->sync();
 
@@ -171,7 +182,7 @@ void bot::slashcommands::process_list_command(dpp::cluster *bot, bot::settings::
                 // We want give more information to users who can Manage Webhooks
                 dpp::permission user_permissions = event.command.get_resolved_permission(event.command.usr.id);
                 if (user_permissions.has(dpp::p_manage_webhooks)) {
-                    std::shared_ptr<bot::database::database> database = settings->get_database();
+                    auto database = settings->get_database();
                     const bot::settings::channel db_channel = database->get_channel(event.command.guild_id, event.command.channel_id);
 
                     for (auto target = channel->targets.begin(); target != channel->targets.end(); target++) {
@@ -268,13 +279,13 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
         dpp::command_interaction interaction = event.command.get_command_interaction();
         if (interaction.options[0].name == "channel") {
             v_target = event.command.get_resolved_channel(
-                           std::get<dpp::snowflake>(event.get_parameter("channel")));
+                std::get<dpp::snowflake>(event.get_parameter("channel")));
         }
         else if (interaction.options[0].name == "webhook") {
             v_target = dpp::webhook(std::get<std::string>(event.get_parameter("webhook")));
         }
 
-        const std::vector<bot::translator::language> languages = settings->get_translator()->get_languages();
+        const auto languages = settings->get_translator()->get_languages();
 
         std::ostringstream language_codes;
         bool source_valid = false, target_valid = false;
@@ -307,7 +318,7 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
                     settings->add_channel(s_channel, event.command.guild_id);
                     settings->add_translatebot_webhook(webhook->id);
 
-                    std::shared_ptr<bot::database::database> database = settings->get_database();
+                    auto database = settings->get_database();
                     database->set_channel_source(event.command.guild_id, event.command.channel_id, source);
                     database->add_channel_target(event.command.guild_id, event.command.channel_id, s_target);
                     database->sync();
@@ -333,7 +344,7 @@ void bot::slashcommands::process_translate_command(dpp::cluster *bot, bot::setti
                     settings->add_target(s_target, event.command.guild_id, event.command.channel_id);
                     settings->add_translatebot_webhook(webhook->id);
 
-                    std::shared_ptr<bot::database::database> database = settings->get_database();
+                    auto database = settings->get_database();
                     database->add_channel_target(event.command.guild_id, event.command.channel_id, s_target);
                     database->sync();
 
@@ -374,7 +385,7 @@ void bot::slashcommands::process_translate_webhook_add_target(bot::settings::set
     settings->add_target(s_target, event.command.guild_id, event.command.channel_id);
     settings->add_translatebot_webhook(webhook.id);
 
-    std::shared_ptr<bot::database::database> database = settings->get_database();
+    auto database = settings->get_database();
     database->add_channel_target(event.command.guild_id, event.command.channel_id, s_target);
     database->sync();
 
@@ -396,7 +407,7 @@ void bot::slashcommands::process_translate_webhook_new_channel(bot::settings::se
     settings->add_channel(s_channel, event.command.guild_id);
     settings->add_translatebot_webhook(webhook.id);
 
-    std::shared_ptr<bot::database::database> database = settings->get_database();
+    auto database = settings->get_database();
     database->set_channel_source(event.command.guild_id, event.command.channel_id, source);
     database->add_channel_target(event.command.guild_id, event.command.channel_id, s_target);
     database->sync();

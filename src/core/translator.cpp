@@ -22,14 +22,6 @@
 #include "translator.h"
 using namespace bot::translator;
 
-translator::translator()
-{
-}
-
-translator::~translator()
-{
-}
-
 const std::vector<language> translator::get_languages()
 {
 #ifndef NDEBUG

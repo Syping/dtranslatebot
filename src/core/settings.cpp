@@ -24,14 +24,14 @@
 #include "../translator/libretranslate/libretranslate.h"
 using namespace bot::settings;
 
-void process_database_channels(std::shared_ptr<bot::database::database> database, bot::settings::guild *guild, std::vector<dpp::snowflake> *webhookIds)
+void process_database_channels(std::shared_ptr<bot::database::database> database, bot::settings::guild &guild, std::vector<dpp::snowflake> &webhookIds)
 {
-    const std::vector<dpp::snowflake> db_channels = database->get_channels(guild->id);
+    const std::vector<dpp::snowflake> db_channels = database->get_channels(guild.id);
     for (auto db_channel_id = db_channels.begin(); db_channel_id != db_channels.end(); db_channel_id++) {
         bool channel_found = false;
-        for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
+        for (auto channel = guild.channel.begin(); channel != guild.channel.end(); channel++) {
             if (channel->id == *db_channel_id) {
-                const bot::settings::channel db_channel = database->get_channel(guild->id, channel->id);
+                const bot::settings::channel db_channel = database->get_channel(guild.id, channel->id);
                 if (!db_channel.source.empty())
                     channel->source = db_channel.source;
                 for (auto db_target = db_channel.targets.begin(); db_target != db_channel.targets.end(); db_target++) {
@@ -39,14 +39,14 @@ void process_database_channels(std::shared_ptr<bot::database::database> database
                     for (auto target = channel->targets.begin(); target != channel->targets.end(); target++) {
                         if (target->target == db_target->target) {
                             target->webhook = db_target->webhook;
-                            webhookIds->push_back(db_target->webhook.id);
+                            webhookIds.push_back(db_target->webhook.id);
                             target_found = true;
                             break;
                         }
                     }
                     if (!target_found) {
                         channel->targets.push_back(*db_target);
-                        webhookIds->push_back(db_target->webhook.id);
+                        webhookIds.push_back(db_target->webhook.id);
                     }
                 }
                 channel_found = true;
@@ -54,23 +54,23 @@ void process_database_channels(std::shared_ptr<bot::database::database> database
             }
         }
         if (!channel_found) {
-            const bot::settings::channel db_channel = database->get_channel(guild->id, *db_channel_id);
-            guild->channel.push_back(db_channel);
+            const bot::settings::channel db_channel = database->get_channel(guild.id, *db_channel_id);
+            guild.channel.push_back(db_channel);
             for (auto db_target = db_channel.targets.begin(); db_target != db_channel.targets.end(); db_target++)
-                webhookIds->push_back(db_target->webhook.id);
+                webhookIds.push_back(db_target->webhook.id);
         }
     }
 }
 
-void process_database(std::shared_ptr<bot::database::database> database, std::vector<guild> *guilds, std::vector<dpp::snowflake> *webhookIds)
+void process_database(std::shared_ptr<bot::database::database> database, std::vector<guild> &guilds, std::vector<dpp::snowflake> &webhookIds)
 {
     std::cout << "[Launch] Loading database..." << std::endl;
     const std::vector<dpp::snowflake> db_guilds = database->get_guilds();
     for (auto db_guild_id = db_guilds.begin(); db_guild_id != db_guilds.end(); db_guild_id++) {
         bool guild_found = false;
-        for (auto guild = guilds->begin(); guild != guilds->end(); guild++) {
+        for (auto guild = guilds.begin(); guild != guilds.end(); guild++) {
             if (guild->id == *db_guild_id) {
-                process_database_channels(database, &*guild, webhookIds);
+                process_database_channels(database, *guild, webhookIds);
                 guild_found = true;
                 break;
             }
@@ -78,13 +78,13 @@ void process_database(std::shared_ptr<bot::database::database> database, std::ve
         if (!guild_found) {
             bot::settings::guild guild;
             guild.id = *db_guild_id;
-            process_database_channels(database, &guild, webhookIds);
-            guilds->push_back(std::move(guild));
+            process_database_channels(database, guild, webhookIds);
+            guilds.push_back(std::move(guild));
         }
     }
 }
 
-void process_guild_settings(const dpp::json &json, std::vector<guild> *guilds, std::vector<dpp::snowflake> *webhookIds)
+void process_guild_settings(const dpp::json &json, std::vector<guild> &guilds, std::vector<dpp::snowflake> &webhookIds)
 {
     for (auto json_guild = json.begin(); json_guild != json.end(); json_guild++) {
         if (json_guild->is_object()) {
@@ -128,7 +128,7 @@ void process_guild_settings(const dpp::json &json, std::vector<guild> *guilds, s
                             target target;
                             target.target = *json_channel_target;
                             target.webhook = dpp::webhook(json_channel->at("webhook"));
-                            webhookIds->push_back(target.webhook.id);
+                            webhookIds.push_back(target.webhook.id);
                             channel.targets.push_back(std::move(target));
                         }
                         else if (json_channel_target->is_object()) {
@@ -136,7 +136,7 @@ void process_guild_settings(const dpp::json &json, std::vector<guild> *guilds, s
                                 target target;
                                 target.target = json_target.key();
                                 target.webhook = dpp::webhook(*json_target);
-                                webhookIds->push_back(target.webhook.id);
+                                webhookIds.push_back(target.webhook.id);
                                 channel.targets.push_back(std::move(target));
                             }
                         }
@@ -146,7 +146,7 @@ void process_guild_settings(const dpp::json &json, std::vector<guild> *guilds, s
                         guild.channel.push_back(std::move(channel));
                 }
             }
-            guilds->push_back(std::move(guild));
+            guilds.push_back(std::move(guild));
         }
     }
 }
@@ -162,63 +162,63 @@ void process_preflang_settings(const dpp::json &json, std::vector<std::string> *
     }
 }
 
-void process_user_settings(const dpp::json &json, uint16_t *avatar_size)
+void process_user_settings(const dpp::json &json, uint16_t &avatar_size)
 {
     auto json_avatar_size = json.find("avatar_size");
     if (json_avatar_size != json.end()) {
-        *avatar_size = *json_avatar_size;
-        if (*avatar_size < 16)
-            *avatar_size = 16;
-        else if (*avatar_size > 4096)
-            *avatar_size = 4096;
+        avatar_size = *json_avatar_size;
+        if (avatar_size < 16)
+            avatar_size = 16;
+        else if (avatar_size > 4096)
+            avatar_size = 4096;
     }
 }
 
-void process_url(const std::string &url, translator *translator)
+void process_url(const std::string &url, translator &translator)
 {
     std::string_view url_v = url;
     if (url_v.substr(0, 7) == "http://") {
-        translator->tls = false;
-        if (!translator->port)
-            translator->port = 80;
+        translator.tls = false;
+        if (!translator.port)
+            translator.port = 80;
         url_v = url_v.substr(7);
     }
     else if (url_v.substr(0, 8) == "https://") {
-        translator->tls = true;
-        if (!translator->port)
-            translator->port = 443;
+        translator.tls = true;
+        if (!translator.port)
+            translator.port = 443;
         url_v = url_v.substr(8);
     }
     else {
-        translator->tls = false;
-        if (!translator->port)
-            translator->port = 80;
+        translator.tls = false;
+        if (!translator.port)
+            translator.port = 80;
     }
     auto slash_pos = url_v.find_first_of('/');
     if (slash_pos != std::string_view::npos) {
-        translator->url = url_v.substr(slash_pos);
+        translator.url = url_v.substr(slash_pos);
         url_v = url_v.substr(0, slash_pos);
     }
     else {
-        translator->url = "/";
+        translator.url = "/";
         url_v = url_v.substr(0, slash_pos);
     }
     // We don't have IPv6 support here yet
     auto colon_pos = url_v.find_last_of(':');
     if (colon_pos != std::string_view::npos) {
-        translator->hostname = url_v.substr(0, colon_pos);
+        translator.hostname = url_v.substr(0, colon_pos);
         const int port = std::stoi(std::string(url_v.substr(colon_pos + 1)));
         if (port > 0 && port < 65536)
-            translator->port = static_cast<uint16_t>(port);
+            translator.port = static_cast<uint16_t>(port);
         else
             throw std::invalid_argument("Port is out of range");
     }
     else {
-        translator->hostname = url_v;
+        translator.hostname = url_v;
     }
 }
 
-bool process_translator_settings(const dpp::json &json, translator *translator)
+bool process_translator_settings(const dpp::json &json, translator &translator)
 {
     if (!json.is_object()) {
         std::cerr << "[Error] Value translator needs to be a object" << std::endl;
@@ -227,39 +227,39 @@ bool process_translator_settings(const dpp::json &json, translator *translator)
 
     auto json_translate_hostname = json.find("hostname");
     if (json_translate_hostname != json.end())
-        translator->hostname = *json_translate_hostname;
+        translator.hostname = *json_translate_hostname;
     else
-        translator->hostname = {};
+        translator.hostname = {};
 
     auto json_translate_tls = json.find("tls");
     if (json_translate_tls != json.end())
-        translator->tls = *json_translate_tls;
+        translator.tls = *json_translate_tls;
     else
-        translator->tls = false;
+        translator.tls = false;
 
     auto json_translate_port = json.find("port");
     if (json_translate_port != json.end())
-        translator->port = *json_translate_port;
+        translator.port = *json_translate_port;
     else
-        translator->port = 0;
+        translator.port = 0;
 
     auto json_translate_url = json.find("url");
     if (json_translate_url == json.end()) {
         std::cerr << "[Error] Value url not found in translator object" << std::endl;
         return false;
     }
-    if (translator->hostname.empty()) {
+    if (translator.hostname.empty()) {
         process_url(*json_translate_url, translator);
     }
     else {
-        translator->url = *json_translate_url;
+        translator.url = *json_translate_url;
     }
 
     auto json_translate_apiKey = json.find("apiKey");
     if (json_translate_apiKey != json.end())
-        translator->apiKey = *json_translate_apiKey;
+        translator.apiKey = *json_translate_apiKey;
     else
-        translator->apiKey.clear();
+        translator.apiKey.clear();
 
     return true;
 }
@@ -301,6 +301,16 @@ void settings::add_translatebot_webhook(dpp::snowflake webhook_id)
     m_webhookIds.push_back(webhook_id);
 }
 
+void settings::erase_channel(guild *guild, dpp::snowflake channel_id)
+{
+    for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
+        if (channel->id == channel_id) {
+            guild->channel.erase(channel);
+            return;
+        }
+    }
+}
+
 void settings::erase_translatebot_webhook(dpp::snowflake webhook_id)
 {
     const std::lock_guard<std::recursive_mutex> guard(m_mutex);
@@ -315,9 +325,9 @@ uint16_t settings::avatar_size()
     return m_avatarSize;
 }
 
-channel* settings::get_channel(guild *guild, dpp::snowflake channel_id)
+channel* settings::get_channel(guild &guild, dpp::snowflake channel_id)
 {
-    for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
+    for (auto channel = guild.channel.begin(); channel != guild.channel.end(); channel++) {
         if (channel->id == channel_id)
             return &*channel;
     }
@@ -484,12 +494,12 @@ bool settings::parse(const std::string &data, bool initialize)
             std::cerr << "[Error] Value translator not found" << std::endl;
             return false;
         }
-        if (!process_translator_settings(*json_translator, &m_translator))
+        if (!process_translator_settings(*json_translator, m_translator))
             return false;
 
         auto json_guilds = json.find("guilds");
         if (json_guilds != json.end() && json_guilds->is_object())
-            process_guild_settings(*json_guilds, &m_guilds, &m_webhookIds);
+            process_guild_settings(*json_guilds, m_guilds, m_webhookIds);
 
         auto json_preflangs = json.find("preferred_lang");
         if (json_preflangs != json.end() && json_preflangs->is_array())
@@ -497,9 +507,9 @@ bool settings::parse(const std::string &data, bool initialize)
 
         auto json_user = json.find("user");
         if (json_user != json.end() && json_user->is_object())
-            process_user_settings(*json_user, &m_avatarSize);
+            process_user_settings(*json_user, m_avatarSize);
 
-        process_database(m_database, &m_guilds, &m_webhookIds);
+        process_database(m_database, m_guilds, m_webhookIds);
 
         return true;
     }
