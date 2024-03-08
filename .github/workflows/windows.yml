@@ -1,0 +1,36 @@
+name: Windows
+on: push
+jobs:
+  Release:
+    runs-on: windows-latest
+    env:
+      BUILD_TYPE: Release
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: clang64
+        update: true
+        install: >-
+          git
+          make
+          mingw-w64-clang-x86_64-clang
+          mingw-w64-clang-x86_64-cmake
+          mingw-w64-clang-x86_64-ninja
+          perl
+    - name: Cloning
+      uses: actions/checkout@v4
+    - name: Configure CMake
+      run: cmake -B ./build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_EXE_LINKER_FLAGS="-static -lc++" -DWITH_DPP_AS_EXTERNAL_PROJECT=TRUE -GNinja
+    - name: Build
+      run: cmake --build ./build --config ${{env.BUILD_TYPE}}
+    - name: Install
+      run: cmake --install ./build --config ${{env.BUILD_TYPE}} --prefix ./install --strip
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: Windows
+        path: |
+          ./install/bin/

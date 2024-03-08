@@ -17,7 +17,7 @@ BEGIN
         BLOCK   "040904b0"
         BEGIN
             VALUE   "CompanyName",      "Syping"
-            VALUE   "FileDescription",  "Open Source Discord Translation Bot"
+            VALUE   "FileDescription",  "Discord Translation Bot"
             VALUE   "FileVersion",      "@dtranslatebot_VERSION@"
             VALUE   "InternalName",     "dtranslatebot"
             VALUE   "LegalCopyright",   "Copyright © 2023-2024 Syping"
