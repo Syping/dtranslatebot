@@ -301,11 +301,22 @@ void settings::add_translatebot_webhook(dpp::snowflake webhook_id)
     m_webhookIds.push_back(webhook_id);
 }
 
-void settings::erase_channel(guild *guild, dpp::snowflake channel_id)
+void settings::erase_channel(guild &guild, dpp::snowflake channel_id)
 {
-    for (auto channel = guild->channel.begin(); channel != guild->channel.end(); channel++) {
+    for (auto channel = guild.channel.begin(); channel != guild.channel.end(); channel++) {
         if (channel->id == channel_id) {
-            guild->channel.erase(channel);
+            guild.channel.erase(channel);
+            return;
+        }
+    }
+}
+
+void settings::erase_guild(dpp::snowflake guild_id)
+{
+    const std::lock_guard<std::recursive_mutex> guard(m_mutex);
+    for (auto guild = m_guilds.begin(); guild != m_guilds.end(); guild++) {
+        if (guild->id == guild_id) {
+            m_guilds.erase(guild);
             return;
         }
     }

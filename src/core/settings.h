@@ -33,7 +33,8 @@ namespace bot {
             void add_translatebot_webhook(dpp::snowflake webhook_id);
 
             /* erase functions */
-            static void erase_channel(guild *guild, dpp::snowflake channel_id);
+            static void erase_channel(guild &guild, dpp::snowflake channel_id);
+            void erase_guild(dpp::snowflake guild_id);
             void erase_translatebot_webhook(dpp::snowflake webhook_id);
 
             /* get functions */

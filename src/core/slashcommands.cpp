@@ -68,8 +68,12 @@ void bot::slashcommands::process_edit_command(dpp::cluster *bot, bot::settings::
                         database->delete_channel(event.command.guild_id, event.command.channel_id);
                         database->sync();
 
-                        if (channel->targets.empty())
-                            settings->erase_channel(guild, event.command.channel_id);
+                        if (channel->targets.empty()) {
+                            settings->erase_channel(*guild, event.command.channel_id);
+                            if (guild->channel.empty()) {
+                                settings->erase_guild(event.command.guild_id);
+                            }
+                        }
 
                         event.reply(dpp::message("Deleteable targets have being deleted!").set_flags(dpp::m_ephemeral));
                     }
@@ -97,8 +101,12 @@ void bot::slashcommands::process_edit_command(dpp::cluster *bot, bot::settings::
                                 database->delete_channel_target(event.command.guild_id, event.command.channel_id, target);
                             database->sync();
 
-                            if (channel->targets.empty())
-                                settings->erase_channel(guild, event.command.channel_id);
+                            if (channel->targets.empty()) {
+                                settings->erase_channel(*guild, event.command.channel_id);
+                                if (guild->channel.empty()) {
+                                    settings->erase_guild(event.command.guild_id);
+                                }
+                            }
 
                             event.reply(dpp::message("Target have being deleted!").set_flags(dpp::m_ephemeral));
                         }
