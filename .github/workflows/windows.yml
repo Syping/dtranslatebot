@@ -23,14 +23,20 @@ jobs:
     - name: Cloning
       uses: actions/checkout@v4
     - name: Configure CMake
-      run: cmake -B ./build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_EXE_LINKER_FLAGS="-static -lc++" -DWITH_DPP_AS_EXTERNAL_PROJECT=TRUE -GNinja
-    - name: Build
-      run: cmake --build ./build --config ${{env.BUILD_TYPE}}
+      run: cmake -B dtranslatebot-build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_EXE_LINKER_FLAGS="-static -lc++" -DWITH_DPP_AS_EXTERNAL_PROJECT=TRUE -GNinja
+    - name: Download and build OpenSSL
+      run: cmake --build dtranslatebot-build --config ${{env.BUILD_TYPE}} --target OpenSSL
+    - name: Download and build zlib
+      run: cmake --build dtranslatebot-build --config ${{env.BUILD_TYPE}} --target ZLIB
+    - name: Download and build DPP
+      run: cmake --build dtranslatebot-build --config ${{env.BUILD_TYPE}} --target DPP
+    - name: Build dtranslatebot
+      run: cmake --build dtranslatebot-build --config ${{env.BUILD_TYPE}}
     - name: Install
-      run: cmake --install ./build --config ${{env.BUILD_TYPE}} --prefix ./install --strip
+      run: cmake --install dtranslatebot-build --config ${{env.BUILD_TYPE}} --prefix dtranslatebot-install --strip
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
         name: Windows
         path: |
-          ./install/bin/
+          dtranslatebot-install/bin/dtranslatebot.exe

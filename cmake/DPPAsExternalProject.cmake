@@ -32,7 +32,7 @@ if (DEFINED NPROC_EXECUTABLE)
         OUTPUT_VARIABLE NPROC
     )
     string(STRIP "${NPROC}" NPROC)
-    set(JOBS_ARGUMENT "-j${NPROC}" CACHE INTERNAL "make jobs argument")
+    set(MAKE_JOBS_ARG "-j${NPROC}")
 endif()
 
 include(ExternalProject)
@@ -41,13 +41,15 @@ ExternalProject_Add(ZLIB
     URL_HASH SHA256=38ef96b8dfe510d42707d9c781877914792541133e1870841463bfa73f883e32
     CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
-        "${CMAKE_PASSTHROUGH_ARGS}"
+        ${CMAKE_PASSTHROUGH_ARGS}
         "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
         -DZLIB_BUILD_EXAMPLES=OFF
+        ${ZLIB_CONFIGURE_ARGS}
 )
 ExternalProject_Get_Property(ZLIB INSTALL_DIR)
 set(ZLIB_INSTALL_DIR "${INSTALL_DIR}")
 
+set(OPENSSL_PLATFORM_ARG $<$<BOOL:$ENV{MSYSTEM}>:mingw64>)
 ExternalProject_Add(OpenSSL
     URL https://www.openssl.org/source/openssl-3.0.13.tar.gz
     URL_HASH SHA256=88525753f79d3bec27d2fa7c66aa0b92b3aa9498dafd93d7cfa4b3780cdae313
@@ -63,8 +65,10 @@ ExternalProject_Add(OpenSSL
         no-engine
         no-shared
         no-zlib
-    BUILD_COMMAND "${MAKE_EXECUTABLE}" "${JOBS_ARGUMENT}"
-    INSTALL_COMMAND "${MAKE_EXECUTABLE}" "${JOBS_ARGUMENT}" install_sw
+        ${OPENSSL_PLATFORM_ARG}
+        ${OPENSSL_CONFIGURE_ARGS}
+    BUILD_COMMAND "${MAKE_EXECUTABLE}" ${MAKE_JOBS_ARG} build_libs
+    INSTALL_COMMAND "${MAKE_EXECUTABLE}" ${MAKE_JOBS_ARG} install_dev
 )
 ExternalProject_Get_Property(OpenSSL INSTALL_DIR)
 set(OpenSSL_INSTALL_DIR "${INSTALL_DIR}")
@@ -75,15 +79,15 @@ ExternalProject_Add(DPP
     CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
         -DBUILD_VOICE_SUPPORT=OFF
-        "${CMAKE_PASSTHROUGH_ARGS}"
+        ${CMAKE_PASSTHROUGH_ARGS}
         "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
         -DDPP_BUILD_TEST=OFF
         -DDPP_NO_VCPKG=ON
         -DRUN_LDCONFIG=OFF
         "-DOpenSSL_ROOT=${OpenSSL_INSTALL_DIR}"
         "-DZLIB_ROOT=${ZLIB_INSTALL_DIR}"
-    DEPENDS OpenSSL
-    DEPENDS ZLIB
+        ${DPP_CONFIGURE_ARGS}
+    DEPENDS OpenSSL ZLIB
 )
 ExternalProject_Get_Property(DPP INSTALL_DIR)
 set(DPP_INSTALL_DIR "${INSTALL_DIR}")
@@ -106,7 +110,5 @@ if (WIN32)
     set(DPP_DEFINITIONS DPP_STATIC)
     list(APPEND DPP_LIBRARIES
         ws2_32
-        gdi32
-        crypt32
     )
 endif()
