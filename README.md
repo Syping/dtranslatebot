@@ -24,5 +24,5 @@ sudo cmake --install dtranslatebot-build
 
 ##### Optional CMake flags
 `-DWITH_BOOST=TRUE`  
-`-DWITH_DPP_AS_EXTERNAL_PROJECT=TRUE`  
+`-DWITH_DPP_STATIC_BUNDLE=TRUE`  
 `-DWITH_SYSTEMD=TRUE`

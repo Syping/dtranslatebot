@@ -64,9 +64,9 @@ if (WITH_BOOST)
 endif()
 
 # D++ Discord API Library for Bots
-option(WITH_DPP_AS_EXTERNAL_PROJECT "Build with DPP as External Project" OFF)
-if (WITH_DPP_AS_EXTERNAL_PROJECT)
-    include(DPPAsExternalProject)
+option(WITH_DPP_STATIC_BUNDLE "Build with DPP Static Bundle" OFF)
+if (WITH_DPP_STATIC_BUNDLE)
+    include(DPPStaticBundle)
 else()
     find_package(DPP REQUIRED)
 endif()

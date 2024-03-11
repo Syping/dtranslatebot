@@ -77,6 +77,7 @@ ExternalProject_Add(DPP
     URL https://github.com/Syping/DPP/archive/dcd00001dfa145a03f80a0ad5317bc3e63252ead.tar.gz
     URL_HASH SHA256=42ff04b13a384591e819c100c4f40e12e31c8076769c168631eef85a8eeb0be3
     CMAKE_ARGS
+        -DAVX_TYPE=AVX0
         -DBUILD_SHARED_LIBS=OFF
         -DBUILD_VOICE_SUPPORT=OFF
         ${CMAKE_PASSTHROUGH_ARGS}
