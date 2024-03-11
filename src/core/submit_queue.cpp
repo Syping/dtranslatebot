@@ -19,7 +19,7 @@
 #include <thread>
 #include "submit_queue.h"
 #include "webhook_push.h"
-using namespace bot;
+using bot::submit_queue;
 using namespace std::chrono_literals;
 
 void submit_queue::add(const translated_message &message)

@@ -33,6 +33,8 @@ namespace bot {
         public:
             explicit translator() = default;
             virtual ~translator() = default;
+            translator(const translator&) = delete;
+            translator& operator=(const translator&) = delete;
             virtual const std::vector<language> get_languages();
             virtual const std::string translate(const std::string &text, const std::string &source, const std::string &target);
         };

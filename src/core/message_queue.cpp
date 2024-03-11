@@ -19,7 +19,7 @@
 #include <thread>
 #include "message_queue.h"
 #include "settings.h"
-using namespace bot;
+using bot::message_queue;
 using namespace std::chrono_literals;
 
 void message_queue::add(const message &message)

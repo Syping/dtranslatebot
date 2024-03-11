@@ -31,6 +31,8 @@ namespace bot {
         class database {
         public:
             explicit database() = default;
+            database(const database&) = delete;
+            database& operator=(const database&) = delete;
             virtual ~database() = default;
             virtual void add_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const bot::settings::target &target);
             virtual void delete_channel(dpp::snowflake guild_id, dpp::snowflake channel_id);

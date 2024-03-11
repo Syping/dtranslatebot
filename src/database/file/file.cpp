@@ -98,7 +98,7 @@ void file::add_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id
             }
 
             bot::settings::channel channel;
-            cache_get_channel(channel_id, &channel);
+            cache_get_channel(channel_id, channel);
             channel.targets.push_back(target);
             cache_add_channel(guild_id, channel_id);
             guild->channel.push_back(std::move(channel));
@@ -107,7 +107,7 @@ void file::add_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id
     }
 
     bot::settings::channel channel;
-    cache_get_channel(channel_id, &channel);
+    cache_get_channel(channel_id, channel);
     channel.targets.push_back(target);
     cache_add_channel(guild_id, channel_id);
     m_dataCache.push_back({ guild_id, { std::move(channel) } });
@@ -141,7 +141,7 @@ void file::delete_channel(dpp::snowflake guild_id, dpp::snowflake channel_id)
         }
 
         std::vector<dpp::snowflake> channels;
-        cache_guild(guild_id, &channels);
+        cache_guild(guild_id, channels);
         for (auto channel = channels.begin(); channel != channels.end(); channel++) {
             if (*channel == channel_id) {
                 channels.erase(channel);
@@ -175,7 +175,7 @@ void file::delete_channel_target(dpp::snowflake guild_id, dpp::snowflake channel
             }
 
             bot::settings::channel channel;
-            cache_get_channel(channel_id, &channel);
+            cache_get_channel(channel_id, channel);
             for (auto _target = channel.targets.begin(); _target != channel.targets.end(); _target++) {
                 if (_target->target == target) {
                     channel.targets.erase(_target);
@@ -188,7 +188,7 @@ void file::delete_channel_target(dpp::snowflake guild_id, dpp::snowflake channel
     }
 
     bot::settings::channel channel;
-    cache_get_channel(channel_id, &channel);
+    cache_get_channel(channel_id, channel);
     for (auto _target = channel.targets.begin(); _target != channel.targets.end(); _target++) {
         if (_target->target == target) {
             channel.targets.erase(_target);
@@ -266,7 +266,7 @@ bot::settings::channel file::get_channel(dpp::snowflake guild_id, dpp::snowflake
     }
 
     bot::settings::channel channel;
-    cache_get_channel(channel_id, &channel);
+    cache_get_channel(channel_id, channel);
     return channel;
 }
 
@@ -281,7 +281,7 @@ std::vector<dpp::snowflake> file::get_channels(dpp::snowflake guild_id)
     }
 
     std::vector<dpp::snowflake> channels;
-    cache_guild(guild_id, &channels);
+    cache_guild(guild_id, channels);
     return channels;
 }
 
@@ -330,7 +330,7 @@ std::vector<dpp::snowflake> file::get_guilds()
 {
     const std::lock_guard<std::mutex> guard(m_mutex);
     std::vector<dpp::snowflake> guilds;
-    list_guilds(&guilds);
+    list_guilds(guilds);
     return guilds;
 }
 
@@ -348,7 +348,7 @@ void file::set_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id
             }
 
             bot::settings::channel channel;
-            cache_get_channel(channel_id, &channel);
+            cache_get_channel(channel_id, channel);
             channel.source = source;
             cache_add_channel(guild_id, channel_id);
             guild->channel.push_back(std::move(channel));
@@ -357,7 +357,7 @@ void file::set_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id
     }
 
     bot::settings::channel channel;
-    cache_get_channel(channel_id, &channel);
+    cache_get_channel(channel_id, channel);
     channel.source = source;
     cache_add_channel(guild_id, channel_id);
     m_dataCache.push_back({ guild_id, { std::move(channel) } });
@@ -390,16 +390,16 @@ void file::cache_add_channel(dpp::snowflake guild_id, dpp::snowflake channel_id)
     }
 
     std::vector<dpp::snowflake> channels;
-    cache_guild(guild_id, &channels);
+    cache_guild(guild_id, channels);
     if (std::find(channels.begin(), channels.end(), channel_id) == channels.end())
         channels.push_back(channel_id);
 
     m_channelCache.push_back({ guild_id, std::move(channels) });
 }
 
-void file::cache_get_channel(dpp::snowflake channel_id, bot::settings::channel *channel)
+void file::cache_get_channel(dpp::snowflake channel_id, settings::channel &channel)
 {
-    channel->id = channel_id;
+    channel.id = channel_id;
 
     const std::filesystem::path channel_file = m_storagePath / "channel" / (std::to_string(channel_id) + ".json");
 
@@ -418,7 +418,7 @@ void file::cache_get_channel(dpp::snowflake channel_id, bot::settings::channel *
         if (json.is_object()) {
             auto json_channel_source = json.find("source");
             if (json_channel_source != json.end())
-                channel->source = *json_channel_source;
+                channel.source = *json_channel_source;
 
             auto json_channel_target = json.find("target");
             if (json_channel_target != json.end()) {
@@ -433,7 +433,7 @@ void file::cache_get_channel(dpp::snowflake channel_id, bot::settings::channel *
                         else if (json_target->is_string()) {
                             target.webhook = dpp::webhook(*json_target);
                         }
-                        channel->targets.push_back(std::move(target));
+                        channel.targets.push_back(std::move(target));
                     }
                 }
             }
@@ -444,7 +444,7 @@ void file::cache_get_channel(dpp::snowflake channel_id, bot::settings::channel *
     }
 }
 
-void file::cache_guild(dpp::snowflake guild_id, std::vector<dpp::snowflake> *channels)
+void file::cache_guild(dpp::snowflake guild_id, std::vector<dpp::snowflake> &channels)
 {
     const std::filesystem::path guild_file = m_storagePath / "guild" / (std::to_string(guild_id) + ".json");
 
@@ -463,9 +463,9 @@ void file::cache_guild(dpp::snowflake guild_id, std::vector<dpp::snowflake> *cha
         if (json.is_array()) {
             for (auto channel = json.begin(); channel != json.end(); channel++) {
                 if (channel->is_number())
-                    channels->push_back(*channel);
+                    channels.push_back(*channel);
                 else if (channel->is_string())
-                    channels->push_back(std::stoull(std::string(*channel)));
+                    channels.push_back(std::stoull(std::string(*channel)));
             }
         }
     }
@@ -474,7 +474,7 @@ void file::cache_guild(dpp::snowflake guild_id, std::vector<dpp::snowflake> *cha
     }
 }
 
-void file::list_guilds(std::vector<dpp::snowflake> *guilds)
+void file::list_guilds(std::vector<dpp::snowflake> &guilds)
 {
     const std::filesystem::path guild_dir = m_storagePath / "guild";
 
@@ -488,7 +488,7 @@ void file::list_guilds(std::vector<dpp::snowflake> *guilds)
             if (std::all_of(guild_filename.begin(), guild_filename.end(), ::isdigit)) {
                 try {
                     dpp::snowflake guild_id = std::stoull(guild_filename);
-                    guilds->push_back(guild_id);
+                    guilds.push_back(guild_id);
                 }
                 catch (const std::exception &exception) {
                     std::cerr << "[Exception] " << exception.what() << std::endl;

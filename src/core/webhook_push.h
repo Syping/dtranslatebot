@@ -26,6 +26,7 @@
 namespace bot {
     class webhook_push {
     public:
+        webhook_push() = delete;
         static void run(const bot::translated_message &message, dpp::cluster *bot);
 
     private:

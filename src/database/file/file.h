@@ -53,9 +53,9 @@ namespace bot {
 
         private:
             void cache_add_channel(dpp::snowflake guild_id, dpp::snowflake channel_id);
-            void cache_get_channel(dpp::snowflake channel_id, bot::settings::channel *channel);
-            void cache_guild(dpp::snowflake guild_id, std::vector<dpp::snowflake> *channels);
-            void list_guilds(std::vector<dpp::snowflake> *guilds);
+            void cache_get_channel(dpp::snowflake channel_id, bot::settings::channel &channel);
+            void cache_guild(dpp::snowflake guild_id, std::vector<dpp::snowflake> &channels);
+            void list_guilds(std::vector<dpp::snowflake> &guilds);
             void sync_cache();
 #if defined(__unix__)
             int fd;
