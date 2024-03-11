@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
 
     bot.on_message_create(std::bind(&bot::message_queue::process_message_event, &message_queue, &bot, &settings, std::placeholders::_1));
     bot.on_slashcommand(std::bind(&bot::slashcommands::process_command_event, &bot, &settings, std::placeholders::_1));
-    bot.on_ready([&bot, &settings](const dpp::ready_t &event) {
+    bot.on_ready([&bot, &settings]([[maybe_unused]] const dpp::ready_t &event) {
         if (dpp::run_once<struct register_bot_commands>()) {
             bot::slashcommands::register_commands(&bot, &settings);
         }

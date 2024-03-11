@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2023-2024 Syping
+* Copyright (C) 2024 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -16,29 +16,21 @@
 * responsible for anything with use of the software, you are self responsible.
 *****************************************************************************/
 
-#ifndef TRANSLATOR_LIBRETRANSLATE_H
-#define TRANSLATOR_LIBRETRANSLATE_H
+#ifndef TRANSLATOR_STUB_H
+#define TRANSLATOR_STUB_H
 
-#include <cstdint>
 #include "../../core/translator.h"
 
 namespace bot {
     namespace translator {
-        class libretranslate : public translator {
+        class stub : public translator {
         public:
-            explicit libretranslate(const std::string &hostname, uint16_t port, const std::string &url, bool tls, const std::string apiKey = {});
-            ~libretranslate() override;
+            explicit stub();
+            ~stub() override;
             const std::vector<language> get_languages() override;
             const std::string translate(const std::string &text, const std::string &source, const std::string &target) override;
-
-        private:
-            std::string m_apiKey;
-            std::string m_hostname;
-            uint16_t m_port;
-            std::string m_url;
-            bool m_tls;
         };
     }
 }
 
-#endif // TRANSLATOR_LIBRETRANSLATE_H
+#endif // TRANSLATOR_STUB_H
