@@ -1,0 +1,13 @@
+[Unit]
+Description=Discord Translation Bot
+After=network.target
+
+[Service]
+User=dtranslatebot
+Group=dtranslatebot
+WorkingDirectory=/var/lib/dtranslatebot
+ExecStart=/usr/bin/dtranslatebot /etc/dtranslatebot.json
+Restart=on-abnormal
+
+[Install]
+WantedBy=multi-user.target

@@ -8,9 +8,12 @@ Summary:        Discord Translation Bot
 License:        BSD-2-Clause
 URL:            https://github.com/Syping/%{name}
 Source0:        %{name}_%{version}.tar.gz
-Source1:        %{name}.sysusersd
+Source1:        %{name}.json
+Source2:        %{name}.service
+Source3:        %{name}.sysusersd
 
 BuildRequires:  cmake >= 3.16
+BuildRequires:  perl
 %if 0%{?rhel} && 0%{?rhel} < 9
 BuildRequires:  gcc-toolset-9-annobin
 BuildRequires:  gcc-toolset-9-gcc-c++
@@ -49,10 +52,12 @@ source /opt/rh/gcc-toolset-9/enable
 %make_install
 %endif
 mkdir -p %{buildroot}%{_localstatedir}/lib/%{name}
-install -p -D -m 0644 %{SOURCE1} %{buildroot}%{_sysusersdir}/%{name}.conf
+install -p -D -m 0644 %{SOURCE1} %{buildroot}%{_sysconfdir}/%{name}.json
+install -p -D -m 0644 %{SOURCE2} %{buildroot}%{_unitdir}/%{name}.service
+install -p -D -m 0644 %{SOURCE3} %{buildroot}%{_sysusersdir}/%{name}.conf
 
 %pre
-%sysusers_create_compat %{SOURCE1}
+%sysusers_create_compat %{SOURCE3}
 
 %post
 %systemd_post %{name}.service
@@ -67,4 +72,5 @@ install -p -D -m 0644 %{SOURCE1} %{buildroot}%{_sysusersdir}/%{name}.conf
 %{_bindir}/%{name}
 %{_unitdir}/%{name}.service
 %{_sysusersdir}/%{name}.conf
+%config(noreplace) %attr(0640,root,%{name}) %{_sysconfdir}/%{name}.json
 %dir %attr(0750,%{name},%{name}) %{_localstatedir}/lib/%{name}
