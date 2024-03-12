@@ -96,7 +96,7 @@ endif()
 
 # dtranslatebot Target + Installs
 add_executable(dtranslatebot ${DTRANSLATEBOT_HEADERS} ${DTRANSLATEBOT_SOURCES} ${DTRANSLATEBOT_RESOURCES})
-if (WITH_DPP_AS_EXTERNAL_PROJECT)
+if (WITH_DPP_STATIC_BUNDLE)
     add_dependencies(dtranslatebot DPP)
 endif()
 target_compile_definitions(dtranslatebot PRIVATE
