@@ -1,0 +1,37 @@
+name: Enterprise Linux
+on: push
+jobs:
+  Release:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: [el7, el8, el9]
+    steps:
+    - name: Cloning
+      uses: actions/checkout@v4
+    - name: Preparing
+      run: mkdir -m 777 ${{github.workspace}}/rpms
+    - name: Build RPM
+      uses: addnab/docker-run-action@v3
+      with:
+        image: docker.io/syping/dtranslatebot-build:${{matrix.version}}
+        options: -v ${{github.workspace}}:/home/rpmbuild/dtranslatebot -v ${{github.workspace}}/rpms:/home/rpmbuild/rpmbuild/RPMS
+        run: |
+          VERSION=$(cat dtranslatebot/CMakeLists.txt | grep -oP "project\(dtranslatebot VERSION \K(\S*)(?= LANGUAGES CXX\))")
+          mkdir -p dtranslatebot-$VERSION
+          shopt -s extglob
+          cp -R dtranslatebot/!(rpms|rpmsrc) \
+            dtranslatebot-$VERSION
+          tar cfz dtranslatebot-$VERSION.tar.gz dtranslatebot-$VERSION
+          cp dtranslatebot-$VERSION.tar.gz \
+            dtranslatebot/rpmsrc/!(*.spec) \
+            rpmbuild/SOURCES
+          cp dtranslatebot/rpmsrc/*.spec \
+            rpmbuild/SPECS
+          rpmbuild -ba rpmbuild/SPECS/dtranslatebot.spec
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: Enterprise Linux ${{matrix.version}}
+        path: |
+          ${{github.workspace}}/rpms/x86_64/*.rpm
