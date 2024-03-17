@@ -89,6 +89,16 @@ endif()
 if (UNIX AND NOT APPLE)
     option(WITH_SYSTEMD "Build with systemd Support" OFF)
     if (WITH_SYSTEMD)
+        find_program(SYSTEMD_ESCAPE_EXECUTABLE NAMES systemd-escape)
+        if (DEFINED SYSTEMD_ESCAPE_EXECUTABLE)
+            execute_process(
+                COMMAND "${SYSTEMD_ESCAPE_EXECUTABLE}" "${CMAKE_INSTALL_FULL_LOCALSTATEDIR}/lib/dtranslatebot"
+                OUTPUT_VARIABLE dtranslatebot_SERVICE_WORKDIR
+            )
+            string(STRIP "${dtranslatebot_SERVICE_WORKDIR}" dtranslatebot_SERVICE_WORKDIR)
+        else()
+            set(dtranslatebot_SERVICE_WORKDIR "${CMAKE_INSTALL_FULL_LOCALSTATEDIR}/lib/dtranslatebot")
+        endif()
         configure_file(src/systemd/dtranslatebot.service.in "${dtranslatebot_BINARY_DIR}/systemd/service/dtranslatebot.service" @ONLY)
         configure_file(src/systemd/dtranslatebot.sysusersd.in "${dtranslatebot_BINARY_DIR}/systemd/sysusers.d/dtranslatebot.conf" @ONLY)
         install(FILES "${dtranslatebot_BINARY_DIR}/systemd/service/dtranslatebot.service" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system")

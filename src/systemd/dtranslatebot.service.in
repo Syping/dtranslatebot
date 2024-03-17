@@ -5,9 +5,9 @@ After=network.target
 [Service]
 User=dtranslatebot
 Group=dtranslatebot
-WorkingDirectory="@CMAKE_INSTALL_FULL_LOCALSTATEDIR@/lib/dtranslatebot"
+WorkingDirectory=@dtranslatebot_SERVICE_WORKDIR@
 ExecStart="@CMAKE_INSTALL_FULL_BINDIR@/dtranslatebot" "@CMAKE_INSTALL_FULL_SYSCONFDIR@/dtranslatebot.json"
-Restart=on-failure
+Restart=on-abnormal
 
 [Install]
 WantedBy=multi-user.target
