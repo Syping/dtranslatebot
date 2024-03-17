@@ -19,7 +19,6 @@
 include(ArgumentPassthrough)
 
 # OpenSSL needs to be configured with perl and build with make
-find_package(Perl REQUIRED)
 find_program(MAKE_EXECUTABLE NAMES make gmake)
 if (NOT DEFINED MAKE_EXECUTABLE)
     message(SEND_ERROR "make not found")
@@ -33,6 +32,11 @@ if (DEFINED NPROC_EXECUTABLE)
     )
     string(STRIP "${NPROC}" NPROC)
     set(MAKE_JOBS_ARG "-j${NPROC}")
+endif()
+
+find_program(PERL_EXECUTABLE NAMES perl)
+if (NOT DEFINED PERL_EXECUTABLE)
+    message(SEND_ERROR "perl not found")
 endif()
 
 include(ExternalProject)
