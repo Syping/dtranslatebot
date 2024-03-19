@@ -58,7 +58,6 @@ source /opt/rh/gcc-toolset-9/enable
 %endif
 %cmake \
   -DCMAKE_BUILD_TYPE=Release \
-  -DPERL_EXECUTABLE=%{_bindir}/perl \
   -DWITH_DPP_STATIC_BUNDLE=TRUE \
   -DWITH_SYSTEMD=TRUE
 %cmake_build
