@@ -1,11 +1,19 @@
-name: Enterprise Linux
+name: Linux
 on: push
 jobs:
   Release:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        version: [el7, el8, el9]
+        include:
+          - name: Enterprise Linux 7
+            version: el7
+          - name: Enterprise Linux 8
+            version: el8
+          - name: Enterprise Linux 9
+            version: el9
+          - name: openSUSE Leap 15.5
+            version: lp155
     steps:
     - name: Cloning
       uses: actions/checkout@v4
@@ -32,6 +40,6 @@ jobs:
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
-        name: Enterprise Linux ${{matrix.version}}
+        name: ${{matrix.name}}
         path: |
           ${{github.workspace}}/rpms/x86_64/*.rpm
