@@ -41,6 +41,7 @@ namespace bot {
             std::vector<bot::settings::channel> channel;
         };
         enum translator_type {
+            TRANSLATOR_DEEPL,
             TRANSLATOR_LIBRETRANSLATE,
             TRANSLATOR_STUB
         };

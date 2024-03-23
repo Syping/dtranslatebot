@@ -434,9 +434,9 @@ void slashcommands::register_commands(dpp::cluster *bot, bot::settings::settings
     std::vector<dpp::slashcommand> commands;
 
     dpp::command_option source_option(dpp::co_string, "source", "Source language (ISO 639-1)", true);
-    source_option.set_max_length(static_cast<int64_t>(2)).set_min_length(static_cast<int64_t>(2));
+    source_option.set_max_length(static_cast<int64_t>(5)).set_min_length(static_cast<int64_t>(2));
     dpp::command_option target_option(dpp::co_string, "target", "Target language (ISO 639-1)", true);
-    target_option.set_max_length(static_cast<int64_t>(2)).set_min_length(static_cast<int64_t>(2));
+    target_option.set_max_length(static_cast<int64_t>(5)).set_min_length(static_cast<int64_t>(2));
 
     dpp::slashcommand command_edit("edit", "Edit current channel settings", bot->me.id);
     command_edit.set_default_permissions(dpp::p_manage_webhooks);

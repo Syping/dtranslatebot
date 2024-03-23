@@ -21,6 +21,7 @@
 #include <iostream>
 #include "settings.h"
 #include "../database/file/file.h"
+#include "../translator/deepl/deepl.h"
 #include "../translator/libretranslate/libretranslate.h"
 #include "../translator/stub/stub.h"
 using namespace bot::settings;
@@ -233,7 +234,23 @@ bool process_translator_settings(const dpp::json &json, translator &translator)
         std::transform(translator_type.begin(), translator_type.end(), translator_type.begin(), ::tolower);
     }
 
-    if (translator_type == "libretranslate") {
+    if (translator_type == "deepl") {
+        translator.type = TRANSLATOR_DEEPL;
+
+        auto json_deepl_hostname = json.find("hostname");
+        if (json_deepl_hostname != json.end())
+            translator.hostname = *json_deepl_hostname;
+        else
+            translator.hostname = "api-free.deepl.com";
+
+        auto json_deepl_apiKey = json.find("apiKey");
+        if (json_deepl_apiKey == json.end()) {
+            std::cerr << "[Error] DeepL requires API key for authorization" << std::endl;
+            return false;
+        }
+        translator.apiKey = *json_deepl_apiKey;
+    }
+    else if (translator_type == "libretranslate") {
         translator.type = TRANSLATOR_LIBRETRANSLATE;
 
         auto json_lt_hostname = json.find("hostname");
@@ -459,6 +476,8 @@ std::unique_ptr<bot::translator::translator> settings::get_translator() const
     const std::lock_guard<std::recursive_mutex> guard(m_mutex);
 
     switch (m_translator.type) {
+    case TRANSLATOR_DEEPL:
+        return std::make_unique<bot::translator::deepl>(m_translator.hostname, m_translator.apiKey);
     case TRANSLATOR_LIBRETRANSLATE:
         return std::make_unique<bot::translator::libretranslate>(m_translator.hostname, m_translator.port, m_translator.url, m_translator.tls, m_translator.apiKey);
     case TRANSLATOR_STUB:

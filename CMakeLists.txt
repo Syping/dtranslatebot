@@ -33,6 +33,7 @@ set(DTRANSLATEBOT_HEADERS
     src/core/translator.h
     src/core/webhook_push.h
     src/database/file/file.h
+    src/translator/deepl/deepl.h
     src/translator/libretranslate/libretranslate.h
     src/translator/stub/stub.h
 )
@@ -46,6 +47,7 @@ set(DTRANSLATEBOT_SOURCES
     src/core/translator.cpp
     src/core/webhook_push.cpp
     src/database/file/file.cpp
+    src/translator/deepl/deepl.cpp
     src/translator/libretranslate/libretranslate.cpp
     src/translator/stub/stub.cpp
 )
