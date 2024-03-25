@@ -1,5 +1,12 @@
 {
-    "token": "add bot token from here -> https://discord.com/developers/applications",
+    /*
+      A DISCORD BOT TOKEN IS NECESSARY TO USE THIS APPLICATION!
+
+      You can get a Bot Token from the Discord Developer Portal
+      by creating a New Application:
+      https://discord.com/developers/applications
+    */
+    "token": "",
     "translator": {
         "type": "stub"
     }

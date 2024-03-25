@@ -507,7 +507,7 @@ bool settings::parse(const std::string &data, bool initialize)
     try {
         dpp::json json;
         try {
-            json = dpp::json::parse(data);
+            json = dpp::json::parse(data, nullptr, true, true);
         }
         catch (const std::exception &exception) {
             std::cerr << "[Exception] " << exception.what() << std::endl;
