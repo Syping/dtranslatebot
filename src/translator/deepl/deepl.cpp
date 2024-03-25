@@ -20,6 +20,7 @@
 #include <dpp/httpsclient.h>
 #include "deepl.h"
 using namespace bot::translator;
+using namespace std::chrono_literals;
 using namespace std::string_literals;
 
 deepl::deepl(const std::string &hostname, const std::string apiKey) :
@@ -33,31 +34,41 @@ deepl::~deepl()
 
 const std::vector<language> deepl::get_languages()
 {
-    std::vector<language> languages;
+    if (!m_languages.languages.empty()) {
+        auto current_time = std::chrono::system_clock::now();
+        auto threshold_time = m_languages.query_time + 24h;
+        if (current_time <= threshold_time)
+            return m_languages.languages;
+    }
 
     try {
         dpp::https_client http_request(m_hostname, 443, "/v2/languages?type=target", "GET", {}, { {"Authorization"s, "DeepL-Auth-Key " + m_apiKey} }, false);
         if (http_request.get_status() == 200) {
             const dpp::json response = dpp::json::parse(http_request.get_content());
             if (response.is_array()) {
-                for (const auto &json_language : response) {
-                    if (json_language.is_object()) {
+                m_languages.languages.clear();
+                for (auto json_language = response.begin(); json_language != response.end(); json_language++) {
+                    if (json_language->is_object()) {
                         language language;
 
-                        auto json_lang_code = json_language.find("language");
-                        if (json_lang_code != json_language.end())
+                        auto json_lang_code = json_language->find("language");
+                        if (json_lang_code != json_language->end())
                             language.code = *json_lang_code;
 
-                        std::transform(language.code.begin(), language.code.end(), language.code.begin(), ::tolower);
+                        if (language.code.size() > 2)
+                            std::transform(language.code.begin(), language.code.begin() + 2, language.code.begin(), ::tolower);
+                        else
+                            std::transform(language.code.begin(), language.code.end(), language.code.begin(), ::tolower);
 
-                        auto json_lang_name = json_language.find("name");
-                        if (json_lang_name != json_language.end())
+                        auto json_lang_name = json_language->find("name");
+                        if (json_lang_name != json_language->end())
                             language.name = *json_lang_name;
 
                         if (!language.code.empty() && !language.name.empty())
-                            languages.push_back(std::move(language));
+                            m_languages.languages.push_back(std::move(language));
                     }
                 }
+                m_languages.query_time = std::chrono::system_clock::now();
             }
         }
     }
@@ -65,18 +76,19 @@ const std::vector<language> deepl::get_languages()
         std::cerr << "[Exception] " << exception.what() << std::endl;
     }
 
-    return languages;
+    return m_languages.languages;
 }
 
 const std::string deepl::translate(const std::string &text, const std::string &source, const std::string &target)
 {
     const dpp::http_headers http_headers = {
-        {"Authorization"s, "DeepL-Auth-Key "s + m_apiKey},
+        {"Authorization"s, "DeepL-Auth-Key " + m_apiKey},
         {"Content-Type"s, "application/json"s}
     };
 
     dpp::json json_body = {
         {"text"s, { text } },
+        {"source_lang"s, source},
         {"target_lang"s, target},
     };
 

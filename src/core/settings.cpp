@@ -220,23 +220,24 @@ void process_url(const std::string &url, translator &translator)
     }
 }
 
-bool process_translator_settings(const dpp::json &json, translator &translator)
+bool process_translator_settings(const dpp::json &json, std::shared_ptr<bot::translator::translator> &translator_instance)
 {
     if (!json.is_object()) {
         std::cerr << "[Error] Value translator needs to be a object" << std::endl;
         return false;
     }
 
-    std::string translator_type = "libretranslate";
+    bot::settings::translator translator;
     auto json_translator_type = json.find("type");
     if (json_translator_type != json.end()) {
-        translator_type = *json_translator_type;
-        std::transform(translator_type.begin(), translator_type.end(), translator_type.begin(), ::tolower);
+        translator.type = *json_translator_type;
+        std::transform(translator.type.begin(), translator.type.end(), translator.type.begin(), ::tolower);
+    }
+    else {
+        translator.type = "libretranslate";
     }
 
-    if (translator_type == "deepl") {
-        translator.type = TRANSLATOR_DEEPL;
-
+    if (translator.type == "deepl") {
         auto json_deepl_hostname = json.find("hostname");
         if (json_deepl_hostname != json.end())
             translator.hostname = *json_deepl_hostname;
@@ -249,10 +250,10 @@ bool process_translator_settings(const dpp::json &json, translator &translator)
             return false;
         }
         translator.apiKey = *json_deepl_apiKey;
-    }
-    else if (translator_type == "libretranslate") {
-        translator.type = TRANSLATOR_LIBRETRANSLATE;
 
+        translator_instance = std::make_shared<bot::translator::deepl>(translator.hostname, translator.apiKey);
+    }
+    else if (translator.type == "libretranslate") {
         auto json_lt_hostname = json.find("hostname");
         if (json_lt_hostname != json.end())
             translator.hostname = *json_lt_hostname;
@@ -288,9 +289,11 @@ bool process_translator_settings(const dpp::json &json, translator &translator)
             translator.apiKey = *json_lt_apiKey;
         else
             translator.apiKey.clear();
+
+        translator_instance = std::make_shared<bot::translator::libretranslate>(translator.hostname, translator.port, translator.url, translator.tls, translator.apiKey);
     }
-    else if (translator_type == "stub") {
-        translator.type = TRANSLATOR_STUB;
+    else if (translator.type == "stub") {
+        translator_instance = std::make_shared<bot::translator::stub>();
     }
     else {
         std::cerr << "[Error] Translator " << translator.type << " is unknown" << std::endl;
@@ -471,20 +474,10 @@ std::shared_ptr<bot::database::database> settings::get_database() const
     return m_database;
 }
 
-std::unique_ptr<bot::translator::translator> settings::get_translator() const
+std::shared_ptr<bot::translator::translator> settings::get_translator() const
 {
     const std::lock_guard<std::recursive_mutex> guard(m_mutex);
-
-    switch (m_translator.type) {
-    case TRANSLATOR_DEEPL:
-        return std::make_unique<bot::translator::deepl>(m_translator.hostname, m_translator.apiKey);
-    case TRANSLATOR_LIBRETRANSLATE:
-        return std::make_unique<bot::translator::libretranslate>(m_translator.hostname, m_translator.port, m_translator.url, m_translator.tls, m_translator.apiKey);
-    case TRANSLATOR_STUB:
-        return std::make_unique<bot::translator::stub>();
-    default:
-        return std::make_unique<bot::translator::translator>();
-    }
+    return m_translator;
 }
 
 const std::string settings::token() const

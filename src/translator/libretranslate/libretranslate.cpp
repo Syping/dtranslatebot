@@ -20,6 +20,7 @@
 #include <dpp/httpsclient.h>
 #include "libretranslate.h"
 using namespace bot::translator;
+using namespace std::chrono_literals;
 using namespace std::string_literals;
 
 libretranslate::libretranslate(const std::string &hostname, uint16_t port, const std::string &url, bool tls, const std::string apiKey) :
@@ -33,29 +34,36 @@ libretranslate::~libretranslate()
 
 const std::vector<language> libretranslate::get_languages()
 {
-    std::vector<language> languages;
+    if (!m_languages.languages.empty()) {
+        auto current_time = std::chrono::system_clock::now();
+        auto threshold_time = m_languages.query_time + 24h;
+        if (current_time <= threshold_time)
+            return m_languages.languages;
+    }
 
     try {
         dpp::https_client http_request(m_hostname, m_port, m_url + "languages", "GET", {}, {}, !m_tls);
         if (http_request.get_status() == 200) {
             const dpp::json response = dpp::json::parse(http_request.get_content());
             if (response.is_array()) {
-                for (const auto &json_language : response) {
-                    if (json_language.is_object()) {
+                m_languages.languages.clear();
+                for (auto json_language = response.begin(); json_language != response.end(); json_language++) {
+                    if (json_language->is_object()) {
                         language language;
 
-                        auto json_lang_code = json_language.find("code");
-                        if (json_lang_code != json_language.end())
+                        auto json_lang_code = json_language->find("code");
+                        if (json_lang_code != json_language->end())
                             language.code = *json_lang_code;
 
-                        auto json_lang_name = json_language.find("name");
-                        if (json_lang_name != json_language.end())
+                        auto json_lang_name = json_language->find("name");
+                        if (json_lang_name != json_language->end())
                             language.name = *json_lang_name;
 
                         if (!language.code.empty() && !language.name.empty())
-                            languages.push_back(std::move(language));
+                            m_languages.languages.push_back(std::move(language));
                     }
                 }
+                m_languages.query_time = std::chrono::system_clock::now();
             }
         }
     }
@@ -63,7 +71,7 @@ const std::vector<language> libretranslate::get_languages()
         std::cerr << "[Exception] " << exception.what() << std::endl;
     }
 
-    return languages;
+    return m_languages.languages;
 }
 
 const std::string libretranslate::translate(const std::string &text, const std::string &source, const std::string &target)

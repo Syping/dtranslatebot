@@ -33,6 +33,7 @@ namespace bot {
         private:
             std::string m_apiKey;
             std::string m_hostname;
+            supported_languages m_languages;
         };
     }
 }

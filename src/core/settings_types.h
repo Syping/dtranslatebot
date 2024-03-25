@@ -40,13 +40,8 @@ namespace bot {
             dpp::snowflake id;
             std::vector<bot::settings::channel> channel;
         };
-        enum translator_type {
-            TRANSLATOR_DEEPL,
-            TRANSLATOR_LIBRETRANSLATE,
-            TRANSLATOR_STUB
-        };
         struct translator {
-            translator_type type;
+            std::string type;
             std::string hostname;
             uint16_t port;
             std::string url;

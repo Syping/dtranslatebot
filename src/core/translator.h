@@ -19,6 +19,7 @@
 #ifndef TRANSLATOR_H
 #define TRANSLATOR_H
 
+#include <chrono>
 #include <string>
 #include <vector>
 
@@ -27,6 +28,11 @@ namespace bot {
         struct language {
             std::string code;
             std::string name;
+        };
+
+        struct supported_languages {
+            std::vector<language> languages;
+            std::chrono::system_clock::time_point query_time;
         };
 
         class translator {

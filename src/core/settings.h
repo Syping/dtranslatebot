@@ -47,7 +47,7 @@ namespace bot {
             static const target* get_target(const channel *channel, const std::string &target);
             const std::vector<std::string> preferred_languages() const;
             std::shared_ptr<bot::database::database> get_database() const;
-            std::unique_ptr<bot::translator::translator> get_translator() const;
+            std::shared_ptr<bot::translator::translator> get_translator() const;
             const std::string token() const;
 
             /* is functions */
@@ -73,7 +73,7 @@ namespace bot {
             std::shared_ptr<bot::database::database> m_database;
             std::vector<guild> m_guilds;
             std::vector<std::string> m_prefLangs;
-            bot::settings::translator m_translator;
+            std::shared_ptr<bot::translator::translator> m_translator;
             std::string m_token;
             std::vector<dpp::snowflake> m_webhookIds;
         };
