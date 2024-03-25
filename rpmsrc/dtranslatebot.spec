@@ -46,6 +46,7 @@ dtranslatebot is a Discord Bot which translate incoming Discord messages to Disc
 
 %prep
 %setup -q
+%{?debug_package}
 
 %build
 %if 0%{?rhel} && 0%{?rhel} < 8
