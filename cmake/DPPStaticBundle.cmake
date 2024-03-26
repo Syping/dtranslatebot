@@ -29,8 +29,8 @@ if (DEFINED NPROC_EXECUTABLE)
     execute_process(
         COMMAND "${NPROC_EXECUTABLE}"
         OUTPUT_VARIABLE NPROC
+        OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    string(STRIP "${NPROC}" NPROC)
     set(MAKE_JOBS_ARG "-j${NPROC}")
 endif()
 

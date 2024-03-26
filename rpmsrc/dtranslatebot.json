@@ -6,6 +6,7 @@
       by creating a New Application:
       https://discord.com/developers/applications
     */
+
     "token": "",
     "translator": {
         "type": "stub"
