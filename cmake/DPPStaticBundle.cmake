@@ -78,8 +78,8 @@ ExternalProject_Get_Property(OpenSSL INSTALL_DIR)
 set(OpenSSL_INSTALL_DIR "${INSTALL_DIR}")
 
 ExternalProject_Add(DPP
-    URL https://github.com/brainboxdotcc/DPP/releases/download/v10.0.31/DPP-10.0.31.tar.gz
-    URL_HASH SHA256=3e392868c0dc3d0f13a00cfa190a925a20bde62bea58fd87d4acf14de11062bf
+    URL https://github.com/Syping/DPP/archive/067dfb0c5728432dd24f74375173cf0fc8cbc4ca.tar.gz
+    URL_HASH SHA256=ea794219d32bc58eeb23536b3b18fbc119bd747773c6f7c98cf8e96e6d91693a
     CMAKE_ARGS
         -DAVX_TYPE=AVX0
         -DBUILD_SHARED_LIBS=OFF
