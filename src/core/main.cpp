@@ -24,22 +24,39 @@
 #include "message_queue.h"
 #include "settings.h"
 #include "slashcommands.h"
+using namespace std::chrono_literals;
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        std::cout << "Usage: " << argv[0] << " [json]" << std::endl;
+    bool flag_wait_for_translator = false;
+    std::vector<std::string> args;
+    for (size_t i = 1; i < argc; i++) {
+        if (!strcmp(argv[i], "--wait-for-translator"))
+            flag_wait_for_translator = true;
+        else
+            args.push_back(argv[i]);
+    }
+    if (args.size() != 1) {
+        std::cout << "Usage: " << argv[0] << " [--wait-for-translator] [json]" << std::endl;
         return 0;
     }
 
     std::cout << "[Launch] Processing configuration..." << std::endl;
     bot::settings::settings settings;
-    if (!settings.parse_file(argv[1]))
+    if (!settings.parse_file(args.at(0)))
         return 1;
 
-    std::cout << "[Launch] Requesting supported languages..." << std::endl;
-    if (settings.get_translator()->get_languages().empty()) {
-        std::cerr << "[Error] Failed to initialise translateable languages" << std::endl;
-        return 1;
+    for (;;) {
+        std::cout << "[Launch] Requesting supported languages..." << std::endl;
+        if (!settings.get_translator()->get_languages().empty()) {
+            break;
+        }
+        else if (flag_wait_for_translator) {
+            std::this_thread::sleep_for(5000ms);
+        }
+        else {
+            std::cerr << "[Error] Failed to initialise translateable languages" << std::endl;
+            return 1;
+        }
     }
 
     dpp::cluster bot(settings.token(), dpp::i_default_intents | dpp::i_message_content);
