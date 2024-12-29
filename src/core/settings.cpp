@@ -23,6 +23,7 @@
 #include "../database/file/file.h"
 #include "../translator/deepl/deepl.h"
 #include "../translator/libretranslate/libretranslate.h"
+#include "../translator/lingvatranslate/lingvatranslate.h"
 #include "../translator/stub/stub.h"
 using namespace bot::settings;
 
@@ -291,6 +292,39 @@ bool process_translator_settings(const dpp::json &json, std::shared_ptr<bot::tra
             translator.apiKey.clear();
 
         translator_instance = std::make_shared<bot::translator::libretranslate>(translator.hostname, translator.port, translator.url, translator.tls, translator.apiKey);
+    }
+    else if (translator.type == "lingvatranslate") {
+        auto json_lt_hostname = json.find("hostname");
+        if (json_lt_hostname != json.end())
+            translator.hostname = *json_lt_hostname;
+        else
+            translator.hostname = {};
+
+        auto json_lt_tls = json.find("tls");
+        if (json_lt_tls != json.end())
+            translator.tls = *json_lt_tls;
+        else
+            translator.tls = false;
+
+        auto json_lt_port = json.find("port");
+        if (json_lt_port != json.end())
+            translator.port = *json_lt_port;
+        else
+            translator.port = 0;
+
+        auto json_lt_url = json.find("url");
+        if (json_lt_url == json.end()) {
+            std::cerr << "[Error] Value url not found in translator object" << std::endl;
+            return false;
+        }
+        if (translator.hostname.empty()) {
+            process_url(*json_lt_url, translator);
+        }
+        else {
+            translator.url = *json_lt_url;
+        }
+
+        translator_instance = std::make_shared<bot::translator::lingvatranslate>(translator.hostname, translator.port, translator.url, translator.tls);
     }
     else if (translator.type == "stub") {
         translator_instance = std::make_shared<bot::translator::stub>();

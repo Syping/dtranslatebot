@@ -35,6 +35,7 @@ set(DTRANSLATEBOT_HEADERS
     src/database/file/file.h
     src/translator/deepl/deepl.h
     src/translator/libretranslate/libretranslate.h
+    src/translator/lingvatranslate/lingvatranslate.h
     src/translator/stub/stub.h
 )
 set(DTRANSLATEBOT_SOURCES
@@ -49,6 +50,7 @@ set(DTRANSLATEBOT_SOURCES
     src/database/file/file.cpp
     src/translator/deepl/deepl.cpp
     src/translator/libretranslate/libretranslate.cpp
+    src/translator/lingvatranslate/lingvatranslate.cpp
     src/translator/stub/stub.cpp
 )
 
