@@ -22,6 +22,7 @@
 #include "settings.h"
 #include "../database/file/file.h"
 #include "../translator/deepl/deepl.h"
+#include "../translator/mozhi/mozhi.h"
 #include "../translator/libretranslate/libretranslate.h"
 #include "../translator/lingvatranslate/lingvatranslate.h"
 #include "../translator/stub/stub.h"
@@ -254,6 +255,46 @@ bool process_translator_settings(const dpp::json &json, std::shared_ptr<bot::tra
 
         translator_instance = std::make_shared<bot::translator::deepl>(translator.hostname, translator.apiKey);
     }
+    else if (translator.type == "mozhi") {
+        auto json_mozhi_hostname = json.find("hostname");
+        if (json_mozhi_hostname != json.end())
+            translator.hostname = *json_mozhi_hostname;
+        else
+            translator.hostname = {};
+
+        auto json_mozhi_tls = json.find("tls");
+        if (json_mozhi_tls != json.end())
+            translator.tls = *json_mozhi_tls;
+        else
+            translator.tls = false;
+
+        auto json_mozhi_port = json.find("port");
+        if (json_mozhi_port != json.end())
+            translator.port = *json_mozhi_port;
+        else
+            translator.port = 0;
+
+        auto json_mozhi_url = json.find("url");
+        if (json_mozhi_url == json.end()) {
+            std::cerr << "[Error] Value url not found in translator object" << std::endl;
+            return false;
+        }
+        if (translator.hostname.empty()) {
+            process_url(*json_mozhi_url, translator);
+        }
+        else {
+            translator.url = *json_mozhi_url;
+        }
+
+        std::string mozhi_engine;
+        auto json_mozhi_engine = json.find("engine");
+        if (json_mozhi_engine != json.end())
+            mozhi_engine = *json_mozhi_engine;
+        else
+            mozhi_engine = "google";
+
+        translator_instance = std::make_shared<bot::translator::mozhi>(translator.hostname, translator.port, translator.url, translator.tls, mozhi_engine);
+    }
     else if (translator.type == "libretranslate") {
         auto json_lt_hostname = json.find("hostname");
         if (json_lt_hostname != json.end())
@@ -288,8 +329,6 @@ bool process_translator_settings(const dpp::json &json, std::shared_ptr<bot::tra
         auto json_lt_apiKey = json.find("apiKey");
         if (json_lt_apiKey != json.end())
             translator.apiKey = *json_lt_apiKey;
-        else
-            translator.apiKey.clear();
 
         translator_instance = std::make_shared<bot::translator::libretranslate>(translator.hostname, translator.port, translator.url, translator.tls, translator.apiKey);
     }
