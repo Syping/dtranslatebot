@@ -215,8 +215,6 @@ bool process_server(const dpp::json &json, translator &translator)
     auto json_hostname = json.find("hostname");
     if (json_hostname != json.end())
         translator.hostname = *json_hostname;
-    else
-        translator.hostname = {};
 
     auto json_tls = json.find("tls");
     if (json_tls != json.end())
