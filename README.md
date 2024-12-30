@@ -10,8 +10,11 @@ Open Source Discord Translation Bot
 - Compiler with C++17 Support
 - [D++: A C++ Discord API Library for Bots](https://dpp.dev/)
 
-#### Runtime Dependencies
-- [LibreTranslate](https://libretranslate.com/)
+#### Supported Translation Engines
+- [LibreTranslate](https://libretranslate.com/) (Default)
+- [Lingva Translate](https://lingva.ml/)
+- [Mozhi](https://codeberg.org/aryak/mozhi)
+- [DeepL](https://deepl.com/) (Experimental)
 
 #### Build dtranslatebot
 
