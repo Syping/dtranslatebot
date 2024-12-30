@@ -46,7 +46,6 @@ const std::vector<language> mozhi::get_languages()
         const std::string parameters = dpp::utility::make_url_parameters({
             {"engine"s, m_engine}
         });
-
         dpp::https_client http_request(m_hostname, m_port, m_url + "api/target_languages" + parameters, "GET", {}, {}, !m_tls);
         if (http_request.get_status() == 200) {
             const dpp::json response = dpp::json::parse(http_request.get_content());
@@ -88,7 +87,6 @@ const std::string mozhi::translate(const std::string &text, const std::string &s
             {"to"s, target},
             {"text"s, text},
         });
-
         dpp::https_client http_request(m_hostname, m_port, m_url + "api/translate" + parameters, "GET", {}, {}, !m_tls);
         if (http_request.get_status() == 200) {
             const dpp::json response = dpp::json::parse(http_request.get_content());

@@ -166,19 +166,7 @@ void process_preflang_settings(const dpp::json &json, std::vector<std::string> *
     }
 }
 
-void process_user_settings(const dpp::json &json, uint16_t &avatar_size)
-{
-    auto json_avatar_size = json.find("avatar_size");
-    if (json_avatar_size != json.end()) {
-        avatar_size = *json_avatar_size;
-        if (avatar_size < 16)
-            avatar_size = 16;
-        else if (avatar_size > 4096)
-            avatar_size = 4096;
-    }
-}
-
-void process_url(const std::string &url, translator &translator)
+void process_server_url(const std::string &url, translator &translator)
 {
     std::string_view url_v = url;
     if (url_v.substr(0, 7) == "http://") {
@@ -222,6 +210,55 @@ void process_url(const std::string &url, translator &translator)
     }
 }
 
+bool process_server(const dpp::json &json, translator &translator)
+{
+    auto json_hostname = json.find("hostname");
+    if (json_hostname != json.end())
+        translator.hostname = *json_hostname;
+    else
+        translator.hostname = {};
+
+    auto json_tls = json.find("tls");
+    if (json_tls != json.end())
+        translator.tls = *json_tls;
+    else
+        translator.tls = false;
+
+    auto json_port = json.find("port");
+    if (json_port != json.end())
+        translator.port = *json_port;
+    else
+        translator.port = 0;
+
+    auto json_url = json.find("url");
+    if (json_url == json.end()) {
+        std::cerr << "[Error] Value url not found in translator object" << std::endl;
+        return false;
+    }
+    if (translator.hostname.empty())
+        process_server_url(*json_url, translator);
+    else
+        translator.url = *json_url;
+
+    auto json_apiKey = json.find("apiKey");
+    if (json_apiKey != json.end())
+        translator.apiKey = *json_apiKey;
+
+    return true;
+}
+
+void process_user_settings(const dpp::json &json, uint16_t &avatar_size)
+{
+    auto json_avatar_size = json.find("avatar_size");
+    if (json_avatar_size != json.end()) {
+        avatar_size = *json_avatar_size;
+        if (avatar_size < 16)
+            avatar_size = 16;
+        else if (avatar_size > 4096)
+            avatar_size = 4096;
+    }
+}
+
 bool process_translator_settings(const dpp::json &json, std::shared_ptr<bot::translator::translator> &translator_instance)
 {
     if (!json.is_object()) {
@@ -256,35 +293,8 @@ bool process_translator_settings(const dpp::json &json, std::shared_ptr<bot::tra
         translator_instance = std::make_shared<bot::translator::deepl>(translator.hostname, translator.apiKey);
     }
     else if (translator.type == "mozhi") {
-        auto json_mozhi_hostname = json.find("hostname");
-        if (json_mozhi_hostname != json.end())
-            translator.hostname = *json_mozhi_hostname;
-        else
-            translator.hostname = {};
-
-        auto json_mozhi_tls = json.find("tls");
-        if (json_mozhi_tls != json.end())
-            translator.tls = *json_mozhi_tls;
-        else
-            translator.tls = false;
-
-        auto json_mozhi_port = json.find("port");
-        if (json_mozhi_port != json.end())
-            translator.port = *json_mozhi_port;
-        else
-            translator.port = 0;
-
-        auto json_mozhi_url = json.find("url");
-        if (json_mozhi_url == json.end()) {
-            std::cerr << "[Error] Value url not found in translator object" << std::endl;
+        if (!process_server(json, translator))
             return false;
-        }
-        if (translator.hostname.empty()) {
-            process_url(*json_mozhi_url, translator);
-        }
-        else {
-            translator.url = *json_mozhi_url;
-        }
 
         std::string mozhi_engine;
         auto json_mozhi_engine = json.find("engine");
@@ -296,72 +306,14 @@ bool process_translator_settings(const dpp::json &json, std::shared_ptr<bot::tra
         translator_instance = std::make_shared<bot::translator::mozhi>(translator.hostname, translator.port, translator.url, translator.tls, mozhi_engine);
     }
     else if (translator.type == "libretranslate") {
-        auto json_lt_hostname = json.find("hostname");
-        if (json_lt_hostname != json.end())
-            translator.hostname = *json_lt_hostname;
-        else
-            translator.hostname = {};
-
-        auto json_lt_tls = json.find("tls");
-        if (json_lt_tls != json.end())
-            translator.tls = *json_lt_tls;
-        else
-            translator.tls = false;
-
-        auto json_lt_port = json.find("port");
-        if (json_lt_port != json.end())
-            translator.port = *json_lt_port;
-        else
-            translator.port = 0;
-
-        auto json_lt_url = json.find("url");
-        if (json_lt_url == json.end()) {
-            std::cerr << "[Error] Value url not found in translator object" << std::endl;
+        if (!process_server(json, translator))
             return false;
-        }
-        if (translator.hostname.empty()) {
-            process_url(*json_lt_url, translator);
-        }
-        else {
-            translator.url = *json_lt_url;
-        }
-
-        auto json_lt_apiKey = json.find("apiKey");
-        if (json_lt_apiKey != json.end())
-            translator.apiKey = *json_lt_apiKey;
 
         translator_instance = std::make_shared<bot::translator::libretranslate>(translator.hostname, translator.port, translator.url, translator.tls, translator.apiKey);
     }
     else if (translator.type == "lingvatranslate") {
-        auto json_lt_hostname = json.find("hostname");
-        if (json_lt_hostname != json.end())
-            translator.hostname = *json_lt_hostname;
-        else
-            translator.hostname = {};
-
-        auto json_lt_tls = json.find("tls");
-        if (json_lt_tls != json.end())
-            translator.tls = *json_lt_tls;
-        else
-            translator.tls = false;
-
-        auto json_lt_port = json.find("port");
-        if (json_lt_port != json.end())
-            translator.port = *json_lt_port;
-        else
-            translator.port = 0;
-
-        auto json_lt_url = json.find("url");
-        if (json_lt_url == json.end()) {
-            std::cerr << "[Error] Value url not found in translator object" << std::endl;
+        if (!process_server(json, translator))
             return false;
-        }
-        if (translator.hostname.empty()) {
-            process_url(*json_lt_url, translator);
-        }
-        else {
-            translator.url = *json_lt_url;
-        }
 
         translator_instance = std::make_shared<bot::translator::lingvatranslate>(translator.hostname, translator.port, translator.url, translator.tls);
     }
