@@ -63,7 +63,6 @@ ExternalProject_Add(OpenSSL
         "<SOURCE_DIR>/Configure"
         "--prefix=<INSTALL_DIR>"
         $<$<CONFIG:Debug>:-d>
-        no-deprecated
         no-dso
         no-dtls
         no-engine
