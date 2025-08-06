@@ -42,7 +42,7 @@ const std::vector<language> libretranslate::get_languages()
     }
 
     try {
-        dpp::https_client http_request(m_hostname, m_port, m_url + "languages", "GET", {}, {}, !m_tls);
+        dpp::https_client http_request(&m_cluster, m_hostname, m_port, m_url + "languages", "GET", {}, {}, !m_tls);
         if (http_request.get_status() == 200) {
             const dpp::json response = dpp::json::parse(http_request.get_content());
             if (response.is_array()) {
@@ -91,7 +91,7 @@ const std::string libretranslate::translate(const std::string &text, const std::
         json_body["apiKey"] = m_apiKey;
 
     try {
-        dpp::https_client http_request(m_hostname, m_port, m_url + "translate", "POST", json_body.dump(), http_headers, !m_tls);
+        dpp::https_client http_request(&m_cluster, m_hostname, m_port, m_url + "translate", "POST", json_body.dump(), http_headers, !m_tls);
         if (http_request.get_status() == 200) {
             const dpp::json response = dpp::json::parse(http_request.get_content());
             if (response.is_object()) {

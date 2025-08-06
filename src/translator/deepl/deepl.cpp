@@ -42,7 +42,7 @@ const std::vector<language> deepl::get_languages()
     }
 
     try {
-        dpp::https_client http_request(m_hostname, 443, "/v2/languages?type=target", "GET", {}, { {"Authorization"s, "DeepL-Auth-Key " + m_apiKey} }, false);
+        dpp::https_client http_request(&m_cluster, m_hostname, 443, "/v2/languages?type=target", "GET", {}, { {"Authorization"s, "DeepL-Auth-Key " + m_apiKey} }, false);
         if (http_request.get_status() == 200) {
             const dpp::json response = dpp::json::parse(http_request.get_content());
             if (response.is_array()) {
@@ -93,7 +93,7 @@ const std::string deepl::translate(const std::string &text, const std::string &s
     };
 
     try {
-        dpp::https_client http_request(m_hostname, 443, "/v2/translate", "POST", json_body.dump(), http_headers, false);
+        dpp::https_client http_request(&m_cluster, m_hostname, 443, "/v2/translate", "POST", json_body.dump(), http_headers, false);
         if (http_request.get_status() == 200) {
             const dpp::json response = dpp::json::parse(http_request.get_content());
             if (response.is_object()) {

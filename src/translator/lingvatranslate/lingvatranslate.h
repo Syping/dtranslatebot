@@ -20,6 +20,7 @@
 #define TRANSLATOR_LINGVATRANSLATE_H
 
 #include <cstdint>
+#include <dpp/cluster.h>
 #include "../../core/translator.h"
 
 namespace bot {
@@ -33,6 +34,7 @@ namespace bot {
             const std::string translate(const std::string &text, const std::string &source, const std::string &target) override;
 
         private:
+            dpp::cluster m_cluster;
             std::string m_hostname;
             supported_languages m_languages;
             uint16_t m_port;

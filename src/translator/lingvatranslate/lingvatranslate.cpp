@@ -43,7 +43,7 @@ const std::vector<language> lingvatranslate::get_languages()
     }
 
     try {
-        dpp::https_client http_request(m_hostname, m_port, m_url + "api/v1/languages/target", "GET", {}, {}, !m_tls);
+        dpp::https_client http_request(&m_cluster, m_hostname, m_port, m_url + "api/v1/languages/target", "GET", {}, {}, !m_tls);
         if (http_request.get_status() == 200) {
             const dpp::json response = dpp::json::parse(http_request.get_content());
             if (response.is_object()) {
@@ -81,7 +81,7 @@ const std::vector<language> lingvatranslate::get_languages()
 const std::string lingvatranslate::translate(const std::string &text, const std::string &source, const std::string &target)
 {
     try {
-        dpp::https_client http_request(m_hostname, m_port, m_url + "api/v1/" + source + "/" + target + "/" + dpp::utility::url_encode(text), "GET", {}, {}, !m_tls);
+        dpp::https_client http_request(&m_cluster, m_hostname, m_port, m_url + "api/v1/" + source + "/" + target + "/" + dpp::utility::url_encode(text), "GET", {}, {}, !m_tls);
         if (http_request.get_status() == 200) {
             const dpp::json response = dpp::json::parse(http_request.get_content());
             if (response.is_object()) {
