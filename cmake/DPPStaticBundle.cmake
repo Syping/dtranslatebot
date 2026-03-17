@@ -1,6 +1,6 @@
 #[[**************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2024 Syping
+* Copyright (C) 2024-2026 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -41,8 +41,8 @@ endif()
 
 include(ExternalProject)
 ExternalProject_Add(ZLIB
-    URL https://www.zlib.net/zlib-1.3.1.tar.xz
-    URL_HASH SHA256=38ef96b8dfe510d42707d9c781877914792541133e1870841463bfa73f883e32
+    URL https://www.zlib.net/zlib-1.3.2.tar.xz
+    URL_HASH SHA256=d7a0654783a4da529d1bb793b7ad9c3318020af77667bcae35f95d0e42a792f3
     CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
         ${CMAKE_PASSTHROUGH_ARGS}
@@ -55,8 +55,8 @@ set(ZLIB_INSTALL_DIR "${INSTALL_DIR}")
 
 set(OPENSSL_PLATFORM_ARG $<$<BOOL:$ENV{MSYSTEM}>:mingw64>)
 ExternalProject_Add(OpenSSL
-    URL https://github.com/openssl/openssl/releases/download/openssl-3.0.17/openssl-3.0.17.tar.gz
-    URL_HASH SHA256=dfdd77e4ea1b57ff3a6dbde6b0bdc3f31db5ac99e7fdd4eaf9e1fbb6ec2db8ce
+    URL https://github.com/openssl/openssl/releases/download/openssl-3.0.19/openssl-3.0.19.tar.gz
+    URL_HASH SHA256=fa5a4143b8aae18be53ef2f3caf29a2e0747430b8bc74d32d88335b94ab63072
     CONFIGURE_COMMAND
         ${CMAKE_PASSTHROUGH_ENV}
         "${PERL_EXECUTABLE}"
@@ -77,8 +77,8 @@ ExternalProject_Get_Property(OpenSSL INSTALL_DIR)
 set(OpenSSL_INSTALL_DIR "${INSTALL_DIR}")
 
 ExternalProject_Add(DPP
-    URL https://github.com/brainboxdotcc/DPP/archive/refs/tags/v10.1.3.tar.gz
-    URL_HASH SHA256=a32d94dcd6b23430afff82918234e4e28e0616bd2ddf743c5ab2f1778c5a600b
+    URL https://github.com/brainboxdotcc/DPP/archive/refs/tags/v10.1.4.tar.gz
+    URL_HASH SHA256=f11b6d3fc5cc8febcf672b573ca74293ead6c6ea48a66ac0316ab9a5cbd09441
     CMAKE_ARGS
         -DAVX_TYPE=AVX0
         -DBUILD_SHARED_LIBS=OFF
