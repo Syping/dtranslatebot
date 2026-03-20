@@ -24,6 +24,8 @@ include(GNUInstallDirs)
 # dtranslatebot Source files
 set(DTRANSLATEBOT_HEADERS
     src/core/database.h
+    src/core/http_request.h
+    src/core/http_response.h
     src/core/message_queue.h
     src/core/regex.h
     src/core/settings.h
@@ -41,6 +43,7 @@ set(DTRANSLATEBOT_HEADERS
 )
 set(DTRANSLATEBOT_SOURCES
     src/core/database.cpp
+    src/core/http_request.cpp
     src/core/main.cpp
     src/core/message_queue.cpp
     src/core/settings.cpp
@@ -58,6 +61,12 @@ set(DTRANSLATEBOT_SOURCES
 
 # dtranslatebot Module Path
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+# curl Library
+find_package(CURL REQUIRED)
+list(APPEND DTRANSLATEBOT_LIBRARIES
+    CURL::libcurl
+)
 
 # Boost C++ Libraries
 option(WITH_BOOST "Build with Boost C++ Libraries" OFF)

@@ -27,9 +27,13 @@ Source3:        %{name}.sysusersd
 
 %if 0%{?fedora} || 0%{?rhel}
 BuildRequires:  %{?toolset_prefix}annobin
+BuildRequires:  curl-devel
 %if 0%{?rhel} && 0%{?rhel} < 9
 BuildRequires:  epel-rpm-macros-systemd
 %endif
+%endif
+%if 0%{?suse_version}
+BuildRequires:  libcurl-devel
 %endif
 BuildRequires:  cmake%{?cmake_suffix}
 BuildRequires:  %{?toolset_prefix}gcc%{?toolset_version}-c++

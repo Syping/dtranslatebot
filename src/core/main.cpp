@@ -21,6 +21,7 @@
 #include <iostream>
 #include <vector>
 #include <thread>
+#include <curl/curl.h>
 #include "message_queue.h"
 #include "settings.h"
 #include "slashcommands.h"
@@ -44,6 +45,12 @@ int main(int argc, char* argv[]) {
     bot::settings::settings settings;
     if (!settings.parse_file(args.at(0)))
         return 1;
+
+    CURLcode result = curl_global_init(CURL_GLOBAL_DEFAULT);
+    if (result != CURLE_OK) {
+        std::cerr << "[Error] Failed to initialise curl" << std::endl;
+        return 1;
+    }
 
     for (;;) {
         std::cout << "[Launch] Requesting supported languages..." << std::endl;
@@ -87,6 +94,8 @@ int main(int argc, char* argv[]) {
 
     submit_queue.terminate();
     submit_queue_loop.join();
+
+    curl_global_cleanup();
 
     return 0;
 }

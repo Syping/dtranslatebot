@@ -34,7 +34,6 @@ namespace bot {
             const std::string translate(const std::string &text, const std::string &source, const std::string &target) override;
 
         private:
-            dpp::cluster m_cluster;
             std::string m_apiKey;
             std::string m_hostname;
             supported_languages m_languages;

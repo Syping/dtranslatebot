@@ -6,8 +6,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: Enterprise Linux 7
-            version: el7
           - name: Enterprise Linux 8
             version: el8
           - name: Enterprise Linux 9

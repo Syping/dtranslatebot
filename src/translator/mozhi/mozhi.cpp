@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2024 Syping
+* Copyright (C) 2024-2026 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -19,6 +19,7 @@
 #include <dpp/json.h>
 #include <dpp/httpsclient.h>
 #include <dpp/utility.h>
+#include "../../core/http_request.h"
 #include "mozhi.h"
 using namespace bot::translator;
 using namespace std::chrono_literals;
@@ -46,12 +47,13 @@ const std::vector<language> mozhi::get_languages()
         const std::string parameters = dpp::utility::make_url_parameters({
             {"engine"s, m_engine}
         });
-        dpp::https_client http_request(&m_cluster, m_hostname, m_port, m_url + "api/target_languages" + parameters, "GET", {}, {}, !m_tls);
-        if (http_request.get_status() == 200) {
-            const dpp::json response = dpp::json::parse(http_request.get_content());
-            if (response.is_array()) {
+        http_request request;
+        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/target_languages", m_tls));
+        if (response.status == 200) {
+            const dpp::json json_response = dpp::json::parse(response.content);
+            if (json_response.is_array()) {
                 m_languages.languages.clear();
-                for (auto json_language = response.begin(); json_language != response.end(); json_language++) {
+                for (auto json_language = json_response.begin(); json_language != json_response.end(); json_language++) {
                     if (json_language->is_object()) {
                         language language;
 
@@ -87,12 +89,13 @@ const std::string mozhi::translate(const std::string &text, const std::string &s
             {"to"s, target},
             {"text"s, text},
         });
-        dpp::https_client http_request(&m_cluster, m_hostname, m_port, m_url + "api/translate" + parameters, "GET", {}, {}, !m_tls);
-        if (http_request.get_status() == 200) {
-            const dpp::json response = dpp::json::parse(http_request.get_content());
-            if (response.is_object()) {
-                auto tr_text = response.find("translated-text");
-                if (tr_text != response.end())
+        http_request request;
+        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/translate" + parameters, m_tls));
+        if (response.status == 200) {
+            const dpp::json json_response = dpp::json::parse(response.content);
+            if (json_response.is_object()) {
+                auto tr_text = json_response.find("translated-text");
+                if (tr_text != json_response.end())
                     return *tr_text;
             }
         }

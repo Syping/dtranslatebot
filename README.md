@@ -8,6 +8,7 @@ Open Source Discord Translation Bot
 #### Build Dependencies
 - CMake 3.16 or newer
 - Compiler with C++17 Support
+- curl
 - [D++: A C++ Discord API Library for Bots](https://dpp.dev/)
 
 #### Supported Translation Engines

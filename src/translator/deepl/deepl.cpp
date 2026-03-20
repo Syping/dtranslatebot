@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2024 Syping
+* Copyright (C) 2024-2026 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -18,6 +18,7 @@
 
 #include <dpp/json.h>
 #include <dpp/httpsclient.h>
+#include "../../core/http_request.h"
 #include "deepl.h"
 using namespace bot::translator;
 using namespace std::chrono_literals;
@@ -42,12 +43,13 @@ const std::vector<language> deepl::get_languages()
     }
 
     try {
-        dpp::https_client http_request(&m_cluster, m_hostname, 443, "/v2/languages?type=target", "GET", {}, { {"Authorization"s, "DeepL-Auth-Key " + m_apiKey} }, false);
-        if (http_request.get_status() == 200) {
-            const dpp::json response = dpp::json::parse(http_request.get_content());
-            if (response.is_array()) {
+        http_request request;
+        http_response response = request.get(http_request::legacy_url(m_hostname, 443, "/v2/languages?type=target", true), { {"Authorization"s, "DeepL-Auth-Key " + m_apiKey} });
+        if (response.status == 200) {
+            const dpp::json json_response = dpp::json::parse(response.content);
+            if (json_response.is_array()) {
                 m_languages.languages.clear();
-                for (auto json_language = response.begin(); json_language != response.end(); json_language++) {
+                for (auto json_language = json_response.begin(); json_language != json_response.end(); json_language++) {
                     if (json_language->is_object()) {
                         language language;
 
@@ -93,12 +95,13 @@ const std::string deepl::translate(const std::string &text, const std::string &s
     };
 
     try {
-        dpp::https_client http_request(&m_cluster, m_hostname, 443, "/v2/translate", "POST", json_body.dump(), http_headers, false);
-        if (http_request.get_status() == 200) {
-            const dpp::json response = dpp::json::parse(http_request.get_content());
-            if (response.is_object()) {
-                auto translations = response.find("translations");
-                if (translations != response.end() && translations->is_array()) {
+        http_request request;
+        http_response response = request.post(http_request::legacy_url(m_hostname, 443, "/v2/translate", true), json_body.dump(), "application/json", { {"Authorization"s, "DeepL-Auth-Key " + m_apiKey} });
+        if (response.status == 200) {
+            const dpp::json json_response = dpp::json::parse(response.content);
+            if (json_response.is_object()) {
+                auto translations = json_response.find("translations");
+                if (translations != json_response.end() && translations->is_array()) {
                     for (auto translation = translations->begin(); translation != translations->end(); translation++) {
                         auto tr_text = translation->find("text");
                         if (tr_text != translation->end())

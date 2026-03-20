@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2024-2026 Syping
+* Copyright (C) 2026 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -16,27 +16,14 @@
 * responsible for anything with use of the software, you are self responsible.
 *****************************************************************************/
 
-#ifndef TRANSLATOR_DEEPL_H
-#define TRANSLATOR_DEEPL_H
+#ifndef HTTP_RESPONSE_H
+#define HTTP_RESPONSE_H
+#include <string>
 
-#include <dpp/cluster.h>
-#include "../../core/translator.h"
+struct http_response
+{
+    std::string content;
+    long status;
+};
 
-namespace bot {
-    namespace translator {
-        class deepl : public translator {
-        public:
-            explicit deepl(const std::string &hostname, const std::string apiKey = {});
-            ~deepl() override;
-            const std::vector<language> get_languages() override;
-            const std::string translate(const std::string &text, const std::string &source, const std::string &target) override;
-
-        private:
-            std::string m_apiKey;
-            std::string m_hostname;
-            supported_languages m_languages;
-        };
-    }
-}
-
-#endif // TRANSLATOR_DEEPL_H
+#endif // HTTP_RESPONSE_H

@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2024 Syping
+* Copyright (C) 2024-2026 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -19,6 +19,7 @@
 #include <dpp/json.h>
 #include <dpp/httpsclient.h>
 #include <dpp/utility.h>
+#include "../../core/http_request.h"
 #include "lingvatranslate.h"
 using namespace bot::translator;
 using namespace std::chrono_literals;
@@ -43,12 +44,13 @@ const std::vector<language> lingvatranslate::get_languages()
     }
 
     try {
-        dpp::https_client http_request(&m_cluster, m_hostname, m_port, m_url + "api/v1/languages/target", "GET", {}, {}, !m_tls);
-        if (http_request.get_status() == 200) {
-            const dpp::json response = dpp::json::parse(http_request.get_content());
-            if (response.is_object()) {
-                auto languages = response.find("languages");
-                if (languages != response.end()) {
+        http_request request;
+        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/v1/languages/target", m_tls));
+        if (response.status == 200) {
+            const dpp::json json_response = dpp::json::parse(response.content);
+            if (json_response.is_object()) {
+                auto languages = json_response.find("languages");
+                if (languages != json_response.end()) {
                     m_languages.languages.clear();
                     for (auto json_language = languages->begin(); json_language != languages->end(); json_language++) {
                         if (json_language->is_object()) {
@@ -81,14 +83,15 @@ const std::vector<language> lingvatranslate::get_languages()
 const std::string lingvatranslate::translate(const std::string &text, const std::string &source, const std::string &target)
 {
     try {
-        dpp::https_client http_request(&m_cluster, m_hostname, m_port, m_url + "api/v1/" + source + "/" + target + "/" + dpp::utility::url_encode(text), "GET", {}, {}, !m_tls);
-        if (http_request.get_status() == 200) {
-            const dpp::json response = dpp::json::parse(http_request.get_content());
-            if (response.is_object()) {
-                auto tr_text = response.find("translation");
-                if (tr_text != response.end())
+        http_request request;
+        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/v1/" + source + "/" + target + "/" + dpp::utility::url_encode(text), m_tls));
+        if (response.status == 200) {
+            const dpp::json json_response = dpp::json::parse(response.content);
+            if (json_response.is_object()) {
+                auto tr_text = json_response.find("translation");
+                if (tr_text != json_response.end())
                     return *tr_text;
-            }
+             }
         }
     }
     catch (const std::exception &exception) {
