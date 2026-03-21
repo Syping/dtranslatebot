@@ -5,6 +5,7 @@ RUN apk add --no-cache \
     cmake \
     curl-dev \
     git \
+    jq \
     libc++-dev \
     llvm-libunwind-dev \
     ninja-build \
@@ -16,7 +17,7 @@ COPY cmake/ dtranslatebot/cmake/
 COPY src/ dtranslatebot/src/
 ENV CC=clang CXX=clang++
 ENV DPP_VERSION=10.1.4
-RUN git clone https://github.com/brainboxdotcc/DPP.git --branch "v$DPP_VERSION" --depth=1
+RUN git clone https://github.com/brainboxdotcc/DPP.git --branch "v$DPP_VERSION" --depth=1 --single-branch
 RUN cmake \
     -DAVX_TYPE=AVX0 \
     -DBUILD_VOICE_SUPPORT=OFF \
@@ -43,6 +44,7 @@ RUN cmake \
     dtranslatebot
 RUN cmake --build dtranslatebot-build
 RUN cmake --install dtranslatebot-build --strip
+RUN echo "{\"translator\":{\"type\":\"stub\"}}" | jq > dtranslatebot.json
 
 # Create the dtranslatebot Container
 FROM alpine:3.23
@@ -57,6 +59,7 @@ COPY --from=build /opt/dtranslatebot/bin/dtranslatebot /opt/dtranslatebot/bin/
 COPY --from=build /opt/dtranslatebot/lib/*.so /opt/dtranslatebot/lib/
 COPY --from=build /opt/dtranslatebot/lib/*.so.* /opt/dtranslatebot/lib/
 RUN adduser --disabled-password dtranslatebot
-WORKDIR /home/dtranslatebot
 USER dtranslatebot
-ENTRYPOINT ["/opt/dtranslatebot/bin/dtranslatebot", "--wait-for-translator", "/home/dtranslatebot/dtranslatebot.json"]
+WORKDIR /home/dtranslatebot
+COPY --from=build /build/dtranslatebot.json .
+ENTRYPOINT ["/opt/dtranslatebot/bin/dtranslatebot", "--wait-for-translator", "dtranslatebot.json"]
