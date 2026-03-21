@@ -18,7 +18,7 @@
 
 cmake_minimum_required(VERSION 3.16)
 cmake_policy(VERSION 3.16...3.27)
-project(dtranslatebot VERSION 0.2.0 LANGUAGES CXX)
+project(dtranslatebot VERSION 0.3.0 LANGUAGES CXX)
 include(GNUInstallDirs)
 
 # dtranslatebot Source files
@@ -62,12 +62,6 @@ set(DTRANSLATEBOT_SOURCES
 # dtranslatebot Module Path
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-# curl Library
-find_package(CURL REQUIRED)
-list(APPEND DTRANSLATEBOT_LIBRARIES
-    CURL::libcurl
-)
-
 # Boost C++ Libraries
 option(WITH_BOOST "Build with Boost C++ Libraries" OFF)
 if (WITH_BOOST)
@@ -79,6 +73,9 @@ if (WITH_BOOST)
         set(DTRANSLATEBOT_USE_BOOST_REGEX TRUE)
     endif()
 endif()
+
+# curl Library
+find_package(CURL REQUIRED)
 
 # D++ Discord API Library for Bots
 option(WITH_DPP_STATIC_BUNDLE "Build with DPP Static Bundle" OFF)
@@ -133,7 +130,7 @@ target_compile_definitions(dtranslatebot PRIVATE
 if (MSVC AND MSVC_VERSION GREATER_EQUAL 1914)
     target_compile_options(dtranslatebot PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/Zc:__cplusplus>)
 endif()
-target_link_libraries(dtranslatebot PRIVATE ${DTRANSLATEBOT_LIBRARIES} ${DPP_LIBRARIES} Threads::Threads)
+target_link_libraries(dtranslatebot PRIVATE ${DTRANSLATEBOT_LIBRARIES} ${DPP_LIBRARIES} CURL::libcurl Threads::Threads)
 target_include_directories(dtranslatebot PRIVATE ${DPP_INCLUDE_DIR})
 set_target_properties(dtranslatebot PROPERTIES
     CXX_STANDARD 17
