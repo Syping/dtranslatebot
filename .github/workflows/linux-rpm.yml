@@ -1,5 +1,4 @@
 name: Linux
-on: push
 jobs:
   Release:
     runs-on: ubuntu-latest
@@ -14,7 +13,7 @@ jobs:
             version: lp155
     steps:
     - name: Cloning
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
     - name: Preparing
       run: mkdir -m 777 ${{github.workspace}}/rpms
     - name: Build RPM
@@ -36,8 +35,8 @@ jobs:
             rpmbuild/SPECS
           rpmbuild -ba rpmbuild/SPECS/dtranslatebot.spec
     - name: Upload
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{matrix.name}}
-        path: |
-          ${{github.workspace}}/rpms/x86_64/*.rpm
+        path: ${{github.workspace}}/rpms/x86_64/*.rpm
+on: push

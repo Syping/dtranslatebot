@@ -1,0 +1,42 @@
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+name: Container
+jobs:
+  Release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Cloning
+      uses: actions/checkout@v6
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v4
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Extract metadata for Container
+      id: meta
+      uses: docker/metadata-action@v6
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+    - name: Build and push Container
+      id: push
+      uses: docker/build-push-action@v7
+      with:
+        context: .
+        file: Containerfile
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+    - name: Generate Artifact Attestation
+      uses: actions/attest@v4
+      with:
+        subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
+        subject-digest: ${{ steps.push.outputs.digest }}
+        push-to-registry: true
+on: push
+permissions:
+  attestations: write
+  contents: read
+  id-token: write
+  packages: write
