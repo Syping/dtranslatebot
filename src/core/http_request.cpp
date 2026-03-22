@@ -24,7 +24,7 @@ http_request::http_request() {
         throw std::bad_alloc();
 }
 
-http_response http_request::get(const std::string &url, const dpp::http_headers &headers) {
+const http_response http_request::get(const std::string &url, const dpp::http_headers &headers) {
     http_response response;
     curl_easy_setopt(instance, CURLOPT_URL, url.c_str());
     curl_slist *header_slist = nullptr;
@@ -50,7 +50,7 @@ http_response http_request::get(const std::string &url, const dpp::http_headers 
     return response;
 }
 
-http_response http_request::post(const std::string &url, const std::string &content, const std::string &content_type, const dpp::http_headers &headers) {
+const http_response http_request::post(const std::string &url, const std::string &content, const std::string &content_type, const dpp::http_headers &headers) {
     http_response response;
     curl_easy_setopt(instance, CURLOPT_URL, url.c_str());
     curl_slist *header_slist = nullptr;

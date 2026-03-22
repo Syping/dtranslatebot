@@ -28,8 +28,8 @@ class http_request
 public:
     http_request();
     ~http_request();
-    http_response get(const std::string &url, const dpp::http_headers &headers = {});
-    http_response post(const std::string &url, const std::string &content, const std::string &content_type, const dpp::http_headers &headers = {});
+    const http_response get(const std::string &url, const dpp::http_headers &headers = {});
+    const http_response post(const std::string &url, const std::string &content, const std::string &content_type, const dpp::http_headers &headers = {});
     static std::string legacy_url(const std::string &hostname, uint16_t port, const std::string &url, bool tls);
 
 private:
