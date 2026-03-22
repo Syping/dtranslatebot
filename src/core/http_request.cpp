@@ -30,9 +30,12 @@ http_response http_request::get(const std::string &url, const dpp::http_headers 
     curl_slist *header_slist = nullptr;
     if (!headers.empty()) {
         for (const auto &header : headers) {
-            header_slist = curl_slist_append(header_slist, std::string(header.first + ": " + header.second).c_str());
-            if (!header_slist)
+            curl_slist *new_header_slist = curl_slist_append(header_slist, std::string(header.first + ": " + header.second).c_str());
+            if (!new_header_slist) {
+                curl_slist_free_all(header_slist);
                 throw std::bad_alloc();
+            }
+            header_slist = new_header_slist;
         }
     }
     if (!header_slist)
@@ -52,15 +55,21 @@ http_response http_request::post(const std::string &url, const std::string &cont
     curl_easy_setopt(instance, CURLOPT_URL, url.c_str());
     curl_slist *header_slist = nullptr;
     if (!content_type.empty()) {
-        header_slist = curl_slist_append(header_slist, std::string("Content-Type: " + content_type).c_str());
-        if (!header_slist)
+        curl_slist *new_header_slist = curl_slist_append(header_slist, std::string("Content-Type: " + content_type).c_str());
+        if (!new_header_slist) {
+            curl_slist_free_all(header_slist);
             throw std::bad_alloc();
+        }
+        header_slist = new_header_slist;
     }
     if (!headers.empty()) {
         for (const auto &header : headers) {
-            header_slist = curl_slist_append(header_slist, std::string(header.first + ": " + header.second).c_str());
-            if (!header_slist)
+            curl_slist *new_header_slist = curl_slist_append(header_slist, std::string(header.first + ": " + header.second).c_str());
+            if (!new_header_slist) {
+                curl_slist_free_all(header_slist);
                 throw std::bad_alloc();
+            }
+            header_slist = new_header_slist;
         }
     }
     if (!header_slist)
