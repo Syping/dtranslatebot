@@ -44,7 +44,7 @@ void message_queue::process_direct_message_event(dpp::cluster *bot, bot::setting
             return;
         }
 
-        event.thinking(false);
+        event.thinking(true);
 
         bot::direct_message direct_message;
         direct_message.event = event;

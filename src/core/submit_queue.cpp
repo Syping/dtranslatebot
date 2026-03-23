@@ -45,7 +45,7 @@ void submit_queue::run(dpp::cluster *bot)
             m_mutex.unlock();
 
             if (const auto *direct_message = std::get_if<bot::translated_direct_message>(&message)) {
-                direct_message->event.edit_original_response(dpp::message(direct_message->message));
+                direct_message->event.edit_original_response(dpp::message(direct_message->message).set_flags(dpp::m_ephemeral));
             }
             else if (const auto *guild_message = std::get_if<bot::translated_guild_message>(&message)) {
                 webhook_push::run(*guild_message, bot);
