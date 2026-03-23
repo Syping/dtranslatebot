@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    dpp::cluster bot(settings.token(), dpp::i_default_intents | dpp::i_message_content);
+    dpp::cluster bot(settings.token(), dpp::i_default_intents | dpp::i_direct_messages | dpp::i_message_content);
     bot.on_log([&bot](const dpp::log_t &event) {
         std::cerr << "[Log] " << event.message << std::endl;
     });
