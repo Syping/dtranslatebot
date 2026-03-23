@@ -48,7 +48,7 @@ const std::vector<language> mozhi::get_languages()
             {"engine"s, m_engine}
         });
         http_request request;
-        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/target_languages", m_tls));
+        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/target_languages"s, m_tls));
         if (response.status == 200) {
             const dpp::json json_response = dpp::json::parse(response.content);
             if (json_response.is_array()) {
@@ -85,12 +85,12 @@ const std::string mozhi::translate(const std::string &text, const std::string &s
     try {
         const std::string parameters = dpp::utility::make_url_parameters({
             {"engine"s, m_engine},
-            {"from"s, source},
+            {"from"s, source.empty() ? "auto"s : source},
             {"to"s, target},
-            {"text"s, text},
+            {"text"s, text}
         });
         http_request request;
-        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/translate" + parameters, m_tls));
+        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/translate"s + parameters, m_tls));
         if (response.status == 200) {
             const dpp::json json_response = dpp::json::parse(response.content);
             if (json_response.is_object()) {

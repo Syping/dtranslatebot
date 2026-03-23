@@ -17,6 +17,7 @@
 *****************************************************************************/
 
 #include "http_request.h"
+using namespace std::string_literals;
 
 http_request::http_request() {
     instance = curl_easy_init();
@@ -55,7 +56,7 @@ const http_response http_request::post(const std::string &url, const std::string
     curl_easy_setopt(instance, CURLOPT_URL, url.c_str());
     curl_slist *header_slist = nullptr;
     if (!content_type.empty()) {
-        curl_slist *new_header_slist = curl_slist_append(header_slist, std::string("Content-Type: " + content_type).c_str());
+        curl_slist *new_header_slist = curl_slist_append(header_slist, std::string("Content-Type: "s + content_type).c_str());
         if (!new_header_slist) {
             curl_slist_free_all(header_slist);
             throw std::bad_alloc();
@@ -87,7 +88,7 @@ const http_response http_request::post(const std::string &url, const std::string
 }
 
 std::string http_request::legacy_url(const std::string &hostname, uint16_t port, const std::string &url, bool tls) {
-    return (tls ? "https://" : "http://") + hostname + ":" + std::to_string(port) + (url.empty() ? "/" : (url.front() != '/' ? "/" + url : url));
+    return (tls ? "https://"s : "http://"s) + hostname + ":"s + std::to_string(port) + (url.empty() ? "/"s : (url.front() != '/' ? "/"s + url : url));
 }
 
 http_request::~http_request() {

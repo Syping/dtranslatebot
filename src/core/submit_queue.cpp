@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2024 Syping
+* Copyright (C) 2024-2026 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -44,7 +44,12 @@ void submit_queue::run(dpp::cluster *bot)
             m_queue.pop();
             m_mutex.unlock();
 
-            webhook_push::run(message, bot);
+            if (const auto *direct_message = std::get_if<bot::translated_direct_message>(&message)) {
+                direct_message->event.edit_original_response(dpp::message(direct_message->message));
+            }
+            else if (const auto *guild_message = std::get_if<bot::translated_guild_message>(&message)) {
+                webhook_push::run(*guild_message, bot);
+            }
 
             std::this_thread::yield();
         }

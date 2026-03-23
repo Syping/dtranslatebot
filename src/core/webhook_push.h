@@ -27,7 +27,7 @@ namespace bot {
     class webhook_push {
     public:
         webhook_push() = delete;
-        static void run(const bot::translated_message &message, dpp::cluster *bot);
+        static void run(const bot::translated_guild_message &message, dpp::cluster *bot);
 
     private:
         static void push_request(dpp::snowflake webhook_id, const std::string &webhook_token, const std::string &json, dpp::cluster *bot);

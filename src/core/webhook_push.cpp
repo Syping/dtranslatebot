@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2024 Syping
+* Copyright (C) 2024-2026 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -22,7 +22,7 @@
 using namespace std::string_literals;
 using namespace std::string_view_literals;
 
-void bot::webhook_push::run(const bot::translated_message &message, dpp::cluster *bot)
+void bot::webhook_push::run(const bot::translated_guild_message &message, dpp::cluster *bot)
 {
     dpp::json json_body = {
         {"username"s, message.author}

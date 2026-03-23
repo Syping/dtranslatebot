@@ -44,7 +44,7 @@ const std::vector<language> deepl::get_languages()
 
     try {
         http_request request;
-        http_response response = request.get(http_request::legacy_url(m_hostname, 443, "/v2/languages?type=target", true), { {"Authorization"s, "DeepL-Auth-Key " + m_apiKey} });
+        http_response response = request.get(http_request::legacy_url(m_hostname, 443, "/v2/languages?type=target"s, true), { {"Authorization"s, "DeepL-Auth-Key "s + m_apiKey} });
         if (response.status == 200) {
             const dpp::json json_response = dpp::json::parse(response.content);
             if (json_response.is_array()) {
@@ -90,9 +90,10 @@ const std::string deepl::translate(const std::string &text, const std::string &s
 
     dpp::json json_body = {
         {"text"s, { text } },
-        {"source_lang"s, source},
-        {"target_lang"s, target},
+        {"target_lang"s, target}
     };
+    if (!source.empty())
+        json_body["source_lang"] = source;
 
     try {
         http_request request;

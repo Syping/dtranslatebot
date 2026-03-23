@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2023-2024 Syping
+* Copyright (C) 2023-2026 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -21,6 +21,7 @@
 #include "settings.h"
 using bot::message_queue;
 using namespace std::chrono_literals;
+using namespace std::string_literals;
 
 void message_queue::add(const message &message)
 {
@@ -34,7 +35,30 @@ void message_queue::add(message &&message)
     m_queue.push(message);
 }
 
-void message_queue::process_message_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::message_create_t &event)
+void message_queue::process_direct_message_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::message_context_menu_t &event)
+{
+    try {
+        // We check for conditions we want to skip translation for
+        if (event.ctx_message.author.id == bot->me.id || event.ctx_message.content.empty()) {
+            event.reply(dpp::message("Invalid message").set_flags(dpp::m_ephemeral));
+            return;
+        }
+
+        event.thinking(false);
+
+        bot::direct_message direct_message;
+        direct_message.event = event;
+        direct_message.message = event.ctx_message.content;
+
+        add(std::move(direct_message));
+    }
+    catch (const std::exception &exception) {
+        std::cerr << "[Exception] " << exception.what() << std::endl;
+        event.reply(dpp::message("Exception while processing command:\n"s + exception.what()).set_flags(dpp::m_ephemeral));
+    }
+}
+
+void message_queue::process_guild_message_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::message_create_t &event)
 {
     // We check for conditions we want to skip translation for
     if (event.msg.author.id == bot->me.id || event.msg.content.empty() || event.msg.has_thread())
@@ -50,7 +74,7 @@ void message_queue::process_message_event(dpp::cluster *bot, bot::settings::sett
 
     const std::lock_guard<bot::settings::settings> guard(*settings);
     if (const bot::settings::channel *channel = settings->get_channel(event.msg.guild_id, event.msg.channel_id)) {
-        bot::message message;
+        bot::guild_message message;
         message.id = event.msg.id;
 
         message.author = event.msg.member.get_nickname();
@@ -81,13 +105,21 @@ void message_queue::run(bot::settings::settings *settings, submit_queue *submit_
 
             auto translator = settings->get_translator();
 
-            for (auto target = message.targets.begin(); target != message.targets.end(); target++) {
-                translated_message tr_message;
-                tr_message.author = message.author;
-                tr_message.avatar = message.avatar;
-                tr_message.message = translator->translate(message.message, message.source, target->target);
-                tr_message.webhook = target->webhook;
-                submit_queue->add(std::move(tr_message));
+            if (const auto *direct_message = std::get_if<bot::direct_message>(&message)) {
+                translated_direct_message translated_message;
+                translated_message.event = direct_message->event;
+                translated_message.message = translator->translate(direct_message->message, {}, "en");
+                submit_queue->add(std::move(translated_message));
+            }
+            else if (const auto *guild_message = std::get_if<bot::guild_message>(&message)) {
+                for (auto target = guild_message->targets.begin(); target != guild_message->targets.end(); target++) {
+                    translated_guild_message translated_message;
+                    translated_message.author = guild_message->author;
+                    translated_message.avatar = guild_message->avatar;
+                    translated_message.message = translator->translate(guild_message->message, guild_message->source, target->target);
+                    translated_message.webhook = target->webhook;
+                    submit_queue->add(std::move(translated_message));
+                }
             }
 
             std::this_thread::yield();

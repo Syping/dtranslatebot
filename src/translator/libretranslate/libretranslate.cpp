@@ -44,7 +44,7 @@ const std::vector<language> libretranslate::get_languages()
 
     try {
         http_request request;
-        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "languages", m_tls));
+        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "languages"s, m_tls));
         if (response.status == 200) {
             const dpp::json json_response = dpp::json::parse(response.content);
             if (json_response.is_array()) {
@@ -84,7 +84,7 @@ const std::string libretranslate::translate(const std::string &text, const std::
 
     dpp::json json_body = {
         {"q"s, text},
-        {"source"s, source},
+        {"source"s, source.empty() ? "auto"s : source},
         {"target"s, target},
         {"format"s, "text"s}
     };
@@ -94,7 +94,7 @@ const std::string libretranslate::translate(const std::string &text, const std::
 
     try {
         http_request request;
-        http_response response = request.post(http_request::legacy_url(m_hostname, m_port, m_url + "translate", m_tls), json_body.dump(), "application/json");
+        http_response response = request.post(http_request::legacy_url(m_hostname, m_port, m_url + "translate"s, m_tls), json_body.dump(), "application/json");
         if (response.status == 200) {
             const dpp::json json_response = dpp::json::parse(response.content);
             if (json_response.is_object()) {

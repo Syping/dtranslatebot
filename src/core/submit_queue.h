@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2024 Syping
+* Copyright (C) 2024-2026 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -25,12 +25,19 @@
 #include <queue>
 
 namespace bot {
-    struct translated_message {
+    struct translated_direct_message {
+        dpp::message_context_menu_t event;
+        std::string message;
+    };
+
+    struct translated_guild_message {
         std::string author;
         std::string avatar;
         std::string message;
         dpp::webhook webhook;
     };
+
+    typedef std::variant<translated_direct_message, translated_guild_message> translated_message;
 
     class submit_queue {
     public:

@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2023-2024 Syping
+* Copyright (C) 2023-2026 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -22,12 +22,18 @@
 #include <mutex>
 #include <string>
 #include <queue>
+#include <variant>
 #include <vector>
 #include "settings.h"
 #include "submit_queue.h"
 
 namespace bot {
-    struct message {
+    struct direct_message {
+        dpp::message_context_menu_t event;
+        std::string message;
+    };
+
+    struct guild_message {
         uint64_t id;
         std::string author;
         std::string avatar;
@@ -36,11 +42,14 @@ namespace bot {
         std::vector<bot::settings::target> targets;
     };
 
+    typedef std::variant<direct_message, guild_message> message;
+
     class message_queue {
     public:
         void add(const message &message);
         void add(message &&message);
-        void process_message_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::message_create_t &event);
+        void process_direct_message_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::message_context_menu_t &event);
+        void process_guild_message_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::message_create_t &event);
         void run(bot::settings::settings *settings, submit_queue *submit_queue);
         void terminate();
 

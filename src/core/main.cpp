@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2023-2024 Syping
+* Copyright (C) 2023-2026 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -77,7 +77,8 @@ int main(int argc, char* argv[]) {
     bot::message_queue message_queue;
     std::thread message_queue_loop(&bot::message_queue::run, &message_queue, &settings, &submit_queue);
 
-    bot.on_message_create(std::bind(&bot::message_queue::process_message_event, &message_queue, &bot, &settings, std::placeholders::_1));
+    bot.on_message_context_menu(std::bind(&bot::slashcommands::process_message_menu_event, &message_queue, &bot, &settings, std::placeholders::_1));
+    bot.on_message_create(std::bind(&bot::message_queue::process_guild_message_event, &message_queue, &bot, &settings, std::placeholders::_1));
     bot.on_slashcommand(std::bind(&bot::slashcommands::process_command_event, &bot, &settings, std::placeholders::_1));
     bot.on_ready([&bot, &settings]([[maybe_unused]] const dpp::ready_t &event) {
         if (dpp::run_once<struct register_bot_commands>()) {

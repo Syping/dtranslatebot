@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2024 Syping
+* Copyright (C) 2024-2026 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -20,6 +20,7 @@
 #define SLASHCOMMANDS_H
 
 #include <dpp/cluster.h>
+#include "message_queue.h"
 #include "settings.h"
 
 namespace bot {
@@ -27,6 +28,7 @@ namespace bot {
     public:
         slashcommands() = delete;
         static void process_command_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event);
+        static void process_message_menu_event(bot::message_queue *message_queue, dpp::cluster *bot, bot::settings::settings *settings, const dpp::message_context_menu_t &event);
         static void register_commands(dpp::cluster *bot, bot::settings::settings *settings);
 
     private:

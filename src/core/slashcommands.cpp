@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2024 Syping
+* Copyright (C) 2024-2026 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -27,8 +27,14 @@ void slashcommands::process_command_event(dpp::cluster *bot, bot::settings::sett
         slashcommands::process_edit_command(bot, settings, event);
     else if (event.command.get_command_name() == "list")
         slashcommands::process_list_command(bot, settings, event);
-    else if (event.command.get_command_name() == "translate" || event.command.get_command_name() == "translate_pref")
+    else if (event.command.get_command_name() == "translate" || event.command.get_command_name() == "translate pref")
         slashcommands::process_translate_command(bot, settings, event);
+}
+
+void slashcommands::process_message_menu_event(bot::message_queue *message_queue, dpp::cluster *bot, bot::settings::settings *settings, const dpp::message_context_menu_t &event)
+{
+    if (event.command.get_command_name() == "translate message")
+        message_queue->process_direct_message_event(bot, settings, event);
 }
 
 void slashcommands::process_edit_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event)
@@ -475,7 +481,7 @@ void slashcommands::register_commands(dpp::cluster *bot, bot::settings::settings
     commands.push_back(command_translate);
 
     if (preferred_languages.size() > 1) {
-        dpp::slashcommand command_translate_pref("translate_pref", "Translate current channel (Preferred languages)", bot->me.id);
+        dpp::slashcommand command_translate_pref("translate pref", "Translate current channel (Preferred languages)", bot->me.id);
         command_translate_pref.set_default_permissions(dpp::p_manage_webhooks);
         dpp::command_option channel_pref_subcommand(dpp::co_sub_command, "channel", "Translate current channel to a channel (Preferred languages)");
         dpp::command_option webhook_pref_subcommand(dpp::co_sub_command, "webhook", "Translate current channel to a webhook (Preferred languages)");
@@ -497,6 +503,10 @@ void slashcommands::register_commands(dpp::cluster *bot, bot::settings::settings
         command_translate_pref.add_option(webhook_pref_subcommand);
         commands.push_back(command_translate_pref);
     }
+
+    dpp::slashcommand command_translate_message("translate message", dpp::ctxm_message, bot->me.id);
+    command_translate_message.set_dm_permission(true);
+    commands.push_back(command_translate_message);
 
     bot->global_bulk_command_create(commands);
 }
