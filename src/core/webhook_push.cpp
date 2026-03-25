@@ -43,15 +43,15 @@ void bot::webhook_push::run(const bot::translated_guild_message &message, dpp::c
             }
             else {
                 bot::svmatch match;
-                if (bot::regex_match(message_eov.begin(), message_eov.end(), match, bot::regex("^.*(\\.|\\?|\\!|\\。)\\s.*$"s))) {
+                if (bot::regex_match(message_eov.begin(), message_eov.end(), match, bot::regex("^.*(\\.|\\?|\\!|\\。)\\s.*$"))) {
                     json_body["content"] = message_v.substr(0, 1334 + match.position(1));
                     message_v = message_v.substr(1334 + match.position(1));
                 }
-                else if (bot::regex_match(message_eov.begin(), message_eov.end(), match, bot::regex("^.*(\\,)\\s.*$"s))) {
+                else if (bot::regex_match(message_eov.begin(), message_eov.end(), match, bot::regex("^.*(\\,)\\s.*$"))) {
                     json_body["content"] = message_v.substr(0, 1334 + match.position(1));
                     message_v = message_v.substr(1334 + match.position(1));
                 }
-                else if (bot::regex_match(message_eov.begin(), message_eov.end(), match, bot::regex("^.*()\\s.*$"s))) {
+                else if (bot::regex_match(message_eov.begin(), message_eov.end(), match, bot::regex("^.*()\\s.*$"))) {
                     json_body["content"] = message_v.substr(0, 1334 + match.position(1));
                     message_v = message_v.substr(1334 + match.position(1));
                 }

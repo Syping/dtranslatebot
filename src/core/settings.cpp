@@ -66,7 +66,7 @@ void process_database_channels(std::shared_ptr<bot::database::database> database
     }
 }
 
-void process_database(std::shared_ptr<bot::database::database> database, std::vector<guild> &guilds, std::vector<dpp::snowflake> &webhookIds)
+void process_database(std::shared_ptr<bot::database::database> database, std::vector<guild> &guilds, std::vector<user> &users, std::vector<dpp::snowflake> &webhookIds)
 {
     std::cout << "[Launch] Loading database..." << std::endl;
     const std::vector<dpp::snowflake> db_guilds = database->get_guilds();
@@ -85,6 +85,13 @@ void process_database(std::shared_ptr<bot::database::database> database, std::ve
             process_database_channels(database, guild, webhookIds);
             guilds.push_back(std::move(guild));
         }
+    }
+    const std::vector<dpp::snowflake> db_users = database->get_users();
+    for (auto db_user_id = db_users.begin(); db_user_id != db_users.end(); db_user_id++) {
+        bot::settings::user user = database->get_user(*db_user_id);
+        if (user.target.empty())
+            user.target = "en";
+        users.push_back(std::move(user));
     }
 }
 
@@ -485,6 +492,20 @@ const target* settings::get_target(const channel *channel, const std::string &ta
     return nullptr;
 }
 
+user* settings::get_user(dpp::snowflake user_id) {
+    if (!m_externallyLockedCount) {
+#ifndef NDEBUG
+        std::cerr << "[Debug] settings::get_user(dpp::snowflake) have being called without settings being locked." << std::endl;
+#endif
+        return nullptr;
+    }
+    for (auto user = m_users.begin(); user != m_users.end(); user++) {
+        if (user->id == user_id)
+            return &*user;
+    }
+    return nullptr;
+}
+
 const std::vector<std::string> settings::preferred_languages() const
 {
     const std::lock_guard<std::recursive_mutex> guard(m_mutex);
@@ -507,6 +528,19 @@ const std::string settings::token() const
 {
     const std::lock_guard<std::recursive_mutex> guard(m_mutex);
     return m_token;
+}
+
+void settings::set_user_target(dpp::snowflake user_id, std::string target) {
+    const std::lock_guard<std::recursive_mutex> guard(m_mutex);
+    for (auto user = m_users.begin(); user != m_users.end(); user++) {
+        if (user->id == user_id) {
+            user->target = target;
+            return;
+        }
+    }
+
+    // We will create the user structure when it is not in memory
+    m_users.push_back({ user_id, target });
 }
 
 bool settings::is_translatebot(dpp::snowflake webhook_id) const
@@ -582,7 +616,7 @@ bool settings::parse(const std::string &data, bool initialize)
         if (json_user != json.end() && json_user->is_object())
             process_user_settings(*json_user, m_avatarSize);
 
-        process_database(m_database, m_guilds, m_webhookIds);
+        process_database(m_database, m_guilds, m_users, m_webhookIds);
 
         return true;
     }

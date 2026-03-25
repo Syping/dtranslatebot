@@ -48,14 +48,19 @@ namespace bot {
             std::vector<bot::settings::target> get_channel_targets(dpp::snowflake guild_id, dpp::snowflake channel_id) override;
             */
             std::vector<dpp::snowflake> get_guilds() override;
+            bot::settings::user get_user(dpp::snowflake user_id) override;
+            std::vector<dpp::snowflake> get_users() override;
             void set_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &source) override;
+            void set_user_target(dpp::snowflake user_id, const std::string &target) override;
             bool sync() override;
 
         private:
             void cache_add_channel(dpp::snowflake guild_id, dpp::snowflake channel_id);
             void cache_get_channel(dpp::snowflake channel_id, bot::settings::channel &channel);
+            void cache_get_user(dpp::snowflake user_id, settings::user &user);
             void cache_guild(dpp::snowflake guild_id, std::vector<dpp::snowflake> &channels);
             void list_guilds(std::vector<dpp::snowflake> &guilds);
+            void list_users(std::vector<dpp::snowflake> &users);
             void sync_cache();
 #if defined(__unix__)
             int fd;
@@ -64,6 +69,7 @@ namespace bot {
 #endif
             std::vector<bot::database::guild> m_channelCache;
             std::vector<bot::settings::guild> m_dataCache;
+            std::vector<bot::settings::user> m_userCache;
             std::mutex m_mutex;
             std::filesystem::path m_storagePath;
         };

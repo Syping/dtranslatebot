@@ -44,7 +44,7 @@ RUN cmake \
     dtranslatebot
 RUN cmake --build dtranslatebot-build
 RUN cmake --install dtranslatebot-build --strip
-RUN echo "{\"translator\":{\"type\":\"stub\"}}" | jq > dtranslatebot.json
+RUN echo '{"translator":{"type":"stub"}}' | jq > dtranslatebot.json
 
 # Create the dtranslatebot Container
 FROM alpine:3.23

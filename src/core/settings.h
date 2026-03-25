@@ -45,10 +45,14 @@ namespace bot {
             target* get_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &target);
             static target* get_target(channel *channel, const std::string &target);
             static const target* get_target(const channel *channel, const std::string &target);
+            user* get_user(dpp::snowflake user_id);
             const std::vector<std::string> preferred_languages() const;
             std::shared_ptr<bot::database::database> get_database() const;
             std::shared_ptr<bot::translator::translator> get_translator() const;
             const std::string token() const;
+
+            /* set functions */
+            void set_user_target(dpp::snowflake user_id, std::string target);
 
             /* is functions */
             bool is_translatebot(dpp::snowflake webhook_id) const;
@@ -75,6 +79,7 @@ namespace bot {
             std::vector<std::string> m_prefLangs;
             std::shared_ptr<bot::translator::translator> m_translator;
             std::string m_token;
+            std::vector<user> m_users;
             std::vector<dpp::snowflake> m_webhookIds;
         };
     }

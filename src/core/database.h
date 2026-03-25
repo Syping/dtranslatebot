@@ -48,7 +48,10 @@ namespace bot {
             virtual std::vector<bot::settings::target> get_channel_targets(dpp::snowflake guild_id, dpp::snowflake channel_id);
             */
             virtual std::vector<dpp::snowflake> get_guilds();
+            virtual bot::settings::user get_user(dpp::snowflake user_id);
+            virtual std::vector<dpp::snowflake> get_users();
             virtual void set_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &source);
+            virtual void set_user_target(dpp::snowflake user_id, const std::string &target);
             virtual bool sync();
         };
     }

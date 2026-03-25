@@ -102,10 +102,33 @@ std::vector<dpp::snowflake> database::get_guilds()
     return {};
 }
 
+bot::settings::user database::get_user(dpp::snowflake user_id)
+{
+#ifndef NDEBUG
+    std::cerr << "[Debug] database::get_user(dpp::snowflake) have being called." << std::endl;
+#endif
+    return {};
+}
+
+std::vector<dpp::snowflake> database::get_users()
+{
+#ifndef NDEBUG
+    std::cerr << "[Debug] database::get_users() have being called." << std::endl;
+#endif
+    return {};
+}
+
 void database::set_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &source)
 {
 #ifndef NDEBUG
     std::cerr << "[Debug] database::set_channel_source(dpp::snowflake, dpp::snowflake, const std::string&) have being called." << std::endl;
+#endif
+}
+
+void database::set_user_target(dpp::snowflake user_id, const std::string &target)
+{
+#ifndef NDEBUG
+    std::cerr << "[Debug] database::set_user_target(dpp::snowflake, const std::string&) have being called." << std::endl;
 #endif
 }
 

@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2024 Syping
+* Copyright (C) 2024-2026 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -275,9 +275,8 @@ std::vector<dpp::snowflake> file::get_channels(dpp::snowflake guild_id)
     const std::lock_guard<std::mutex> guard(m_mutex);
 
     for (auto guild = m_channelCache.begin(); guild != m_channelCache.end(); guild++) {
-        if (guild->id == guild_id) {
+        if (guild->id == guild_id)
             return guild->channel;
-        }
     }
 
     std::vector<dpp::snowflake> channels;
@@ -334,6 +333,28 @@ std::vector<dpp::snowflake> file::get_guilds()
     return guilds;
 }
 
+bot::settings::user file::get_user(dpp::snowflake user_id)
+{
+    const std::lock_guard<std::mutex> guard(m_mutex);
+
+    for (auto user = m_userCache.begin(); user != m_userCache.end(); user++) {
+        if (user->id == user_id)
+            return *user;
+    }
+
+    bot::settings::user user;
+    cache_get_user(user_id, user);
+    return user;
+}
+
+std::vector<dpp::snowflake> file::get_users()
+{
+    const std::lock_guard<std::mutex> guard(m_mutex);
+    std::vector<dpp::snowflake> users;
+    list_users(users);
+    return users;
+}
+
 void file::set_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id, const std::string &source)
 {
     const std::lock_guard<std::mutex> guard(m_mutex);
@@ -361,6 +382,20 @@ void file::set_channel_source(dpp::snowflake guild_id, dpp::snowflake channel_id
     channel.source = source;
     cache_add_channel(guild_id, channel_id);
     m_dataCache.push_back({ guild_id, { std::move(channel) } });
+}
+
+void file::set_user_target(dpp::snowflake user_id, const std::string &target)
+{
+    const std::lock_guard<std::mutex> guard(m_mutex);
+
+    for (auto user = m_userCache.begin(); user != m_userCache.end(); user++) {
+        if (user->id == user_id) {
+            user->target = target;
+            return;
+        }
+    }
+
+    m_userCache.push_back({ user_id, target });
 }
 
 bool file::sync()
@@ -444,6 +479,35 @@ void file::cache_get_channel(dpp::snowflake channel_id, settings::channel &chann
     }
 }
 
+void file::cache_get_user(dpp::snowflake user_id, settings::user &user)
+{
+    user.id = user_id;
+
+    const std::filesystem::path user_file = m_storagePath / "user" / (std::to_string(user_id) + ".json");
+
+    if (!std::filesystem::is_regular_file(user_file))
+        return;
+
+    std::ifstream ifs(user_file, std::ios::in | std::ios::binary);
+    if (!ifs.is_open())
+        return;
+
+    std::string sdata(std::istreambuf_iterator<char>{ifs}, {});
+    ifs.close();
+
+    try {
+        const dpp::json json = dpp::json::parse(sdata);
+        if (json.is_object()) {
+            auto json_user_target = json.find("target");
+            if (json_user_target != json.end())
+                user.target = *json_user_target;
+        }
+    }
+    catch (const std::exception &exception) {
+        std::cerr << "[Exception] " << exception.what() << std::endl;
+    }
+}
+
 void file::cache_guild(dpp::snowflake guild_id, std::vector<dpp::snowflake> &channels)
 {
     const std::filesystem::path guild_file = m_storagePath / "guild" / (std::to_string(guild_id) + ".json");
@@ -489,6 +553,31 @@ void file::list_guilds(std::vector<dpp::snowflake> &guilds)
                 try {
                     dpp::snowflake guild_id = std::stoull(guild_filename);
                     guilds.push_back(guild_id);
+                }
+                catch (const std::exception &exception) {
+                    std::cerr << "[Exception] " << exception.what() << std::endl;
+                }
+            }
+        }
+    }
+}
+
+
+void file::list_users(std::vector<dpp::snowflake> &users)
+{
+    const std::filesystem::path user_dir = m_storagePath / "user";
+
+    if (!std::filesystem::is_directory(user_dir))
+        return;
+
+    for (const auto &user_file : std::filesystem::directory_iterator(user_dir)) {
+        const std::filesystem::path &user_file_path = user_file.path();
+        if (user_file_path.extension() == ".json") {
+            const std::string user_filename = user_file_path.stem().generic_string();
+            if (std::all_of(user_filename.begin(), user_filename.end(), ::isdigit)) {
+                try {
+                    dpp::snowflake user_id = std::stoull(user_filename);
+                    users.push_back(user_id);
                 }
                 catch (const std::exception &exception) {
                     std::cerr << "[Exception] " << exception.what() << std::endl;
@@ -569,5 +658,35 @@ void file::sync_cache()
     }
     else {
         std::cerr << "[Error] Storage guild directory can not be created" << std::endl;
+    }
+
+    const std::filesystem::path user_dir = m_storagePath / "user";
+    bool user_dir_exists = std::filesystem::is_directory(user_dir);
+    if (!user_dir_exists)
+        user_dir_exists = std::filesystem::create_directory(user_dir);
+
+    if (user_dir_exists) {
+        for (auto user = m_userCache.begin(); user != m_userCache.end();) {
+            dpp::json user_json = {
+                {"target"s, user->target}
+            };
+
+            const std::filesystem::path user_file = m_storagePath / "user" / (std::to_string(user->id) + ".json");
+            std::ofstream ofs(user_file, std::ios::out | std::ios::binary | std::ios::trunc);
+            if (ofs.is_open()) {
+                ofs << user_json.dump();
+                bool ok = ofs.good();
+                ofs.close();
+                if (ok)
+                    user = m_userCache.erase(user);
+                else
+                    user++;
+            }
+            else
+                user++;
+        }
+    }
+    else {
+        std::cerr << "[Error] Storage user directory can not be created" << std::endl;
     }
 }

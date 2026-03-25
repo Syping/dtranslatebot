@@ -40,6 +40,10 @@ namespace bot {
             dpp::snowflake id;
             std::vector<bot::settings::channel> channel;
         };
+        struct user {
+            dpp::snowflake id;
+            std::string target;
+        };
         struct translator {
             std::string type;
             std::string hostname;
