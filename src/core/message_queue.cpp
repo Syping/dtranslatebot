@@ -108,7 +108,7 @@ void message_queue::run(bot::settings::settings *settings, submit_queue *submit_
             if (const auto *direct_message = std::get_if<bot::direct_message>(&message)) {
                 const std::lock_guard<bot::settings::settings> guard(*settings);
                 bot::settings::user *user = settings->get_user(direct_message->event.command.get_issuing_user().id);
-                std::string target = user ? user->target : "en";
+                const std::string target = user ? user->target : "en";
                 translated_direct_message translated_message;
                 translated_message.event = direct_message->event;
                 translated_message.message = translator->translate(direct_message->message, {}, target);
