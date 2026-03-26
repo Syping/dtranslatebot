@@ -27,13 +27,14 @@ void slashcommands::process_command_event(dpp::cluster *bot, bot::settings::sett
         slashcommands::process_edit_command(bot, settings, event);
     else if (event.command.get_command_name() == "list")
         slashcommands::process_list_command(bot, settings, event);
+    else if (event.command.get_command_name() == "my")
+        slashcommands::process_my_command(bot, settings, event);
     else if (event.command.get_command_name() == "translate" || event.command.get_command_name() == "translate_pref")
         slashcommands::process_translate_command(bot, settings, event);
 }
 
 void slashcommands::process_message_menu_event(bot::message_queue *message_queue, dpp::cluster *bot, bot::settings::settings *settings, const dpp::message_context_menu_t &event)
 {
-    std::cout << event.command.get_command_name() << std::endl;
     if (event.command.get_command_name() == "translate message" || event.command.get_command_name() == "Translate Message")
         message_queue->process_direct_message_event(bot, settings, event);
 }
@@ -181,6 +182,32 @@ void slashcommands::process_deleted_webhook(bot::settings::settings *settings, d
         return;
     }
     settings->erase_translatebot_webhook(webhook_id);
+}
+
+void slashcommands::process_my_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event)
+{
+    try {
+        dpp::command_interaction interaction = event.command.get_command_interaction();
+        if (interaction.options[0].name == "language") {
+            const std::string target = std::get<std::string>(event.get_parameter("target"));
+
+            const std::lock_guard<bot::settings::settings> guard(*settings);
+            settings->set_user_target(event.command.usr.id, target);
+
+            auto database = settings->get_database();
+            database->set_user_target(event.command.usr.id, target);
+            database->sync();
+
+            event.reply(dpp::message("Your target language has being set!").set_flags(dpp::m_ephemeral));
+        }
+        else {
+            throw std::invalid_argument("Option " + interaction.options[0].name + " is not known");
+        }
+    }
+    catch (const std::exception &exception) {
+        std::cerr << "[Exception] " << exception.what() << std::endl;
+        event.reply(dpp::message("Exception while processing command:\n"s + exception.what()).set_flags(dpp::m_ephemeral));
+    }
 }
 
 void slashcommands::process_list_command(dpp::cluster *bot, bot::settings::settings *settings, const dpp::slashcommand_t &event)
@@ -464,6 +491,13 @@ void slashcommands::register_commands(dpp::cluster *bot, bot::settings::settings
     command_list.add_option(languages_list_subcommand);
     commands.push_back(command_list);
 
+    dpp::slashcommand command_my("my", "Personal options", bot->me.id);
+    command_my.set_dm_permission(true);
+    dpp::command_option language_subcommand(dpp::co_sub_command, "language", "Set target language");
+    language_subcommand.add_option(target_option);
+    command_my.add_option(language_subcommand);
+    commands.push_back(command_my);
+
     dpp::slashcommand command_translate("translate", "Translate current channel", bot->me.id);
     command_translate.set_default_permissions(dpp::p_manage_webhooks);
     dpp::command_option channel_translate_subcommand(dpp::co_sub_command, "channel", "Translate current channel to a channel");
@@ -505,7 +539,8 @@ void slashcommands::register_commands(dpp::cluster *bot, bot::settings::settings
         commands.push_back(command_translate_pref);
     }
 
-    dpp::slashcommand command_translate_message("Translate Message", dpp::ctxm_message, bot->me.id);
+    dpp::slashcommand command_translate_message("translate message", dpp::ctxm_message, bot->me.id);
+    command_translate_message.set_name("Translate Message");
     command_translate_message.set_dm_permission(true);
     commands.push_back(command_translate_message);
 
