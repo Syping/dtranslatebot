@@ -491,9 +491,9 @@ void slashcommands::register_commands(dpp::cluster *bot, bot::settings::settings
     command_list.add_option(languages_list_subcommand);
     commands.push_back(command_list);
 
-    dpp::slashcommand command_my("my", "Personal options", bot->me.id);
+    dpp::slashcommand command_my("my", "Personal settings", bot->me.id);
     command_my.set_dm_permission(true);
-    dpp::command_option language_subcommand(dpp::co_sub_command, "language", "Set target language");
+    dpp::command_option language_subcommand(dpp::co_sub_command, "language", "Set personal target language");
     language_subcommand.add_option(target_option);
     command_my.add_option(language_subcommand);
     commands.push_back(command_my);
