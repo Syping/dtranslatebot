@@ -26,7 +26,9 @@ Source2:        %{name}.service
 Source3:        %{name}.sysusersd
 
 %if 0%{?fedora} || 0%{?rhel}
+%if 0%{?rhel} && 0%{?rhel} < 10
 BuildRequires:  %{?toolset_prefix}annobin
+%endif
 BuildRequires:  curl-devel
 %if 0%{?rhel} && 0%{?rhel} < 9
 BuildRequires:  epel-rpm-macros-systemd

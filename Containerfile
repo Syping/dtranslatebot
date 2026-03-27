@@ -58,7 +58,7 @@ RUN apk add --no-cache \
 COPY --from=build /opt/dtranslatebot/bin/dtranslatebot /opt/dtranslatebot/bin/
 COPY --from=build /opt/dtranslatebot/lib/*.so /opt/dtranslatebot/lib/
 COPY --from=build /opt/dtranslatebot/lib/*.so.* /opt/dtranslatebot/lib/
-RUN adduser --disabled-password dtranslatebot
+RUN adduser -D dtranslatebot
 USER dtranslatebot
 WORKDIR /home/dtranslatebot
 COPY --from=build /build/dtranslatebot.json .

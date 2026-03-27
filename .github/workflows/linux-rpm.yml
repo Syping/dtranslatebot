@@ -9,8 +9,12 @@ jobs:
             version: el8
           - name: Enterprise Linux 9
             version: el9
+          - name: Enterprise Linux 10
+            version: el10
           - name: openSUSE Leap 15.5
             version: lp155
+          - name: openSUSE Leap 16.0
+            version: lp160
     steps:
     - name: Cloning
       uses: actions/checkout@v6
