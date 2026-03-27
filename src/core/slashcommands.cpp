@@ -191,14 +191,31 @@ void slashcommands::process_my_command(dpp::cluster *bot, bot::settings::setting
         if (interaction.options[0].name == "language") {
             const std::string target = std::get<std::string>(event.get_parameter("target"));
 
-            const std::lock_guard<bot::settings::settings> guard(*settings);
-            settings->set_user_target(event.command.usr.id, target);
+            const auto languages = settings->get_translator()->get_languages();
 
-            auto database = settings->get_database();
-            database->set_user_target(event.command.usr.id, target);
-            database->sync();
+            std::ostringstream language_codes;
+            bool target_valid = false;
+            for (const bot::translator::language &language : languages) {
+                if (language.code == target) {
+                    target_valid = true;
+                    break;
+                }
+                language_codes << ' ' << language.code;
+            }
 
-            event.reply(dpp::message("Your target language has being set!").set_flags(dpp::m_ephemeral));
+            if (target_valid) {
+                const std::lock_guard<bot::settings::settings> guard(*settings);
+                settings->set_user_target(event.command.usr.id, target);
+
+                auto database = settings->get_database();
+                database->set_user_target(event.command.usr.id, target);
+                database->sync();
+
+                event.reply(dpp::message("Your target language has being set!").set_flags(dpp::m_ephemeral));
+            }
+            else {
+                event.reply(dpp::message("Target language is not valid!\nAvailable languages are:" + language_codes.str()).set_flags(dpp::m_ephemeral));
+            }
         }
         else {
             throw std::invalid_argument("Option " + interaction.options[0].name + " is not known");
