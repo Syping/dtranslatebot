@@ -15,7 +15,7 @@
 %endif
 
 Name:           dtranslatebot
-Version:        0.3.2
+Version:        0.3.3
 Release:        1%{?dist}
 Summary:        Discord Translation Bot
 License:        BSD-2-Clause
