@@ -31,11 +31,14 @@ namespace bot {
         class http_headers {
         public:
             http_headers();
+            http_headers(const http_headers &headers);
             http_headers(const std::string &field, const std::string &value);
             http_headers(const http_header &header);
             http_headers(const std::initializer_list<http_header> &headers);
             http_headers(const std::vector<http_header> &headers);
             ~http_headers();
+            http_headers& operator=(const curl_slist *headers);
+            http_headers& operator=(const http_headers &headers);
             void add(const std::string &field, const std::string &value);
             void add(const http_header &header);
             void add(const std::initializer_list<http_header> &headers);
@@ -45,6 +48,7 @@ namespace bot {
             const curl_slist* data() const;
 
         private:
+            static curl_slist* copy_from(const curl_slist *headers);
             curl_slist *instance;
         };
     }

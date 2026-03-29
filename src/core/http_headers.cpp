@@ -23,6 +23,10 @@ http_headers::http_headers() {
     instance = nullptr;
 }
 
+http_headers::http_headers(const http_headers &headers) {
+    instance = copy_from(headers.data());
+}
+
 http_headers::http_headers(const std::string &field, const std::string &value) {
     instance = nullptr;
     add(field, value);
@@ -35,16 +39,48 @@ http_headers::http_headers(const http_header &header) {
 
 http_headers::http_headers(const std::initializer_list<http_header> &headers) {
     instance = nullptr;
-    add(headers);
+    try {
+        add(headers);
+    }
+    catch (const std::bad_alloc &exception) {
+        curl_slist_free_all(instance);
+        throw;
+    }
 }
 
 http_headers::http_headers(const std::vector<http_header> &headers) {
     instance = nullptr;
-    add(headers);
+    try {
+        add(headers);
+    }
+    catch (const std::bad_alloc &exception) {
+        curl_slist_free_all(instance);
+        throw;
+    }
 }
 
 http_headers::~http_headers() {
     curl_slist_free_all(instance);
+}
+
+http_headers& http_headers::operator=(const curl_slist *other) {
+    if (this->data() == other)
+        return *this;
+    if (curl_slist *headers = copy_from(other)) {
+        curl_slist_free_all(instance);
+        instance = headers;
+    }
+    return *this;
+}
+
+http_headers& http_headers::operator=(const http_headers &other) {
+    if (this == &other)
+        return *this;
+    if (curl_slist *headers = copy_from(other.data())) {
+        curl_slist_free_all(instance);
+        instance = headers;
+    }
+    return *this;
 }
 
 void http_headers::add(const std::string &field, const std::string &value) {
@@ -83,5 +119,18 @@ void http_headers::remove(const std::vector<std::string> &fields) {
 }
 
 const curl_slist* http_headers::data() const {
+    return instance;
+}
+
+curl_slist* http_headers::copy_from(const curl_slist *headers) {
+    curl_slist *instance = nullptr;
+    for (const curl_slist *i = headers; i; i = i->next) {
+        curl_slist *headers = curl_slist_append(instance, i->data);
+        if (!headers) {
+            curl_slist_free_all(instance);
+            throw std::bad_alloc();
+        }
+        instance = headers;
+    }
     return instance;
 }
