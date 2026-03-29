@@ -28,6 +28,8 @@ namespace bot {
         class http_request {
         public:
             http_request();
+            http_request(const http_request&) = delete;
+            http_request& operator=(const http_request&) = delete;
             ~http_request();
             const http_response get(const std::string &url, const http_headers &headers = {});
             const http_response post(const std::string &url, const std::string &content, const http_headers &headers = {});
