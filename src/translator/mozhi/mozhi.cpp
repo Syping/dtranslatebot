@@ -19,7 +19,6 @@
 #include <dpp/json.h>
 #include <dpp/utility.h>
 #include <iostream>
-#include "../../core/http_request.h"
 #include "mozhi.h"
 using namespace bot::http;
 using namespace bot::translator;
@@ -47,8 +46,7 @@ const std::vector<language> mozhi::get_languages()
         const std::string parameters = dpp::utility::make_url_parameters({
             {"engine", m_engine}
         });
-        http_request request;
-        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/target_languages", m_tls));
+        http_response response = m_http.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/target_languages", m_tls));
         if (response.status == 200) {
             const dpp::json json_response = dpp::json::parse(response.content);
             if (json_response.is_array()) {
@@ -89,8 +87,7 @@ const std::string mozhi::translate(const std::string &text, const std::string &s
             {"to", target},
             {"text", text}
         });
-        http_request request;
-        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/translate" + parameters, m_tls));
+        http_response response = m_http.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/translate" + parameters, m_tls));
         if (response.status == 200) {
             const dpp::json json_response = dpp::json::parse(response.content);
             if (json_response.is_object()) {

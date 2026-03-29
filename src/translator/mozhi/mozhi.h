@@ -20,6 +20,7 @@
 #define TRANSLATOR_MOZHI_H
 
 #include <cstdint>
+#include "../../core/http_request.h"
 #include "../../core/translator.h"
 
 namespace bot {
@@ -35,6 +36,7 @@ namespace bot {
         private:
             std::string m_engine;
             std::string m_hostname;
+            bot::http::http_request m_http;
             supported_languages m_languages;
             uint16_t m_port;
             std::string m_url;

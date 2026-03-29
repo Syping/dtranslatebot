@@ -18,7 +18,6 @@
 
 #include <dpp/json.h>
 #include <iostream>
-#include "../../core/http_request.h"
 #include "deepl.h"
 using namespace bot::http;
 using namespace bot::translator;
@@ -43,9 +42,8 @@ const std::vector<language> deepl::get_languages()
     }
 
     try {
-        http_request request;
-        http_response response = request.get(http_request::legacy_url(m_hostname, 443, "/v2/languages?type=target", true),
-                                             {{"Authorization", "DeepL-Auth-Key " + m_apiKey}});
+        http_response response = m_http.get(http_request::legacy_url(m_hostname, 443, "/v2/languages?type=target", true),
+                                            {{"Authorization", "DeepL-Auth-Key " + m_apiKey}});
         if (response.status == 200) {
             const dpp::json json_response = dpp::json::parse(response.content);
             if (json_response.is_array()) {
@@ -92,9 +90,8 @@ const std::string deepl::translate(const std::string &text, const std::string &s
         json_body["source_lang"] = source;
 
     try {
-        http_request request;
-        http_response response = request.post(http_request::legacy_url(m_hostname, 443, "/v2/translate", true), json_body.dump(),
-                                              {{"Authorization", "DeepL-Auth-Key " + m_apiKey}, {"Content-Type", "application/json"}});
+        http_response response = m_http.post(http_request::legacy_url(m_hostname, 443, "/v2/translate", true), json_body.dump(),
+                                             {{"Authorization", "DeepL-Auth-Key " + m_apiKey}, {"Content-Type", "application/json"}});
         if (response.status == 200) {
             const dpp::json json_response = dpp::json::parse(response.content);
             if (json_response.is_object()) {

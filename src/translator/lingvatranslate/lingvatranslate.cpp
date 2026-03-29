@@ -19,7 +19,6 @@
 #include <dpp/json.h>
 #include <dpp/utility.h>
 #include <iostream>
-#include "../../core/http_request.h"
 #include "lingvatranslate.h"
 using namespace bot::http;
 using namespace bot::translator;
@@ -44,8 +43,7 @@ const std::vector<language> lingvatranslate::get_languages()
     }
 
     try {
-        http_request request;
-        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/v1/languages/target", m_tls));
+        http_response response = m_http.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/v1/languages/target", m_tls));
         if (response.status == 200) {
             const dpp::json json_response = dpp::json::parse(response.content);
             if (json_response.is_object()) {
@@ -83,8 +81,7 @@ const std::vector<language> lingvatranslate::get_languages()
 const std::string lingvatranslate::translate(const std::string &text, const std::string &source, const std::string &target)
 {
     try {
-        http_request request;
-        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/v1/" + (source.empty() ? "auto" : source) + "/" + target + "/" + dpp::utility::url_encode(text), m_tls));
+        http_response response = m_http.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/v1/" + (source.empty() ? "auto" : source) + "/" + target + "/" + dpp::utility::url_encode(text), m_tls));
         if (response.status == 200) {
             const dpp::json json_response = dpp::json::parse(response.content);
             if (json_response.is_object()) {

@@ -19,6 +19,7 @@
 #ifndef TRANSLATOR_DEEPL_H
 #define TRANSLATOR_DEEPL_H
 
+#include "../../core/http_request.h"
 #include "../../core/translator.h"
 
 namespace bot {
@@ -33,6 +34,7 @@ namespace bot {
         private:
             std::string m_apiKey;
             std::string m_hostname;
+            bot::http::http_request m_http;
             supported_languages m_languages;
         };
     }
