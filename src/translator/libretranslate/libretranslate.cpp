@@ -17,9 +17,10 @@
 *****************************************************************************/
 
 #include <dpp/json.h>
-#include <dpp/httpsclient.h>
+#include <iostream>
 #include "../../core/http_request.h"
 #include "libretranslate.h"
+using namespace bot::http;
 using namespace bot::translator;
 using namespace std::chrono_literals;
 
@@ -77,10 +78,6 @@ const std::vector<language> libretranslate::get_languages()
 
 const std::string libretranslate::translate(const std::string &text, const std::string &source, const std::string &target)
 {
-    const dpp::http_headers http_headers = {
-        {"Content-Type", "application/json"}
-    };
-
     dpp::json json_body = {
         {"q", text},
         {"source", source.empty() ? "auto" : source},
@@ -93,7 +90,8 @@ const std::string libretranslate::translate(const std::string &text, const std::
 
     try {
         http_request request;
-        http_response response = request.post(http_request::legacy_url(m_hostname, m_port, m_url + "translate", m_tls), json_body.dump(), "application/json");
+        http_response response = request.post(http_request::legacy_url(m_hostname, m_port, m_url + "translate", m_tls), json_body.dump(),
+                                              {{"Content-Type", "application/json"}});
         if (response.status == 200) {
             const dpp::json json_response = dpp::json::parse(response.content);
             if (json_response.is_object()) {

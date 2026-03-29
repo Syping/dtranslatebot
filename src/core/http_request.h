@@ -20,21 +20,24 @@
 #define HTTP_REQUEST_H
 #include <curl/curl.h>
 #include <cstdint>
-#include <dpp/httpsclient.h>
+#include "http_headers.h"
 #include "http_response.h"
 
-class http_request
-{
-public:
-    http_request();
-    ~http_request();
-    const http_response get(const std::string &url, const dpp::http_headers &headers = {});
-    const http_response post(const std::string &url, const std::string &content, const std::string &content_type, const dpp::http_headers &headers = {});
-    static std::string legacy_url(const std::string &hostname, uint16_t port, const std::string &url, bool tls);
+namespace bot {
+    namespace http {
+        class http_request {
+        public:
+            http_request();
+            ~http_request();
+            const http_response get(const std::string &url, const http_headers &headers = {});
+            const http_response post(const std::string &url, const std::string &content, const http_headers &headers = {});
+            static std::string legacy_url(const std::string &hostname, uint16_t port, const std::string &url, bool tls);
 
-private:
-    static size_t writer(char *source, size_t size, size_t nmemb, std::string *target);
-    CURL *instance;
-};
+        private:
+            static size_t writer(char *source, size_t size, size_t nmemb, std::string *target);
+            CURL *instance;
+        };
+    }
+}
 
 #endif // HTTP_REQUEST_H

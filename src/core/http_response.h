@@ -20,10 +20,13 @@
 #define HTTP_RESPONSE_H
 #include <string>
 
-struct http_response
-{
-    std::string content;
-    long status;
-};
+namespace bot {
+    namespace http {
+        struct http_response {
+            std::string content;
+            long status;
+        };
+    }
+}
 
 #endif // HTTP_RESPONSE_H

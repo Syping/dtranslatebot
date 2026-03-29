@@ -17,6 +17,7 @@
 *****************************************************************************/
 
 #include "http_request.h"
+using namespace bot::http;
 
 http_request::http_request() {
     instance = curl_easy_init();
@@ -24,56 +25,23 @@ http_request::http_request() {
         throw std::bad_alloc();
 }
 
-const http_response http_request::get(const std::string &url, const dpp::http_headers &headers) {
+const http_response http_request::get(const std::string &url, const http_headers &headers) {
     http_response response;
     curl_easy_setopt(instance, CURLOPT_URL, url.c_str());
-    curl_slist *header_slist = nullptr;
-    if (!headers.empty()) {
-        for (const auto &header : headers) {
-            curl_slist *new_header_slist = curl_slist_append(header_slist, std::string(header.first + ": " + header.second).c_str());
-            if (!new_header_slist) {
-                curl_slist_free_all(header_slist);
-                throw std::bad_alloc();
-            }
-            header_slist = new_header_slist;
-        }
-    }
-    if (header_slist)
-        curl_easy_setopt(instance, CURLOPT_HTTPHEADER, header_slist);
+    curl_easy_setopt(instance, CURLOPT_HTTPHEADER, headers.data());
     curl_easy_setopt(instance, CURLOPT_WRITEDATA, &response.content);
     curl_easy_setopt(instance, CURLOPT_WRITEFUNCTION, &writer);
     CURLcode result = curl_easy_perform(instance);
     if (result == CURLE_OK)
         curl_easy_getinfo(instance, CURLINFO_RESPONSE_CODE, &response.status);
     curl_easy_reset(instance);
-    curl_slist_free_all(header_slist);
     return response;
 }
 
-const http_response http_request::post(const std::string &url, const std::string &content, const std::string &content_type, const dpp::http_headers &headers) {
+const http_response http_request::post(const std::string &url, const std::string &content, const http_headers &headers) {
     http_response response;
     curl_easy_setopt(instance, CURLOPT_URL, url.c_str());
-    curl_slist *header_slist = nullptr;
-    if (!content_type.empty()) {
-        curl_slist *new_header_slist = curl_slist_append(header_slist, std::string("Content-Type: " + content_type).c_str());
-        if (!new_header_slist) {
-            curl_slist_free_all(header_slist);
-            throw std::bad_alloc();
-        }
-        header_slist = new_header_slist;
-    }
-    if (!headers.empty()) {
-        for (const auto &header : headers) {
-            curl_slist *new_header_slist = curl_slist_append(header_slist, std::string(header.first + ": " + header.second).c_str());
-            if (!new_header_slist) {
-                curl_slist_free_all(header_slist);
-                throw std::bad_alloc();
-            }
-            header_slist = new_header_slist;
-        }
-    }
-    if (header_slist)
-        curl_easy_setopt(instance, CURLOPT_HTTPHEADER, header_slist);
+    curl_easy_setopt(instance, CURLOPT_HTTPHEADER, headers.data());
     curl_easy_setopt(instance, CURLOPT_POSTFIELDS, content.data());
     curl_easy_setopt(instance, CURLOPT_POSTFIELDSIZE, content.size());
     curl_easy_setopt(instance, CURLOPT_WRITEDATA, &response.content);
@@ -82,7 +50,6 @@ const http_response http_request::post(const std::string &url, const std::string
     if (result == CURLE_OK)
         curl_easy_getinfo(instance, CURLINFO_RESPONSE_CODE, &response.status);
     curl_easy_reset(instance);
-    curl_slist_free_all(header_slist);
     return response;
 }
 

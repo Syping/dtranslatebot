@@ -20,7 +20,6 @@
 #define TRANSLATOR_LINGVATRANSLATE_H
 
 #include <cstdint>
-#include <dpp/cluster.h>
 #include "../../core/translator.h"
 
 namespace bot {

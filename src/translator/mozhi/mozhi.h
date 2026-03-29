@@ -20,7 +20,6 @@
 #define TRANSLATOR_MOZHI_H
 
 #include <cstdint>
-#include <dpp/cluster.h>
 #include "../../core/translator.h"
 
 namespace bot {

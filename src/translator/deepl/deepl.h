@@ -19,7 +19,6 @@
 #ifndef TRANSLATOR_DEEPL_H
 #define TRANSLATOR_DEEPL_H
 
-#include <dpp/cluster.h>
 #include "../../core/translator.h"
 
 namespace bot {

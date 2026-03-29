@@ -17,10 +17,11 @@
 *****************************************************************************/
 
 #include <dpp/json.h>
-#include <dpp/httpsclient.h>
 #include <dpp/utility.h>
+#include <iostream>
 #include "../../core/http_request.h"
 #include "lingvatranslate.h"
+using namespace bot::http;
 using namespace bot::translator;
 using namespace std::chrono_literals;
 

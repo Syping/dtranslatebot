@@ -119,7 +119,8 @@ if (UNIX AND NOT APPLE)
 endif()
 
 # dtranslatebot Target + Installs
-add_executable(dtranslatebot ${DTRANSLATEBOT_HEADERS} ${DTRANSLATEBOT_SOURCES} ${DTRANSLATEBOT_RESOURCES})
+add_executable(dtranslatebot ${DTRANSLATEBOT_HEADERS} ${DTRANSLATEBOT_SOURCES} ${DTRANSLATEBOT_RESOURCES}
+    src/core/http_headers.h src/core/http_headers.cpp)
 if (WITH_DPP_STATIC_BUNDLE)
     add_dependencies(dtranslatebot DPP)
 endif()
