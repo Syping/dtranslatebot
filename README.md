@@ -15,7 +15,7 @@ Open Source Discord Translation Bot
 - [LibreTranslate](https://libretranslate.com/) (Default)
 - [Lingva Translate](https://lingva.ml/)
 - [Mozhi](https://codeberg.org/aryak/mozhi)
-- [DeepL](https://deepl.com/) (Experimental)
+- [DeepL](https://deepl.com/)
 
 #### Build dtranslatebot
 

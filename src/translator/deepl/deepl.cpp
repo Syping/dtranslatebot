@@ -22,7 +22,6 @@
 #include "deepl.h"
 using namespace bot::translator;
 using namespace std::chrono_literals;
-using namespace std::string_literals;
 
 deepl::deepl(const std::string &hostname, const std::string apiKey) :
     m_hostname(hostname), m_apiKey(apiKey)
@@ -44,7 +43,7 @@ const std::vector<language> deepl::get_languages()
 
     try {
         http_request request;
-        http_response response = request.get(http_request::legacy_url(m_hostname, 443, "/v2/languages?type=target"s, true), { {"Authorization"s, "DeepL-Auth-Key "s + m_apiKey} });
+        http_response response = request.get(http_request::legacy_url(m_hostname, 443, "/v2/languages?type=target", true), { {"Authorization", "DeepL-Auth-Key " + m_apiKey} });
         if (response.status == 200) {
             const dpp::json json_response = dpp::json::parse(response.content);
             if (json_response.is_array()) {
@@ -84,20 +83,20 @@ const std::vector<language> deepl::get_languages()
 const std::string deepl::translate(const std::string &text, const std::string &source, const std::string &target)
 {
     const dpp::http_headers http_headers = {
-        {"Authorization"s, "DeepL-Auth-Key " + m_apiKey},
-        {"Content-Type"s, "application/json"s}
+        {"Authorization", "DeepL-Auth-Key " + m_apiKey},
+        {"Content-Type", "application/json"}
     };
 
     dpp::json json_body = {
-        {"text"s, { text } },
-        {"target_lang"s, target}
+        {"text", { text } },
+        {"target_lang", target}
     };
     if (!source.empty())
         json_body["source_lang"] = source;
 
     try {
         http_request request;
-        http_response response = request.post(http_request::legacy_url(m_hostname, 443, "/v2/translate", true), json_body.dump(), "application/json", { {"Authorization"s, "DeepL-Auth-Key " + m_apiKey} });
+        http_response response = request.post(http_request::legacy_url(m_hostname, 443, "/v2/translate", true), json_body.dump(), "application/json", { {"Authorization", "DeepL-Auth-Key " + m_apiKey} });
         if (response.status == 200) {
             const dpp::json json_response = dpp::json::parse(response.content);
             if (json_response.is_object()) {

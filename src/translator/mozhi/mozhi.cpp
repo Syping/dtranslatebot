@@ -23,7 +23,6 @@
 #include "mozhi.h"
 using namespace bot::translator;
 using namespace std::chrono_literals;
-using namespace std::string_literals;
 
 mozhi::mozhi(const std::string &hostname, uint16_t port, const std::string &url, bool tls, const std::string &engine) :
     m_hostname(hostname), m_port(port), m_url(url), m_tls(tls), m_engine(engine)
@@ -45,10 +44,10 @@ const std::vector<language> mozhi::get_languages()
 
     try {
         const std::string parameters = dpp::utility::make_url_parameters({
-            {"engine"s, m_engine}
+            {"engine", m_engine}
         });
         http_request request;
-        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/target_languages"s, m_tls));
+        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/target_languages", m_tls));
         if (response.status == 200) {
             const dpp::json json_response = dpp::json::parse(response.content);
             if (json_response.is_array()) {
@@ -84,13 +83,13 @@ const std::string mozhi::translate(const std::string &text, const std::string &s
 {
     try {
         const std::string parameters = dpp::utility::make_url_parameters({
-            {"engine"s, m_engine},
-            {"from"s, source.empty() ? "auto"s : source},
-            {"to"s, target},
-            {"text"s, text}
+            {"engine", m_engine},
+            {"from", source.empty() ? "auto" : source},
+            {"to", target},
+            {"text", text}
         });
         http_request request;
-        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/translate"s + parameters, m_tls));
+        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "api/translate" + parameters, m_tls));
         if (response.status == 200) {
             const dpp::json json_response = dpp::json::parse(response.content);
             if (json_response.is_object()) {

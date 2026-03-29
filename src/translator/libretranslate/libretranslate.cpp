@@ -22,7 +22,6 @@
 #include "libretranslate.h"
 using namespace bot::translator;
 using namespace std::chrono_literals;
-using namespace std::string_literals;
 
 libretranslate::libretranslate(const std::string &hostname, uint16_t port, const std::string &url, bool tls, const std::string apiKey) :
     m_hostname(hostname), m_port(port), m_url(url), m_tls(tls), m_apiKey(apiKey)
@@ -44,7 +43,7 @@ const std::vector<language> libretranslate::get_languages()
 
     try {
         http_request request;
-        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "languages"s, m_tls));
+        http_response response = request.get(http_request::legacy_url(m_hostname, m_port, m_url + "languages", m_tls));
         if (response.status == 200) {
             const dpp::json json_response = dpp::json::parse(response.content);
             if (json_response.is_array()) {
@@ -79,14 +78,14 @@ const std::vector<language> libretranslate::get_languages()
 const std::string libretranslate::translate(const std::string &text, const std::string &source, const std::string &target)
 {
     const dpp::http_headers http_headers = {
-        {"Content-Type"s, "application/json"s}
+        {"Content-Type", "application/json"}
     };
 
     dpp::json json_body = {
-        {"q"s, text},
-        {"source"s, source.empty() ? "auto"s : source},
-        {"target"s, target},
-        {"format"s, "text"s}
+        {"q", text},
+        {"source", source.empty() ? "auto" : source},
+        {"target", target},
+        {"format", "text"}
     };
 
     if (!m_apiKey.empty())
@@ -94,7 +93,7 @@ const std::string libretranslate::translate(const std::string &text, const std::
 
     try {
         http_request request;
-        http_response response = request.post(http_request::legacy_url(m_hostname, m_port, m_url + "translate"s, m_tls), json_body.dump(), "application/json");
+        http_response response = request.post(http_request::legacy_url(m_hostname, m_port, m_url + "translate", m_tls), json_body.dump(), "application/json");
         if (response.status == 200) {
             const dpp::json json_response = dpp::json::parse(response.content);
             if (json_response.is_object()) {

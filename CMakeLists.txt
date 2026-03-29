@@ -18,7 +18,7 @@
 
 cmake_minimum_required(VERSION 3.16)
 cmake_policy(VERSION 3.16...3.27)
-project(dtranslatebot VERSION 0.3.1 LANGUAGES CXX)
+project(dtranslatebot VERSION 0.3.2 LANGUAGES CXX)
 include(GNUInstallDirs)
 
 # dtranslatebot Source files
