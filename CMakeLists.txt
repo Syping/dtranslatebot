@@ -24,6 +24,7 @@ include(GNUInstallDirs)
 # dtranslatebot Source files
 set(DTRANSLATEBOT_HEADERS
     src/core/database.h
+    src/core/http_headers.h
     src/core/http_request.h
     src/core/http_response.h
     src/core/message_queue.h
@@ -43,6 +44,7 @@ set(DTRANSLATEBOT_HEADERS
 )
 set(DTRANSLATEBOT_SOURCES
     src/core/database.cpp
+    src/core/http_headers.cpp
     src/core/http_request.cpp
     src/core/main.cpp
     src/core/message_queue.cpp
@@ -119,8 +121,7 @@ if (UNIX AND NOT APPLE)
 endif()
 
 # dtranslatebot Target + Installs
-add_executable(dtranslatebot ${DTRANSLATEBOT_HEADERS} ${DTRANSLATEBOT_SOURCES} ${DTRANSLATEBOT_RESOURCES}
-    src/core/http_headers.h src/core/http_headers.cpp)
+add_executable(dtranslatebot ${DTRANSLATEBOT_HEADERS} ${DTRANSLATEBOT_SOURCES} ${DTRANSLATEBOT_RESOURCES})
 if (WITH_DPP_STATIC_BUNDLE)
     add_dependencies(dtranslatebot DPP)
 endif()
