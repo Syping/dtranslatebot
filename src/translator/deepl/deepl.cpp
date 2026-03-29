@@ -84,10 +84,10 @@ const std::string deepl::translate(const std::string &text, const std::string &s
 {
     dpp::json json_body = {
         {"text", { text } },
-        {"target_lang", target}
+        {"target_lang", target == "en" ? "en-US" : target == "pt" ? "pt-PT" : target}
     };
-    if (!source.empty())
-        json_body["source_lang"] = source;
+    if (!source.empty() && source != "auto")
+        json_body["source_lang"] = source.length() > 2 ? source.substr(0, 2) : source;
 
     try {
         http_response response = m_http.post(http_request::legacy_url(m_hostname, 443, "/v2/translate", true), json_body.dump(),
