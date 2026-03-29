@@ -56,10 +56,16 @@ const std::vector<language> deepl::get_languages()
                         if (json_lang_code != json_language->end())
                             language.code = *json_lang_code;
 
-                        if (language.code.size() > 2)
+                        if (language.code.size() == 5) {
                             std::transform(language.code.begin(), language.code.begin() + 2, language.code.begin(), ::tolower);
-                        else
+                        }
+                        else if (language.code.size() > 5) {
+                            std::transform(language.code.begin(), language.code.begin() + 2, language.code.begin(), ::tolower);
+                            std::transform(language.code.begin() + 4, language.code.end(), language.code.begin() + 4, ::tolower);
+                        }
+                        else {
                             std::transform(language.code.begin(), language.code.end(), language.code.begin(), ::tolower);
+                        }
 
                         auto json_lang_name = json_language->find("name");
                         if (json_lang_name != json_language->end())
@@ -68,6 +74,23 @@ const std::vector<language> deepl::get_languages()
                         if (!language.code.empty() && !language.name.empty())
                             m_languages.languages.push_back(std::move(language));
                     }
+                }
+                // Improving DeepL compatibility
+                if (std::find_if(m_languages.languages.begin(), m_languages.languages.end(), [](language language) {
+                        return language.code == "en";
+                    }) == m_languages.languages.end()) {
+                    language english;
+                    english.code = "en";
+                    english.name = "English (Default)";
+                    m_languages.languages.push_back(english);
+                }
+                if (std::find_if(m_languages.languages.begin(), m_languages.languages.end(), [](language language) {
+                        return language.code == "pt";
+                    }) == m_languages.languages.end()) {
+                    language portuguese;
+                    portuguese.code = "pt";
+                    portuguese.name = "Portuguese (Default)";
+                    m_languages.languages.push_back(portuguese);
                 }
                 m_languages.query_time = std::chrono::system_clock::now();
             }
