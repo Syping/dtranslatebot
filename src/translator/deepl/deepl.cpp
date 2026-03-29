@@ -82,11 +82,6 @@ const std::vector<language> deepl::get_languages()
 
 const std::string deepl::translate(const std::string &text, const std::string &source, const std::string &target)
 {
-    const dpp::http_headers http_headers = {
-        {"Authorization", "DeepL-Auth-Key " + m_apiKey},
-        {"Content-Type", "application/json"}
-    };
-
     dpp::json json_body = {
         {"text", { text } },
         {"target_lang", target}
