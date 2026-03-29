@@ -38,7 +38,7 @@ const http_response http_request::get(const std::string &url, const dpp::http_he
             header_slist = new_header_slist;
         }
     }
-    if (!header_slist)
+    if (header_slist)
         curl_easy_setopt(instance, CURLOPT_HTTPHEADER, header_slist);
     curl_easy_setopt(instance, CURLOPT_WRITEDATA, &response.content);
     curl_easy_setopt(instance, CURLOPT_WRITEFUNCTION, &writer);
@@ -72,7 +72,7 @@ const http_response http_request::post(const std::string &url, const std::string
             header_slist = new_header_slist;
         }
     }
-    if (!header_slist)
+    if (header_slist)
         curl_easy_setopt(instance, CURLOPT_HTTPHEADER, header_slist);
     curl_easy_setopt(instance, CURLOPT_POSTFIELDS, content.data());
     curl_easy_setopt(instance, CURLOPT_POSTFIELDSIZE, content.size());
