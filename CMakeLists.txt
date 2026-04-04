@@ -18,11 +18,12 @@
 
 cmake_minimum_required(VERSION 3.16)
 cmake_policy(VERSION 3.16...3.27)
-project(dtranslatebot VERSION 0.3.3 LANGUAGES CXX)
+project(dtranslatebot VERSION 0.4.0 LANGUAGES CXX)
 include(GNUInstallDirs)
 
 # dtranslatebot Source files
 set(DTRANSLATEBOT_HEADERS
+    src/core/curl_exception.h
     src/core/database.h
     src/core/http_headers.h
     src/core/http_request.h
@@ -43,6 +44,7 @@ set(DTRANSLATEBOT_HEADERS
     src/translator/stub/stub.h
 )
 set(DTRANSLATEBOT_SOURCES
+    src/core/curl_exception.cpp
     src/core/database.cpp
     src/core/http_headers.cpp
     src/core/http_request.cpp
