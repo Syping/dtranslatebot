@@ -16,6 +16,8 @@
 * responsible for anything with use of the software, you are self responsible.
 *****************************************************************************/
 
+#include <cstring>
+#include "curl_exception.h"
 #include "http_request.h"
 using namespace bot::http;
 
@@ -27,30 +29,36 @@ http_request::http_request() {
 
 const http_response http_request::get(const std::string &url, const http_headers &headers) {
     http_response response;
+    char error[CURL_ERROR_SIZE]{};
     curl_easy_setopt(instance, CURLOPT_URL, url.c_str());
     curl_easy_setopt(instance, CURLOPT_HTTPHEADER, headers.data());
     curl_easy_setopt(instance, CURLOPT_WRITEDATA, &response.content);
     curl_easy_setopt(instance, CURLOPT_WRITEFUNCTION, &writer);
+    curl_easy_setopt(instance, CURLOPT_ERRORBUFFER, error);
     CURLcode result = curl_easy_perform(instance);
     if (result == CURLE_OK)
         curl_easy_getinfo(instance, CURLINFO_RESPONSE_CODE, &response.status);
     curl_easy_reset(instance);
-    return response;
+    return result == CURLE_OK ?
+               response : throw bot::exception::curl_exception(strlen(error) ? error : curl_easy_strerror(result), result);
 }
 
 const http_response http_request::post(const std::string &url, const std::string &content, const http_headers &headers) {
     http_response response;
+    char error[CURL_ERROR_SIZE]{};
     curl_easy_setopt(instance, CURLOPT_URL, url.c_str());
     curl_easy_setopt(instance, CURLOPT_HTTPHEADER, headers.data());
     curl_easy_setopt(instance, CURLOPT_POSTFIELDS, content.data());
     curl_easy_setopt(instance, CURLOPT_POSTFIELDSIZE, content.size());
     curl_easy_setopt(instance, CURLOPT_WRITEDATA, &response.content);
     curl_easy_setopt(instance, CURLOPT_WRITEFUNCTION, &writer);
+    curl_easy_setopt(instance, CURLOPT_ERRORBUFFER, error);
     CURLcode result = curl_easy_perform(instance);
     if (result == CURLE_OK)
         curl_easy_getinfo(instance, CURLINFO_RESPONSE_CODE, &response.status);
     curl_easy_reset(instance);
-    return response;
+    return result == CURLE_OK ?
+               response : throw bot::exception::curl_exception(strlen(error) ? error : curl_easy_strerror(result), result);
 }
 
 std::string http_request::legacy_url(const std::string &hostname, uint16_t port, const std::string &url, bool tls) {
