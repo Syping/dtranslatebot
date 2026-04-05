@@ -17,6 +17,7 @@
 *****************************************************************************/
 
 #include <cstring>
+#include <curl/curlver.h>
 #include "curl_exception.h"
 #include "http_request.h"
 using namespace bot::exception;
@@ -72,10 +73,17 @@ http_request::~http_request() {
 
 void http_request::process_response(CURL* instance, http_response &response) {
     curl_easy_getinfo(instance, CURLINFO_RESPONSE_CODE, &response.status);
+#if LIBCURL_VERSION_NUM >= CURL_VERSION_BITS(7, 83, 0)
     curl_header* content_type;
     CURLHcode result = curl_easy_header(instance, "Content-Type", 0, CURLH_HEADER, -1, &content_type);
     if (result == CURLHE_OK)
         response.content_type = content_type->value;
+#else
+    char* content_type = nullptr;
+    CURLcode result = curl_easy_getinfo(instance, CURLINFO_CONTENT_TYPE, &content_type);
+    if (result == CURLE_OK && content_type)
+        response.content_type = content_type;
+#endif
 }
 
 size_t http_request::writer(char* source, size_t size, size_t nmemb, std::string* target) {
