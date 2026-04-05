@@ -24,6 +24,7 @@ namespace bot {
     namespace http {
         struct http_response {
             std::string content;
+            std::string content_type;
             long status;
         };
     }

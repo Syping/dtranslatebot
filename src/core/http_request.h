@@ -36,8 +36,9 @@ namespace bot {
             static std::string legacy_url(const std::string &hostname, uint16_t port, const std::string &url, bool tls);
 
         private:
-            static size_t writer(char *source, size_t size, size_t nmemb, std::string *target);
-            CURL *instance;
+            static void process_response(CURL* instance, http_response &response);
+            static size_t writer(char* source, size_t size, size_t nmemb, std::string* target);
+            CURL* instance;
         };
     }
 }

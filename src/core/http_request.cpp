@@ -19,6 +19,7 @@
 #include <cstring>
 #include "curl_exception.h"
 #include "http_request.h"
+using namespace bot::exception;
 using namespace bot::http;
 
 http_request::http_request() {
@@ -37,10 +38,10 @@ const http_response http_request::get(const std::string &url, const http_headers
     curl_easy_setopt(instance, CURLOPT_ERRORBUFFER, error);
     CURLcode result = curl_easy_perform(instance);
     if (result == CURLE_OK)
-        curl_easy_getinfo(instance, CURLINFO_RESPONSE_CODE, &response.status);
+        process_response(instance, response);
     curl_easy_reset(instance);
     return result == CURLE_OK ?
-               response : throw bot::exception::curl_exception(error, result);
+               response : throw curl_exception(error, result);
 }
 
 const http_response http_request::post(const std::string &url, const std::string &content, const http_headers &headers) {
@@ -55,10 +56,10 @@ const http_response http_request::post(const std::string &url, const std::string
     curl_easy_setopt(instance, CURLOPT_ERRORBUFFER, error);
     CURLcode result = curl_easy_perform(instance);
     if (result == CURLE_OK)
-        curl_easy_getinfo(instance, CURLINFO_RESPONSE_CODE, &response.status);
+        process_response(instance, response);
     curl_easy_reset(instance);
     return result == CURLE_OK ?
-               response : throw bot::exception::curl_exception(error, result);
+               response : throw curl_exception(error, result);
 }
 
 std::string http_request::legacy_url(const std::string &hostname, uint16_t port, const std::string &url, bool tls) {
@@ -69,7 +70,15 @@ http_request::~http_request() {
     curl_easy_cleanup(instance);
 }
 
-size_t http_request::writer(char *source, size_t size, size_t nmemb, std::string *target) {
+void http_request::process_response(CURL* instance, http_response &response) {
+    curl_easy_getinfo(instance, CURLINFO_RESPONSE_CODE, &response.status);
+    curl_header* content_type;
+    CURLHcode result = curl_easy_header(instance, "Content-Type", 0, CURLH_HEADER, -1, &content_type);
+    if (result == CURLHE_OK)
+        response.content_type = content_type->value;
+}
+
+size_t http_request::writer(char* source, size_t size, size_t nmemb, std::string* target) {
     if (target == nullptr)
         return 0;
     size_t write_size = size * nmemb;
