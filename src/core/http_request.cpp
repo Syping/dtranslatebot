@@ -40,7 +40,7 @@ const http_response http_request::get(const std::string &url, const http_headers
         curl_easy_getinfo(instance, CURLINFO_RESPONSE_CODE, &response.status);
     curl_easy_reset(instance);
     return result == CURLE_OK ?
-               response : throw bot::exception::curl_exception(strlen(error) ? error : curl_easy_strerror(result), result);
+               response : throw bot::exception::curl_exception(error, result);
 }
 
 const http_response http_request::post(const std::string &url, const std::string &content, const http_headers &headers) {
@@ -58,7 +58,7 @@ const http_response http_request::post(const std::string &url, const std::string
         curl_easy_getinfo(instance, CURLINFO_RESPONSE_CODE, &response.status);
     curl_easy_reset(instance);
     return result == CURLE_OK ?
-               response : throw bot::exception::curl_exception(strlen(error) ? error : curl_easy_strerror(result), result);
+               response : throw bot::exception::curl_exception(error, result);
 }
 
 std::string http_request::legacy_url(const std::string &hostname, uint16_t port, const std::string &url, bool tls) {

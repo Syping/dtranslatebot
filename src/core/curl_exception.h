@@ -27,13 +27,14 @@ namespace bot {
     namespace exception {
         class curl_exception : public std::exception {
         public:
-            explicit curl_exception(const std::string &message, CURLcode error_code);
+            explicit curl_exception(const std::string &message, CURLcode error);
             virtual ~curl_exception() noexcept;
+            CURLcode error() const noexcept;
             const char* what() const noexcept override;
 
         private:
-            const std::string m_message;
-            const CURLcode m_error_code;
+            std::string m_message;
+            CURLcode m_error;
         };
     }
 };

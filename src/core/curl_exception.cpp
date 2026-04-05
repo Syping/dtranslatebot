@@ -19,12 +19,16 @@
 #include "curl_exception.h"
 using namespace bot::exception;
 
-curl_exception::curl_exception(const std::string &message, CURLcode error_code) : m_message(message), m_error_code(error_code) {
+curl_exception::curl_exception(const std::string &message, CURLcode error) : m_message(message), m_error(error) {
 }
 
 curl_exception::~curl_exception() noexcept {
 }
 
+CURLcode curl_exception::error() const noexcept {
+    return m_error;
+}
+
 const char* curl_exception::what() const noexcept {
-    return m_message.c_str();
+    return !m_message.empty() ? m_message.c_str() : curl_easy_strerror(m_error);
 }
