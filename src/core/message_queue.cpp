@@ -101,6 +101,8 @@ void message_queue::run(bot::settings::settings *settings, submit_queue *submit_
         if (!m_queue.empty()) {
             const message message = m_queue.front();
             m_queue.pop();
+            for (message_queue_size_callback &callback : m_callbacks)
+                callback(m_queue.size());
             m_mutex.unlock();
 
             auto translator = settings->get_translator();
@@ -133,6 +135,23 @@ void message_queue::run(bot::settings::settings *settings, submit_queue *submit_
         }
     }
 }
+
+size_t message_queue::size() {
+    const std::lock_guard<std::mutex> guard(m_mutex);
+    return m_queue.size();
+}
+
+void message_queue::size_callback_add(const message_queue_size_callback &callback) {
+    const std::lock_guard<std::mutex> guard(m_mutex);
+    m_callbacks.push_back(callback);
+}
+
+/*
+void message_queue::size_callback_remove(const message_queue_size_callback &callback) {
+    const std::lock_guard<std::mutex> guard(m_mutex);
+    m_callbacks.erase(std::remove(m_callbacks.begin(), m_callbacks.end(), callback));
+}
+*/
 
 void message_queue::terminate()
 {

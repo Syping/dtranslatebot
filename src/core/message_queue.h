@@ -19,9 +19,10 @@
 #ifndef MESSAGE_QUEUE_H
 #define MESSAGE_QUEUE_H
 #include <dpp/cluster.h>
+#include <functional>
 #include <mutex>
-#include <string>
 #include <queue>
+#include <string>
 #include <variant>
 #include <vector>
 #include "settings.h"
@@ -42,7 +43,8 @@ namespace bot {
         std::vector<bot::settings::target> targets;
     };
 
-    typedef std::variant<direct_message, guild_message> message;
+    typedef std::function<void(size_t)> message_queue_size_callback;
+    typedef std::variant<direct_message, guild_message> message; 
 
     class message_queue {
     public:
@@ -51,12 +53,15 @@ namespace bot {
         void process_direct_message_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::message_context_menu_t &event);
         void process_guild_message_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::message_create_t &event);
         void run(bot::settings::settings *settings, submit_queue *submit_queue);
+        size_t size();
+        void size_callback_add(const message_queue_size_callback &callback);
         void terminate();
 
     private:
         bool m_running;
         std::mutex m_mutex;
         std::queue<message> m_queue;
+        std::vector<message_queue_size_callback> m_callbacks;
     };
 }
 

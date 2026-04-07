@@ -21,8 +21,9 @@
 #include <dpp/cluster.h>
 #include <dpp/webhook.h>
 #include <mutex>
-#include <string>
 #include <queue>
+#include <string>
+#include <vector>
 
 namespace bot {
     struct translated_direct_message {
@@ -37,6 +38,7 @@ namespace bot {
         dpp::webhook webhook;
     };
 
+    typedef std::function<void(size_t)> submit_queue_size_callback;
     typedef std::variant<translated_direct_message, translated_guild_message> translated_message;
 
     class submit_queue {
@@ -44,12 +46,15 @@ namespace bot {
         void add(const translated_message &message);
         void add(translated_message &&message);
         void run(dpp::cluster *bot);
+        size_t size();
+        void size_callback_add(const submit_queue_size_callback &callback);
         void terminate();
 
     private:
         bool m_running;
         std::mutex m_mutex;
         std::queue<translated_message> m_queue;
+        std::vector<submit_queue_size_callback> m_callbacks;
     };
 }
 
