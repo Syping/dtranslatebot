@@ -27,12 +27,16 @@ void message_queue::add(const message &message)
 {
     const std::lock_guard<std::mutex> guard(m_mutex);
     m_queue.push(message);
+    for (const message_queue_size_callback &callback : m_callbacks)
+        callback(m_queue.size());
 }
 
 void message_queue::add(message &&message)
 {
     const std::lock_guard<std::mutex> guard(m_mutex);
     m_queue.push(message);
+    for (const message_queue_size_callback &callback : m_callbacks)
+        callback(m_queue.size());
 }
 
 void message_queue::process_direct_message_event(dpp::cluster *bot, bot::settings::settings *settings, const dpp::message_context_menu_t &event)

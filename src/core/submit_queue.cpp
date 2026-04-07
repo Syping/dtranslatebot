@@ -26,12 +26,16 @@ void submit_queue::add(const translated_message &message)
 {
     const std::lock_guard<std::mutex> guard(m_mutex);
     m_queue.push(message);
+    for (const submit_queue_size_callback &callback : m_callbacks)
+        callback(m_queue.size());
 }
 
 void submit_queue::add(translated_message &&message)
 {
     const std::lock_guard<std::mutex> guard(m_mutex);
     m_queue.push(message);
+    for (const submit_queue_size_callback &callback : m_callbacks)
+        callback(m_queue.size());
 }
 
 void submit_queue::run(dpp::cluster *bot)
