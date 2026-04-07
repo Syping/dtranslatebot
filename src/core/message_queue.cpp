@@ -101,7 +101,7 @@ void message_queue::run(bot::settings::settings *settings, submit_queue *submit_
         if (!m_queue.empty()) {
             const message message = m_queue.front();
             m_queue.pop();
-            for (message_queue_size_callback &callback : m_callbacks)
+            for (const message_queue_size_callback &callback : m_callbacks)
                 callback(m_queue.size());
             m_mutex.unlock();
 

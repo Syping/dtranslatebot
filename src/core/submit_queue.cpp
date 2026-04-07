@@ -42,7 +42,7 @@ void submit_queue::run(dpp::cluster *bot)
         if (!m_queue.empty()) {
             const translated_message message = m_queue.front();
             m_queue.pop();
-            for (submit_queue_size_callback &callback : m_callbacks)
+            for (const submit_queue_size_callback &callback : m_callbacks)
                 callback(m_queue.size());
             m_mutex.unlock();
 
