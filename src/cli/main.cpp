@@ -16,15 +16,15 @@
 * responsible for anything with use of the software, you are self responsible.
 *****************************************************************************/
 
+#include <curl/curl.h>
 #include <dpp/cluster.h>
 #include <dpp/once.h>
 #include <iostream>
-#include <vector>
 #include <thread>
-#include <curl/curl.h>
-#include "message_queue.h"
-#include "settings.h"
-#include "slashcommands.h"
+#include <vector>
+#include "../core/message_queue.h"
+#include "../core/settings.h"
+#include "../core/slashcommands.h"
 using namespace std::chrono_literals;
 
 int main(int argc, char* argv[]) {

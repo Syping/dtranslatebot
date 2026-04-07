@@ -44,11 +44,11 @@ set(DTRANSLATEBOT_HEADERS
     src/translator/stub/stub.h
 )
 set(DTRANSLATEBOT_SOURCES
+    src/cli/main.cpp
     src/core/curl_exception.cpp
     src/core/database.cpp
     src/core/http_headers.cpp
     src/core/http_request.cpp
-    src/core/main.cpp
     src/core/message_queue.cpp
     src/core/settings.cpp
     src/core/slashcommands.cpp
