@@ -25,9 +25,11 @@ include(GNUInstallDirs)
 set(DTRANSLATEBOT_HEADERS
     src/core/curl_exception.h
     src/core/database.h
+    src/core/discord_bot.h
     src/core/http_headers.h
     src/core/http_request.h
     src/core/http_response.h
+    src/core/log.h
     src/core/message_queue.h
     src/core/regex.h
     src/core/settings.h
@@ -44,9 +46,9 @@ set(DTRANSLATEBOT_HEADERS
     src/translator/stub/stub.h
 )
 set(DTRANSLATEBOT_SOURCES
-    src/cli/main.cpp
     src/core/curl_exception.cpp
     src/core/database.cpp
+    src/core/discord_bot.cpp
     src/core/http_headers.cpp
     src/core/http_request.cpp
     src/core/message_queue.cpp
@@ -69,13 +71,11 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 # Boost C++ Libraries
 option(WITH_BOOST "Build with Boost C++ Libraries" OFF)
 if (WITH_BOOST)
-    find_package(Boost COMPONENTS regex)
-    if (Boost_regex_FOUND)
-        list(APPEND DTRANSLATEBOT_LIBRARIES
-            Boost::regex
-        )
-        set(DTRANSLATEBOT_USE_BOOST_REGEX TRUE)
-    endif()
+    find_package(Boost COMPONENTS regex REQUIRED)
+    list(APPEND DTRANSLATEBOT_LIBRARIES
+        Boost::regex
+    )
+    set(DTRANSLATEBOT_USE_BOOST_REGEX TRUE)
 endif()
 
 # curl Library
@@ -87,6 +87,23 @@ if (WITH_DPP_STATIC_BUNDLE)
     include(DPPStaticBundle)
 else()
     find_package(DPP REQUIRED)
+endif()
+
+option(WITH_GUI "Build with dtranslatebot GUI" OFF)
+if (WITH_GUI)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(GTKMM REQUIRED gtkmm-4.0)
+    list(APPEND DTRANSLATEBOT_HEADERS
+        src/gui/user_interface.h
+    )
+    list(APPEND DTRANSLATEBOT_SOURCES
+        src/gui/main.cpp
+        src/gui/user_interface.cpp
+    )
+else()
+    list(APPEND DTRANSLATEBOT_SOURCES
+        src/cli/main.cpp
+    )
 endif()
 
 # pthread Support
@@ -129,13 +146,27 @@ if (WITH_DPP_STATIC_BUNDLE)
 endif()
 target_compile_definitions(dtranslatebot PRIVATE
     ${DPP_DEFINITIONS}
+    $<$<BOOL:${WITH_GUI}>:DTRANSLATEBOT_GUI>
     $<$<BOOL:${DTRANSLATEBOT_USE_BOOST_REGEX}>:DTRANSLATEBOT_USE_BOOST_REGEX>
 )
-if (MSVC AND MSVC_VERSION GREATER_EQUAL 1914)
-    target_compile_options(dtranslatebot PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/Zc:__cplusplus>)
-endif()
-target_link_libraries(dtranslatebot PRIVATE ${DTRANSLATEBOT_LIBRARIES} ${DPP_LIBRARIES} CURL::libcurl Threads::Threads)
-target_include_directories(dtranslatebot PRIVATE ${DPP_INCLUDE_DIR})
+target_compile_options(dtranslatebot PRIVATE
+    $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<VERSION_GREATER_EQUAL:$<CXX_COMPILER_VERSION>,19.14>,$<COMPILE_LANGUAGE:CXX>>:/Zc:__cplusplus>
+    $<$<BOOL:${WITH_GUI}>:${GTKMM_CFLAGS}>
+)
+target_link_libraries(dtranslatebot PRIVATE
+    ${DTRANSLATEBOT_LIBRARIES}
+    ${DPP_LIBRARIES}
+    CURL::libcurl
+    $<$<BOOL:${WITH_GUI}>:${GTKMM_LIBRARIES}>
+    Threads::Threads
+)
+target_link_directories(dtranslatebot PRIVATE
+    $<$<BOOL:${WITH_GUI}>:${GTKMM_LIBRARY_DIRS}>
+)
+target_include_directories(dtranslatebot PRIVATE
+    ${DPP_INCLUDE_DIR}
+    $<$<BOOL:${WITH_GUI}>:${GTKMM_INCLUDE_DIRS}>
+)
 set_target_properties(dtranslatebot PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON

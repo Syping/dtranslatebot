@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2023-2024 Syping
+* Copyright (C) 2023-2026 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -20,6 +20,7 @@
 #define SETTINGS_H
 #include <mutex>
 #include "database.h"
+#include "log.h"
 #include "settings_types.h"
 #include "translator.h"
 
@@ -62,8 +63,11 @@ namespace bot {
             void unlock();
 
             /* parse functions */
-            bool parse(const std::string &data, bool initialize = true);
-            bool parse_file(const std::string &filename, bool initialize = true);
+            bool parse(const std::string &data, const bot::log::log_message_callback &log_callback, bool initialize = true);
+            bool parse_file(const std::string &filename, const bot::log::log_message_callback &log_callback, bool initialize = true);
+
+            /* process functions */
+            bool process(const dpp::json &json, const bot::log::log_message_callback &log_callback, bool initialize = true);
 
             /* prevent copies */
             settings() = default;

@@ -31,11 +31,11 @@
 using namespace bot::database;
 using namespace std::string_literals;
 
-file::file(const std::filesystem::path &storage_path) : m_storagePath(storage_path)
+file::file(const std::filesystem::path &storage_path, const log::log_message_callback &log_callback) : m_storagePath(storage_path), m_logCallback(log_callback)
 {
-    std::cout << "[Launch] Checking storage directory..." << std::endl;
+    m_logCallback("Checking storage directory...", "Launch", false);
     if (!std::filesystem::is_directory(storage_path)) {
-        std::cerr << "[Error] Storage directory " << storage_path << " can not be found" << std::endl;
+        m_logCallback("[Error] Storage directory " + storage_path.string() + " can not be found", "Error", true);
         throw std::runtime_error("Storage directory can not be found");
     }
 
@@ -50,19 +50,19 @@ file::file(const std::filesystem::path &storage_path) : m_storagePath(storage_pa
     const std::filesystem::path lock_file = storage_path / ".lock";
     fd = open(lock_file.c_str(), O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (fd == -1) {
-        std::cerr << "[Error] Storage directory " << storage_path << " can not be locked" << std::endl;
+        m_logCallback("[Error] Storage directory " + storage_path.string() + " can not be locked", "Error", true);
         throw std::system_error(errno, std::system_category());
     }
     if (fcntl(fd, F_SETLK, &lock) == -1) {
         close(fd);
-        std::cerr << "[Error] Storage directory " << storage_path << " can not be locked" << std::endl;
+        m_logCallback("[Error] Storage directory " + storage_path.string() + " can not be locked", "Error", true);
         throw std::system_error(errno, std::system_category());
     }
 #elif defined(_WIN32)
     const std::filesystem::path lock_file = storage_path / ".lock";
     fh = CreateFileW(lock_file.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_HIDDEN, NULL);
     if (fh == INVALID_HANDLE_VALUE) {
-        std::cerr << "[Error] Storage directory " << storage_path << " can not be locked" << std::endl;
+        m_logCallback("[Error] Storage directory " + storage_path.string() + " can not be found", "Error", true);
         throw std::system_error(GetLastError(), std::system_category());
     }
 #endif
@@ -408,7 +408,7 @@ bool file::sync()
         return true;
     }
     catch (const std::exception &exception) {
-        std::cerr << "[Exception] " << exception.what() << std::endl;
+        m_logCallback(exception.what(), "Exception", true);
     }
 
     return false;
@@ -475,7 +475,7 @@ void file::cache_get_channel(dpp::snowflake channel_id, settings::channel &chann
         }
     }
     catch (const std::exception &exception) {
-        std::cerr << "[Exception] " << exception.what() << std::endl;
+        m_logCallback(exception.what(), "Exception", true);
     }
 }
 
@@ -504,7 +504,7 @@ void file::cache_get_user(dpp::snowflake user_id, settings::user &user)
         }
     }
     catch (const std::exception &exception) {
-        std::cerr << "[Exception] " << exception.what() << std::endl;
+        m_logCallback(exception.what(), "Exception", true);
     }
 }
 
@@ -534,7 +534,7 @@ void file::cache_guild(dpp::snowflake guild_id, std::vector<dpp::snowflake> &cha
         }
     }
     catch (const std::exception &exception) {
-        std::cerr << "[Exception] " << exception.what() << std::endl;
+        m_logCallback(exception.what(), "Exception", true);
     }
 }
 
@@ -555,7 +555,7 @@ void file::list_guilds(std::vector<dpp::snowflake> &guilds)
                     guilds.push_back(guild_id);
                 }
                 catch (const std::exception &exception) {
-                    std::cerr << "[Exception] " << exception.what() << std::endl;
+                    m_logCallback(exception.what(), "Exception", true);
                 }
             }
         }
@@ -580,7 +580,7 @@ void file::list_users(std::vector<dpp::snowflake> &users)
                     users.push_back(user_id);
                 }
                 catch (const std::exception &exception) {
-                    std::cerr << "[Exception] " << exception.what() << std::endl;
+                    m_logCallback(exception.what(), "Exception", true);
                 }
             }
         }
@@ -627,7 +627,7 @@ void file::sync_cache()
         }
     }
     else {
-        std::cerr << "[Error] Storage channel directory can not be created" << std::endl;
+        m_logCallback("Storage channel directory can not be created", "Error", true);
     }
 
     const std::filesystem::path guild_dir = m_storagePath / "guild";
@@ -657,7 +657,7 @@ void file::sync_cache()
         }
     }
     else {
-        std::cerr << "[Error] Storage guild directory can not be created" << std::endl;
+        m_logCallback("Storage guild directory can not be created", "Error", true);
     }
 
     const std::filesystem::path user_dir = m_storagePath / "user";
@@ -687,6 +687,6 @@ void file::sync_cache()
         }
     }
     else {
-        std::cerr << "[Error] Storage user directory can not be created" << std::endl;
+        m_logCallback("Storage user directory can not be created", "Error", true);
     }
 }

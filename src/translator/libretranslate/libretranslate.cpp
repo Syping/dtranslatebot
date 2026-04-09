@@ -17,14 +17,13 @@
 *****************************************************************************/
 
 #include <dpp/json.h>
-#include <iostream>
 #include "libretranslate.h"
 using namespace bot::http;
 using namespace bot::translator;
 using namespace std::chrono_literals;
 
-libretranslate::libretranslate(const std::string &hostname, uint16_t port, const std::string &url, bool tls, const std::string apiKey) :
-    m_hostname(hostname), m_port(port), m_url(url), m_tls(tls), m_apiKey(apiKey)
+libretranslate::libretranslate(const std::string &hostname, uint16_t port, const std::string &url, bool tls, const std::string &api_key, const bot::log::log_message_callback &log_callback) :
+    m_hostname(hostname), m_port(port), m_url(url), m_tls(tls), m_apiKey(api_key), m_logCallback(log_callback)
 {
 }
 
@@ -68,7 +67,7 @@ const std::vector<language> libretranslate::get_languages()
         }
     }
     catch (const std::exception &exception) {
-        std::cerr << "[Exception] " << exception.what() << std::endl;
+        m_logCallback(exception.what(), "Exception", true);
     }
 
     return m_languages.languages;
@@ -99,7 +98,7 @@ const std::string libretranslate::translate(const std::string &text, const std::
         }
     }
     catch (const std::exception &exception) {
-        std::cerr << "[Exception] " << exception.what() << std::endl;
+        m_logCallback(exception.what(), "Exception", true);
     }
 
     return text;

@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2024-2026 Syping
+* Copyright (C) 2026 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -16,30 +16,33 @@
 * responsible for anything with use of the software, you are self responsible.
 *****************************************************************************/
 
-#ifndef TRANSLATOR_DEEPL_H
-#define TRANSLATOR_DEEPL_H
-
-#include "../../core/http_request.h"
-#include "../../core/log.h"
-#include "../../core/translator.h"
+#include <glibmm/dispatcher.h>
+#include <gtkmm/button.h>
+#include <gtkmm/passwordentry.h>
+#include <gtkmm/textbuffer.h>
+#include <gtkmm/window.h>
+#include <mutex>
+#include "../core/discord_bot.h"
 
 namespace bot {
-    namespace translator {
-        class deepl : public translator {
+    namespace gui {
+        class user_interface : public Gtk::Window {
         public:
-            explicit deepl(const std::string &hostname, const std::string &api_key, const bot::log::log_message_callback &log_callback);
-            ~deepl() override;
-            const std::vector<language> get_languages() override;
-            const std::string translate(const std::string &text, const std::string &source, const std::string &target) override;
+            explicit user_interface();
+            void log_append(const std::string &message, const std::string &type = "Log", bool is_error = false);
+            void run();
+            void terminate();
 
         private:
-            std::string m_apiKey;
-            std::string m_hostname;
-            bot::http::http_request m_http;
-            supported_languages m_languages;
-            bot::log::log_message_callback m_logCallback;
+            bot::discord_bot m_bot;
+            Glib::RefPtr<Gtk::TextBuffer> m_log;
+            Gtk::Button* m_start_button;
+            Gtk::Button* m_stop_button;
+            Gtk::PasswordEntry* m_token_entry;
+            std::string m_log_buffer;
+            Glib::Dispatcher m_log_dispatcher;
+            std::mutex m_log_buffer_mutex;
+            bot::log::log_message_callback m_log_callback;
         };
     }
 }
-
-#endif // TRANSLATOR_DEEPL_H

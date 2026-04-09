@@ -26,16 +26,20 @@ void submit_queue::add(const translated_message &message)
 {
     const std::lock_guard<std::mutex> guard(m_mutex);
     m_queue.push(message);
+#ifdef DTRANSLATEBOT_GUI
     for (const submit_queue_size_callback &callback : m_callbacks)
         callback(m_queue.size());
+#endif
 }
 
 void submit_queue::add(translated_message &&message)
 {
     const std::lock_guard<std::mutex> guard(m_mutex);
     m_queue.push(message);
+#ifdef DTRANSLATEBOT_GUI
     for (const submit_queue_size_callback &callback : m_callbacks)
         callback(m_queue.size());
+#endif
 }
 
 void submit_queue::run(dpp::cluster *bot)
@@ -46,8 +50,10 @@ void submit_queue::run(dpp::cluster *bot)
         if (!m_queue.empty()) {
             const translated_message message = m_queue.front();
             m_queue.pop();
+#ifdef DTRANSLATEBOT_GUI
             for (const submit_queue_size_callback &callback : m_callbacks)
                 callback(m_queue.size());
+#endif
             m_mutex.unlock();
 
             if (const auto *direct_message = std::get_if<bot::translated_direct_message>(&message)) {
@@ -64,24 +70,25 @@ void submit_queue::run(dpp::cluster *bot)
             std::this_thread::sleep_for(100ms);
         }
     }
+    std::queue<translated_message>().swap(m_queue);
 }
 
+#ifdef DTRANSLATEBOT_GUI
 size_t submit_queue::size() {
     const std::lock_guard<std::mutex> guard(m_mutex);
     return m_queue.size();
 }
 
 void submit_queue::size_callback_add(const submit_queue_size_callback &callback) {
-    const std::lock_guard<std::mutex> guard(m_mutex);
     m_callbacks.push_back(callback);
 }
 
 /*
 void submit_queue::size_callback_remove(const submit_queue_size_callback &callback) {
-    const std::lock_guard<std::mutex> guard(m_mutex);
     m_callbacks.erase(std::remove(m_callbacks.begin(), m_callbacks.end(), callback));
 }
 */
+#endif
 
 void submit_queue::terminate()
 {

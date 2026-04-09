@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2023-2024 Syping
+* Copyright (C) 2023-2026 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -24,20 +24,30 @@
 #else
 #include <regex>
 #endif
+#include <string>
 #include <string_view>
 
+#define DTRANSLATEBOT_DISCORD_BOT_TOKEN_REGEX "^([\\w-]{24,})\\.([\\w-]{6,})\\.([\\w-]{27,})$"
+
 namespace bot {
+    namespace regex {
 #ifdef DTRANSLATEBOT_USE_BOOST_REGEX
-    using boost::regex;
-    using boost::regex_match;
-    using boost::match_results;
-    typedef boost::match_results<std::string_view::const_iterator> svmatch;
+        using boost::regex;
+        using boost::regex_match;
+        using boost::match_results;
+        typedef boost::match_results<std::string::const_iterator> smatch;
+        typedef boost::match_results<std::string_view::const_iterator> svmatch;
 #else
-    using std::regex;
-    using std::regex_match;
-    using std::match_results;
-    typedef std::match_results<std::string_view::const_iterator> svmatch;
+        using std::regex;
+        using std::regex_match;
+        using std::match_results;
+        typedef std::match_results<std::string::const_iterator> smatch;
+        typedef std::match_results<std::string_view::const_iterator> svmatch;
 #endif
+        inline bool verify_discord_bot_token(const std::string &token) {
+            return regex_match(token, regex(DTRANSLATEBOT_DISCORD_BOT_TOKEN_REGEX));
+        }
+    }
 }
 
 #endif // REGEX_H

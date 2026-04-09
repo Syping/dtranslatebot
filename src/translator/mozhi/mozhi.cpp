@@ -18,14 +18,13 @@
 
 #include <dpp/json.h>
 #include <dpp/utility.h>
-#include <iostream>
 #include "mozhi.h"
 using namespace bot::http;
 using namespace bot::translator;
 using namespace std::chrono_literals;
 
-mozhi::mozhi(const std::string &hostname, uint16_t port, const std::string &url, bool tls, const std::string &engine) :
-    m_hostname(hostname), m_port(port), m_url(url), m_tls(tls), m_engine(engine)
+mozhi::mozhi(const std::string &hostname, uint16_t port, const std::string &url, bool tls, const std::string &engine, const bot::log::log_message_callback &log_callback) :
+    m_hostname(hostname), m_port(port), m_url(url), m_tls(tls), m_engine(engine), m_logCallback(log_callback)
 {
 }
 
@@ -72,7 +71,7 @@ const std::vector<language> mozhi::get_languages()
         }
     }
     catch (const std::exception &exception) {
-        std::cerr << "[Exception] " << exception.what() << std::endl;
+        m_logCallback(exception.what(), "Exception", true);
     }
 
     return m_languages.languages;
@@ -98,7 +97,7 @@ const std::string mozhi::translate(const std::string &text, const std::string &s
         }
     }
     catch (const std::exception &exception) {
-        std::cerr << "[Exception] " << exception.what() << std::endl;
+        m_logCallback(exception.what(), "Exception", true);
     }
 
     return text;

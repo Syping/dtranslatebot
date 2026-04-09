@@ -17,15 +17,16 @@
 *****************************************************************************/
 
 #include <curl/curl.h>
-#include <dpp/cluster.h>
-#include <dpp/once.h>
 #include <iostream>
-#include <thread>
+#include <string>
 #include <vector>
-#include "../core/message_queue.h"
+#include "../core/discord_bot.h"
 #include "../core/settings.h"
-#include "../core/slashcommands.h"
-using namespace std::chrono_literals;
+
+void output_log(const std::string &message, const std::string &type, bool is_error) {
+    auto &output = !is_error ? std::cout : std::cerr;
+    output << "[" << type << "] " << message << std::endl;
+}
 
 int main(int argc, char* argv[]) {
     bool flag_wait_for_translator = false;
@@ -41,60 +42,26 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    std::cout << "[Launch] Processing configuration..." << std::endl;
-    bot::settings::settings settings;
-    if (!settings.parse_file(args.at(0)))
-        return 1;
-
     CURLcode result = curl_global_init(CURL_GLOBAL_DEFAULT);
     if (result != CURLE_OK) {
         std::cerr << "[Error] Failed to initialise curl" << std::endl;
         return 1;
     }
 
-    for (;;) {
-        std::cout << "[Launch] Requesting supported languages..." << std::endl;
-        if (!settings.get_translator()->get_languages().empty()) {
-            break;
-        }
-        else if (flag_wait_for_translator) {
-            std::this_thread::sleep_for(5000ms);
-        }
-        else {
-            std::cerr << "[Error] Failed to initialise translateable languages" << std::endl;
-            return 1;
-        }
+    std::cout << "[Launch] Processing configuration..." << std::endl;
+    auto settings = std::make_shared<bot::settings::settings>();
+    if (!settings->parse_file(args.at(0), &output_log))
+        return 1;
+
+    bot::discord_bot bot;
+    bot.log_callback_add(&output_log);
+    try {
+        bot.run(settings, false, flag_wait_for_translator);
     }
-
-    dpp::cluster bot(settings.token(), dpp::i_default_intents | dpp::i_direct_messages | dpp::i_message_content);
-    bot.on_log([&bot](const dpp::log_t &event) {
-        std::cerr << "[Log] " << event.message << std::endl;
-    });
-
-    bot::submit_queue submit_queue;
-    std::thread submit_queue_loop(&bot::submit_queue::run, &submit_queue, &bot);
-
-    bot::message_queue message_queue;
-    std::thread message_queue_loop(&bot::message_queue::run, &message_queue, &settings, &submit_queue);
-
-    bot.on_message_context_menu(std::bind(&bot::slashcommands::process_message_menu_event, &message_queue, &bot, &settings, std::placeholders::_1));
-    bot.on_message_create(std::bind(&bot::message_queue::process_guild_message_event, &message_queue, &bot, &settings, std::placeholders::_1));
-    bot.on_slashcommand(std::bind(&bot::slashcommands::process_command_event, &bot, &settings, std::placeholders::_1));
-    bot.on_ready([&bot, &settings]([[maybe_unused]] const dpp::ready_t &event) {
-        if (dpp::run_once<struct register_bot_commands>()) {
-            bot::slashcommands::register_commands(&bot, &settings);
-        }
-    });
-
-    std::cout << "[Launch] Starting bot..." << std::endl;
-    bot.start(dpp::st_wait);
-
-    // It's unneccessary, but we choose to exit clean anyway
-    message_queue.terminate();
-    message_queue_loop.join();
-
-    submit_queue.terminate();
-    submit_queue_loop.join();
+    catch (const std::exception &exception) {
+        std::cerr << "[Exception] " << exception.what() << std::endl;
+        std::cerr << "[Error] Exception while starting bot" << std::endl;
+    }
 
     curl_global_cleanup();
 

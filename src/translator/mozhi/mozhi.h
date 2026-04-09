@@ -1,6 +1,6 @@
 /*****************************************************************************
 * dtranslatebot Discord Translate Bot
-* Copyright (C) 2024 Syping
+* Copyright (C) 2024-2026 Syping
 *
 * Redistribution and use in source and binary forms, with or without modification,
 * are permitted provided that the following conditions are met:
@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include "../../core/http_request.h"
+#include "../../core/log.h"
 #include "../../core/translator.h"
 
 namespace bot {
@@ -28,7 +29,7 @@ namespace bot {
         class mozhi : public translator {
 
         public:
-            explicit mozhi(const std::string &hostname, uint16_t port, const std::string &url, bool tls, const std::string &engine);
+            explicit mozhi(const std::string &hostname, uint16_t port, const std::string &url, bool tls, const std::string &engine, const bot::log::log_message_callback &log_callback);
             ~mozhi() override;
             const std::vector<language> get_languages() override;
             const std::string translate(const std::string &text, const std::string &source, const std::string &target) override;
@@ -41,6 +42,7 @@ namespace bot {
             uint16_t m_port;
             std::string m_url;
             bool m_tls;
+            bot::log::log_message_callback m_logCallback;
         };
     }
 }

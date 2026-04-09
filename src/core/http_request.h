@@ -27,7 +27,7 @@ namespace bot {
     namespace http {
         class http_request {
         public:
-            http_request();
+            explicit http_request();
             http_request(const http_request&) = delete;
             http_request& operator=(const http_request&) = delete;
             ~http_request();

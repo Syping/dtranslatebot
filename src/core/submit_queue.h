@@ -20,10 +20,15 @@
 #define SUBMIT_QUEUE_H
 #include <dpp/cluster.h>
 #include <dpp/webhook.h>
+#ifdef DTRANSLATEBOT_GUI
+#include <functional>
+#endif
 #include <mutex>
 #include <queue>
 #include <string>
+#ifdef DTRANSLATEBOT_GUI
 #include <vector>
+#endif
 
 namespace bot {
     struct translated_direct_message {
@@ -38,23 +43,32 @@ namespace bot {
         dpp::webhook webhook;
     };
 
+#ifdef DTRANSLATEBOT_GUI
     typedef std::function<void(size_t)> submit_queue_size_callback;
+#endif
     typedef std::variant<translated_direct_message, translated_guild_message> translated_message;
 
     class submit_queue {
     public:
+        submit_queue() = default;
+        submit_queue(const submit_queue&) = delete;
+        submit_queue& operator=(const submit_queue&) = delete;
         void add(const translated_message &message);
         void add(translated_message &&message);
         void run(dpp::cluster *bot);
+#ifdef DTRANSLATEBOT_GUI
         size_t size();
         void size_callback_add(const submit_queue_size_callback &callback);
+#endif
         void terminate();
 
     private:
         bool m_running;
         std::mutex m_mutex;
         std::queue<translated_message> m_queue;
+#ifdef DTRANSLATEBOT_GUI
         std::vector<submit_queue_size_callback> m_callbacks;
+#endif
     };
 }
 

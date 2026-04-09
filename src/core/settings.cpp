@@ -68,7 +68,6 @@ void process_database_channels(std::shared_ptr<bot::database::database> database
 
 void process_database(std::shared_ptr<bot::database::database> database, std::vector<guild> &guilds, std::vector<user> &users, std::vector<dpp::snowflake> &webhookIds)
 {
-    std::cout << "[Launch] Loading database..." << std::endl;
     const std::vector<dpp::snowflake> db_guilds = database->get_guilds();
     for (auto db_guild_id = db_guilds.begin(); db_guild_id != db_guilds.end(); db_guild_id++) {
         bool guild_found = false;
@@ -162,11 +161,11 @@ void process_guild_settings(const dpp::json &json, std::vector<guild> &guilds, s
     }
 }
 
-void process_preflang_settings(const dpp::json &json, std::vector<std::string> *preferred_langs)
+void process_preflang_settings(const dpp::json &json, std::vector<std::string> *preferred_langs, const bot::log::log_message_callback &log_callback)
 {
     for (auto json_preferred_lang = json.begin(); json_preferred_lang != json.end(); json_preferred_lang++) {
         if (std::distance(json.begin(), json_preferred_lang) >= 25) {
-            std::cerr << "[Error] Value preferred_lang is limited to 25 languages" << std::endl;
+            log_callback("Value preferred_lang is limited to 25 languages", "Error", true);
             break;
         }
         preferred_langs->push_back(*json_preferred_lang);
@@ -217,7 +216,7 @@ void process_server_url(const std::string &url, translator &translator)
     }
 }
 
-bool process_server(const dpp::json &json, translator &translator)
+bool process_server(const dpp::json &json, translator &translator, const bot::log::log_message_callback &log_callback)
 {
     auto json_hostname = json.find("hostname");
     if (json_hostname != json.end())
@@ -237,7 +236,7 @@ bool process_server(const dpp::json &json, translator &translator)
 
     auto json_url = json.find("url");
     if (json_url == json.end()) {
-        std::cerr << "[Error] Value url not found in translator object" << std::endl;
+        log_callback("Value url not found in translator object", "Error", true);
         return false;
     }
     if (translator.hostname.empty())
@@ -264,10 +263,10 @@ void process_user_settings(const dpp::json &json, uint16_t &avatar_size)
     }
 }
 
-bool process_translator_settings(const dpp::json &json, std::shared_ptr<bot::translator::translator> &translator_instance)
+bool process_translator_settings(const dpp::json &json, std::shared_ptr<bot::translator::translator> &translator_instance, const bot::log::log_message_callback &log_callback)
 {
     if (!json.is_object()) {
-        std::cerr << "[Error] Value translator needs to be a object" << std::endl;
+        log_callback("Value translator needs to be a object", "Error", true);
         return false;
     }
 
@@ -290,15 +289,15 @@ bool process_translator_settings(const dpp::json &json, std::shared_ptr<bot::tra
 
         auto json_deepl_apiKey = json.find("apiKey");
         if (json_deepl_apiKey == json.end()) {
-            std::cerr << "[Error] DeepL requires API key for authorization" << std::endl;
+            log_callback("DeepL requires API key for authorization", "Error", true);
             return false;
         }
         translator.apiKey = *json_deepl_apiKey;
 
-        translator_instance = std::make_shared<bot::translator::deepl>(translator.hostname, translator.apiKey);
+        translator_instance = std::make_shared<bot::translator::deepl>(translator.hostname, translator.apiKey, log_callback);
     }
     else if (translator.type == "mozhi") {
-        if (!process_server(json, translator))
+        if (!process_server(json, translator, log_callback))
             return false;
 
         std::string mozhi_engine;
@@ -308,25 +307,25 @@ bool process_translator_settings(const dpp::json &json, std::shared_ptr<bot::tra
         else
             mozhi_engine = "google";
 
-        translator_instance = std::make_shared<bot::translator::mozhi>(translator.hostname, translator.port, translator.url, translator.tls, mozhi_engine);
+        translator_instance = std::make_shared<bot::translator::mozhi>(translator.hostname, translator.port, translator.url, translator.tls, mozhi_engine, log_callback);
     }
     else if (translator.type == "libretranslate") {
-        if (!process_server(json, translator))
+        if (!process_server(json, translator, log_callback))
             return false;
 
-        translator_instance = std::make_shared<bot::translator::libretranslate>(translator.hostname, translator.port, translator.url, translator.tls, translator.apiKey);
+        translator_instance = std::make_shared<bot::translator::libretranslate>(translator.hostname, translator.port, translator.url, translator.tls, translator.apiKey, log_callback);
     }
     else if (translator.type == "lingvatranslate") {
-        if (!process_server(json, translator))
+        if (!process_server(json, translator, log_callback))
             return false;
 
-        translator_instance = std::make_shared<bot::translator::lingvatranslate>(translator.hostname, translator.port, translator.url, translator.tls);
+        translator_instance = std::make_shared<bot::translator::lingvatranslate>(translator.hostname, translator.port, translator.url, translator.tls, log_callback);
     }
     else if (translator.type == "stub") {
         translator_instance = std::make_shared<bot::translator::stub>();
     }
     else {
-        std::cerr << "[Error] Translator " << translator.type << " is unknown" << std::endl;
+        log_callback("Translator " + translator.type + " is unknown", "Error", true);
         return false;
     }
 
@@ -559,19 +558,36 @@ void settings::lock()
     m_externallyLockedCount++;
 }
 
-bool settings::parse(const std::string &data, bool initialize)
+bool settings::parse(const std::string &data, const bot::log::log_message_callback &log_callback, bool initialize)
 {
+    dpp::json json;
     try {
-        dpp::json json;
-        try {
-            json = dpp::json::parse(data, nullptr, true, true);
-        }
-        catch (const std::exception &exception) {
-            std::cerr << "[Exception] " << exception.what() << std::endl;
-            std::cerr << "[Error] Exception while parsing JSON" << std::endl;
-            return false;
-        }
+        json = dpp::json::parse(data, nullptr, true, true);
+    }
+    catch (const std::exception &exception) {
+        log_callback(exception.what(), "Exception", true);
+        log_callback("Exception while parsing JSON", "Error", true);
+        return false;
+    }
+    return process(json, log_callback, initialize);
+}
 
+bool settings::parse_file(const std::string &filename, const bot::log::log_message_callback &log_callback, bool initialize)
+{
+    std::ifstream ifs(filename, std::ios::in | std::ios::binary);
+    if (!ifs.is_open()) {
+        log_callback("Failed to open JSON configuration file: " + filename, "Error", true);
+        return false;
+    }
+
+    std::string sdata(std::istreambuf_iterator<char>{ifs}, {});
+    ifs.close();
+
+    return parse(sdata, log_callback, initialize);
+}
+
+bool settings::process(const dpp::json &json, const bot::log::log_message_callback &log_callback, bool initialize) {
+    try {
         const std::lock_guard<std::recursive_mutex> guard(m_mutex);
         auto json_token = json.find("token");
         if (json_token != json.end())
@@ -580,7 +596,7 @@ bool settings::parse(const std::string &data, bool initialize)
             m_token = token;
 
         if (m_token.empty()) {
-            std::cerr << "[Error] Discord Bot Token is not configured" << std::endl;
+            log_callback("Discord Bot Token is not configured", "Error", true);
             return false;
         }
 
@@ -594,14 +610,14 @@ bool settings::parse(const std::string &data, bool initialize)
         if (storage_path.empty())
             storage_path = std::filesystem::current_path();
 
-        m_database = std::make_shared<bot::database::file>(storage_path);
+        m_database = std::make_shared<bot::database::file>(storage_path, log_callback);
 
         auto json_translator = json.find("translator");
         if (json_translator == json.end()) {
-            std::cerr << "[Error] Value translator not found" << std::endl;
+            log_callback("Value translator not found", "Error", true);
             return false;
         }
-        if (!process_translator_settings(*json_translator, m_translator))
+        if (!process_translator_settings(*json_translator, m_translator, log_callback))
             return false;
 
         auto json_guilds = json.find("guilds");
@@ -610,34 +626,21 @@ bool settings::parse(const std::string &data, bool initialize)
 
         auto json_preflangs = json.find("preferred_lang");
         if (json_preflangs != json.end() && json_preflangs->is_array())
-            process_preflang_settings(*json_preflangs, &m_prefLangs);
+            process_preflang_settings(*json_preflangs, &m_prefLangs, log_callback);
 
         auto json_user = json.find("user");
         if (json_user != json.end() && json_user->is_object())
             process_user_settings(*json_user, m_avatarSize);
 
+        log_callback("Loading database...", "Launch", false);
         process_database(m_database, m_guilds, m_users, m_webhookIds);
 
         return true;
     }
     catch (const std::exception &exception) {
-        std::cerr << "[Exception] " << exception.what() << std::endl;
+        log_callback(exception.what(), "Exception", true);
     }
     return false;
-}
-
-bool settings::parse_file(const std::string &filename, bool initialize)
-{
-    std::ifstream ifs(filename, std::ios::in | std::ios::binary);
-    if (!ifs.is_open()) {
-        std::cerr << "[Error] Failed to open JSON configuration file located at " << filename << std::endl;
-        return false;
-    }
-
-    std::string sdata(std::istreambuf_iterator<char>{ifs}, {});
-    ifs.close();
-
-    return parse(sdata, initialize);
 }
 
 void settings::unlock()

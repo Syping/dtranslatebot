@@ -17,14 +17,13 @@
 *****************************************************************************/
 
 #include <dpp/json.h>
-#include <iostream>
 #include "deepl.h"
 using namespace bot::http;
 using namespace bot::translator;
 using namespace std::chrono_literals;
 
-deepl::deepl(const std::string &hostname, const std::string apiKey) :
-    m_hostname(hostname), m_apiKey(apiKey)
+deepl::deepl(const std::string &hostname, const std::string &api_key, const bot::log::log_message_callback &log_callback) :
+    m_hostname(hostname), m_apiKey(api_key), m_logCallback(log_callback)
 {
 }
 
@@ -97,7 +96,7 @@ const std::vector<language> deepl::get_languages()
         }
     }
     catch (const std::exception &exception) {
-        std::cerr << "[Exception] " << exception.what() << std::endl;
+        m_logCallback(exception.what(), "Exception", true);
     }
 
     return m_languages.languages;
@@ -130,7 +129,7 @@ const std::string deepl::translate(const std::string &text, const std::string &s
         }
     }
     catch (const std::exception &exception) {
-        std::cerr << "[Exception] " << exception.what() << std::endl;
+        m_logCallback(exception.what(), "Exception", true);
     }
 
     return text;

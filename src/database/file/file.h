@@ -27,12 +27,13 @@
 #include <windows.h>
 #endif
 #include "../../core/database.h"
+#include "../../core/log.h"
 
 namespace bot {
     namespace database {
         class file : public database {
         public:
-            explicit file(const std::filesystem::path &storage_path);
+            explicit file(const std::filesystem::path &storage_path, const bot::log::log_message_callback &log_callback);
             ~file();
             void add_channel_target(dpp::snowflake guild_id, dpp::snowflake channel_id, const bot::settings::target &target) override;
             void delete_channel(dpp::snowflake guild_id, dpp::snowflake channel_id) override;
@@ -72,6 +73,7 @@ namespace bot {
             std::vector<bot::settings::user> m_userCache;
             std::mutex m_mutex;
             std::filesystem::path m_storagePath;
+            bot::log::log_message_callback m_logCallback;
         };
     }
 }
