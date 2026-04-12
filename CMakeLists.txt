@@ -94,10 +94,14 @@ if (WITH_GUI)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(GTKMM REQUIRED gtkmm-4.0)
     list(APPEND DTRANSLATEBOT_HEADERS
+        src/gui/translator_dialog.h
+        src/gui/user_config.h
         src/gui/user_interface.h
     )
     list(APPEND DTRANSLATEBOT_SOURCES
         src/gui/main.cpp
+        src/gui/translator_dialog.cpp
+        src/gui/user_config.cpp
         src/gui/user_interface.cpp
     )
 else()

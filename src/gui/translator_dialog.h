@@ -16,27 +16,26 @@
 * responsible for anything with use of the software, you are self responsible.
 *****************************************************************************/
 
-#ifndef CURL_EXCEPTION_H
-#define CURL_EXCEPTION_H
+#ifndef TRANSLATOR_DIALOG_H
+#define TRANSLATOR_DIALOG_H
 
-#include <curl/curl.h>
-#include <exception>
-#include <string>
+#include <dpp/json.h>
+#include <gtkmm/dialog.h>
+#include "user_config.h"
 
 namespace bot {
-    namespace exception {
-        class curl_exception : public std::exception {
+    namespace gui {
+        class translator_dialog : public Gtk::Dialog {
         public:
-            explicit curl_exception(const std::string &message, CURLcode error);
-            virtual ~curl_exception() noexcept;
-            CURLcode error() const noexcept;
-            const char* what() const noexcept override;
+            explicit translator_dialog(Gtk::Window &parent, const std::string &translator, user_config &user_config);
+            static void configure(Gtk::Window &parent, const std::string &translator, user_config &user_config);
+            void on_save_button_clicked();
 
         private:
-            std::string m_message;
-            CURLcode m_error;
+            dpp::json m_json;
+            user_config& m_user_config;
         };
     }
 }
 
-#endif // CURL_EXCEPTION_H
+#endif // TRANSLATOR_DIALOG_H

@@ -18,11 +18,13 @@
 
 #include <glibmm/dispatcher.h>
 #include <gtkmm/button.h>
+#include <gtkmm/dropdown.h>
 #include <gtkmm/passwordentry.h>
-#include <gtkmm/textbuffer.h>
+#include <gtkmm/textview.h>
 #include <gtkmm/window.h>
 #include <mutex>
 #include "../core/discord_bot.h"
+#include "user_config.h"
 
 namespace bot {
     namespace gui {
@@ -30,19 +32,28 @@ namespace bot {
         public:
             explicit user_interface();
             void log_append(const std::string &message, const std::string &type = "Log", bool is_error = false);
+            void log_scroll_down();
             void run();
             void terminate();
+            void on_log_dispatched();
+            void on_token_entry_changed();
+            void on_translator_configure_pressed();
+            void on_translator_dropdown_changed();
 
         private:
             bot::discord_bot m_bot;
             Glib::RefPtr<Gtk::TextBuffer> m_log;
-            Gtk::Button* m_start_button;
-            Gtk::Button* m_stop_button;
-            Gtk::PasswordEntry* m_token_entry;
             std::string m_log_buffer;
             Glib::Dispatcher m_log_dispatcher;
             std::mutex m_log_buffer_mutex;
             bot::log::log_message_callback m_log_callback;
+            Gtk::TextView* m_log_textview;
+            Gtk::Button* m_start_button;
+            Gtk::Button* m_stop_button;
+            Gtk::PasswordEntry* m_token_entry;
+            Gtk::Button* m_translator_configure_button;
+            Gtk::DropDown* m_translator_dropdown;
+            user_config m_user_config;
         };
     }
 }
