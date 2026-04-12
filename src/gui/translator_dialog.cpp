@@ -19,6 +19,7 @@
 #include <gtkmm/checkbutton.h>
 #include <gtkmm/entry.h>
 #include <gtkmm/label.h>
+#include <gtkmm/passwordentry.h>
 #include "translator_dialog.h"
 using namespace bot::gui;
 
@@ -135,8 +136,9 @@ translator_dialog::translator_dialog(Gtk::Window &parent, const std::string &tra
         auto apikey_label = Gtk::make_managed<Gtk::Label>("API Key");
         apikey_box->append(*apikey_label);
 
-        auto apikey_entry = Gtk::make_managed<Gtk::Entry>();
+        auto apikey_entry = Gtk::make_managed<Gtk::PasswordEntry>();
         apikey_entry->set_hexpand(true);
+        apikey_entry->set_show_peek_icon(true);
         auto json_apiKey = m_json.find("apiKey");
         if (json_apiKey != m_json.end())
             apikey_entry->set_text(static_cast<const std::string>(*json_apiKey));
