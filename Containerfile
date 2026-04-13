@@ -21,6 +21,7 @@ RUN git clone https://github.com/brainboxdotcc/DPP.git --branch "v$DPP_VERSION" 
 RUN cmake \
     -DAVX_TYPE=AVX0 \
     -DBUILD_VOICE_SUPPORT=OFF \
+    -DDPP_BUILD_TEST=OFF \
     -DDPP_NO_CORO=ON \
     -DDPP_NO_VCPKG=ON \
     -DRUN_LDCONFIG=OFF \
