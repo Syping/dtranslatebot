@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=dtranslatebot
+Comment=Discord Translation Bot
+Categories=GTK;Network;
+TryExec=dtranslatebot
+Exec=dtranslatebot
+Icon=de.syping.dtranslatebot

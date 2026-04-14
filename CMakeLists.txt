@@ -104,6 +104,17 @@ if (WITH_GUI)
         src/gui/user_config.cpp
         src/gui/user_interface.cpp
     )
+    install(FILES src/resources/gui/de.syping.dtranslatebot.desktop DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/applications")
+    install(FILES src/resources/gui/dtranslatebot-16.png DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/16x16/apps" RENAME de.syping.dtranslatebot.png)
+    install(FILES src/resources/gui/dtranslatebot-20.png DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/20x20/apps" RENAME de.syping.dtranslatebot.png)
+    install(FILES src/resources/gui/dtranslatebot-24.png DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/24x24/apps" RENAME de.syping.dtranslatebot.png)
+    install(FILES src/resources/gui/dtranslatebot-32.png DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/32x32/apps" RENAME de.syping.dtranslatebot.png)
+    install(FILES src/resources/gui/dtranslatebot-48.png DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/48x48/apps" RENAME de.syping.dtranslatebot.png)
+    install(FILES src/resources/gui/dtranslatebot-64.png DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/64x64/apps" RENAME de.syping.dtranslatebot.png)
+    install(FILES src/resources/gui/dtranslatebot-96.png DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/96x96/apps" RENAME de.syping.dtranslatebot.png)
+    install(FILES src/resources/gui/dtranslatebot-128.png DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/128x128/apps" RENAME de.syping.dtranslatebot.png)
+    install(FILES src/resources/gui/dtranslatebot-256.png DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/256x256/apps" RENAME de.syping.dtranslatebot.png)
+    install(FILES src/resources/gui/dtranslatebot-512.png DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/512x512/apps" RENAME de.syping.dtranslatebot.png)
 else()
     list(APPEND DTRANSLATEBOT_SOURCES
         src/cli/main.cpp
@@ -123,7 +134,7 @@ if (WIN32)
 endif()
 
 # dtranslatebot systemd Service
-if (UNIX AND NOT APPLE)
+if (LINUX AND NOT WITH_GUI)
     option(WITH_SYSTEMD "Build with systemd Support" OFF)
     if (WITH_SYSTEMD)
         find_program(SYSTEMD_ESCAPE_EXECUTABLE NAMES systemd-escape)
