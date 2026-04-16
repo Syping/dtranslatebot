@@ -20,6 +20,7 @@
 #include <gtkmm/entry.h>
 #include <gtkmm/label.h>
 #include <gtkmm/passwordentry.h>
+#include <gtkmm/spinbutton.h>
 #include "translator_dialog.h"
 using namespace bot::gui;
 
@@ -72,22 +73,19 @@ translator_dialog::translator_dialog(Gtk::Window &parent, const std::string &tra
         auto port_label = Gtk::make_managed<Gtk::Label>("Port");
         port_box->append(*port_label);
 
-        auto port_entry = Gtk::make_managed<Gtk::Entry>();
-        port_entry->set_hexpand(true);
+        auto port_spinbutton = Gtk::make_managed<Gtk::SpinButton>();
+        port_spinbutton->set_hexpand(true);
+        port_spinbutton->set_increments(1, 1);
+        port_spinbutton->set_range(0, 65535);
         auto json_port = m_json.find("port");
         if (json_port != m_json.end())
-            port_entry->set_text(std::to_string(static_cast<int>(*json_port)));
+            port_spinbutton->set_value(*json_port);
         else
-            port_entry->set_text("443");
-        port_entry->signal_changed().connect([=]() {
-            try {
-                m_json["port"] = std::stoi(port_entry->get_text());
-            }
-            catch (const std::exception &exception) {
-                // TODO: Enforce Entry being Number only
-            }
+            port_spinbutton->set_value(443);
+        port_spinbutton ->signal_changed().connect([=]() {
+            m_json["port"] = port_spinbutton->get_value_as_int();
         });
-        port_box->append(*port_entry);
+        port_box->append(*port_spinbutton);
 
         auto tls_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 6);
         vertical_box->append(*tls_box);
@@ -103,10 +101,10 @@ translator_dialog::translator_dialog(Gtk::Window &parent, const std::string &tra
             tls_checkbutton->set_active(true);
         tls_checkbutton->signal_toggled().connect([=]() {
             m_json["tls"] = tls_checkbutton->get_active();
-            if (tls_checkbutton->get_active() && port_entry->get_text() == "80")
-                port_entry->set_text("443");
-            else if (!tls_checkbutton->get_active() && port_entry->get_text() == "443")
-                port_entry->set_text("80");
+            if (tls_checkbutton->get_active() && port_spinbutton->get_value_as_int() == 80)
+                port_spinbutton->set_value(443);
+            else if (!tls_checkbutton->get_active() && port_spinbutton->get_value_as_int() == 443)
+                port_spinbutton->set_value(80);
         });
         tls_box->append(*tls_checkbutton);
     }
