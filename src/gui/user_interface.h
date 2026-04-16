@@ -35,7 +35,9 @@ namespace bot {
             void log_scroll_down();
             void run();
             void terminate();
+            void terminate_async();
             void on_log_dispatched();
+            void on_terminate_dispatched();
             void on_token_entry_changed();
             void on_translator_configure_pressed();
             void on_translator_dropdown_changed();
@@ -50,6 +52,8 @@ namespace bot {
             Gtk::TextView* m_log_textview;
             Gtk::Button* m_start_button;
             Gtk::Button* m_stop_button;
+            Glib::Dispatcher m_terminate_dispatcher;
+            std::unique_ptr<std::thread> m_terminate_thread;
             Gtk::PasswordEntry* m_token_entry;
             Gtk::Button* m_translator_configure_button;
             Gtk::DropDown* m_translator_dropdown;

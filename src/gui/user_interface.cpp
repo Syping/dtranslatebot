@@ -100,7 +100,7 @@ user_interface::user_interface()
     m_stop_button = Gtk::make_managed<Gtk::Button>("Stop");
     m_stop_button->set_size_request(80, -1);
     m_stop_button->set_sensitive(false);
-    m_stop_button->signal_clicked().connect(sigc::mem_fun(*this, &user_interface::terminate));
+    m_stop_button->signal_clicked().connect(sigc::mem_fun(*this, &user_interface::terminate_async));
     button_box->append(*m_stop_button);
 
     const std::string token = m_user_config.get_token();
@@ -117,6 +117,7 @@ user_interface::user_interface()
     m_log_callback = std::bind(&user_interface::log_append, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
     m_bot.log_callback_add(m_log_callback);
     m_log_dispatcher.connect(sigc::mem_fun(*this, &user_interface::on_log_dispatched));
+    m_terminate_dispatcher.connect(sigc::mem_fun(*this, &user_interface::on_terminate_dispatched));
 
     set_child(*vertical_box);
 }
@@ -164,13 +165,12 @@ void user_interface::run() {
 void user_interface::terminate() {
     log_append("Stopping bot...", "Launch");
     m_bot.terminate();
-    bool token_valid = bot::regex::verify_discord_bot_token(m_token_entry->get_text());
-    m_start_button->set_sensitive(token_valid);
+    m_terminate_dispatcher.emit();
+}
+
+void user_interface::terminate_async() {
     m_stop_button->set_sensitive(false);
-    m_token_entry->set_sensitive(true);
-    bool translator_configureable = m_translator_dropdown->get_selected() > 0;
-    m_translator_configure_button->set_sensitive(translator_configureable);
-    m_translator_dropdown->set_sensitive(true);
+    m_terminate_thread = std::make_unique<std::thread>(&user_interface::terminate, this);
 }
 
 void user_interface::on_log_dispatched() {
@@ -178,6 +178,19 @@ void user_interface::on_log_dispatched() {
     m_log->insert(m_log->end(), m_log->begin() != m_log->end() ? m_log_buffer : m_log_buffer.substr(1));
     m_log_buffer.clear();
     Glib::signal_idle().connect_once(sigc::mem_fun(*this, &user_interface::log_scroll_down));
+}
+
+void user_interface::on_terminate_dispatched() {
+    bool token_valid = bot::regex::verify_discord_bot_token(m_token_entry->get_text());
+    m_start_button->set_sensitive(token_valid);
+    m_token_entry->set_sensitive(true);
+    bool translator_configureable = m_translator_dropdown->get_selected() > 0;
+    m_translator_configure_button->set_sensitive(translator_configureable);
+    m_translator_dropdown->set_sensitive(true);
+    if (std::thread *terminate_thread = m_terminate_thread.get()) {
+        terminate_thread->join();
+        m_terminate_thread.reset();
+    }
 }
 
 void user_interface::on_token_entry_changed() {
