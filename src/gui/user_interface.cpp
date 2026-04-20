@@ -31,8 +31,6 @@
 #include "user_interface.h"
 using namespace bot::gui;
 
-const char* translators[] = {"stub", "libretranslate", "lingvatranslate", "mozhi", "deepl"};
-
 user_interface::user_interface()
 {
     set_title("dtranslatebot");
@@ -60,7 +58,8 @@ user_interface::user_interface()
     auto translator_label = Gtk::make_managed<Gtk::Label>("Translator:");
     translator_box->append(*translator_label);
 
-    auto translator_list = Gtk::StringList::create({"Stub", "LibreTranslate", "Lingva Translate", "Mozhi", "DeepL"});
+    auto translator_vector = get_translator();
+    auto translator_list = Gtk::StringList::create(translator_vector);
     m_translator_dropdown = Gtk::make_managed<Gtk::DropDown>(translator_list);
     m_translator_dropdown->property_selected().signal_changed().connect(sigc::mem_fun(*this, &user_interface::on_translator_dropdown_changed));
     translator_box->append(*m_translator_dropdown);
@@ -107,8 +106,8 @@ user_interface::user_interface()
     m_token_entry->set_text(token);
 
     const std::string translator = m_user_config.get_translator();
-    for (guint i = 0; i < sizeof(translators); i++) {
-        if (translators[i] != translator)
+    for (guint i = 0; i < translator_vector.size(); i++) {
+        if (get_translator_name(i) != translator)
             continue;
         m_translator_dropdown->set_selected(i);
         break;
@@ -120,6 +119,17 @@ user_interface::user_interface()
     m_terminate_dispatcher.connect(sigc::mem_fun(*this, &user_interface::on_terminate_dispatched));
 
     set_child(*vertical_box);
+}
+
+std::vector<Glib::ustring> user_interface::get_translator() {
+    return {"Stub", "DeepL", "Mozhi", "LibreTranslate", "Lingva Translate"};
+}
+
+const char* user_interface::get_translator_name(guint translator_id) {
+    const char* translators[] = {"stub", "deepl", "mozhi", "libretranslate", "lingvatranslate"};
+    if (translator_id < 0 || translator_id >= sizeof(translators))
+        return "";
+    return translators[translator_id];
 }
 
 void user_interface::log_append(const std::string &message, const std::string &type, bool is_error) {
@@ -135,7 +145,7 @@ void user_interface::log_scroll_down() {
 
 void user_interface::run() {
     const std::string token = m_token_entry->get_text();
-    const std::string translator = translators[m_translator_dropdown->get_selected()];
+    const std::string translator = get_translator_name(m_translator_dropdown->get_selected());
     m_user_config.set_token(token);
     m_user_config.set_translator(translator);
     m_user_config.save();
@@ -199,7 +209,7 @@ void user_interface::on_token_entry_changed() {
 }
 
 void user_interface::on_translator_configure_pressed() {
-    translator_dialog::configure(*this, translators[m_translator_dropdown->get_selected()], m_user_config);
+    translator_dialog::configure(*this, get_translator_name(m_translator_dropdown->get_selected()), m_user_config);
 }
 
 void user_interface::on_translator_dropdown_changed() {

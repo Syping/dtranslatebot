@@ -8,14 +8,14 @@ Open Source Discord Translation Bot
 #### Build Dependencies
 - CMake 3.16 or newer
 - Compiler with C++17 Support
-- curl
 - [D++: A C++ Discord API Library for Bots](https://dpp.dev/)
+- [libcurl](https://curl.se/libcurl)
 
 #### Supported Translation Engines
 - [LibreTranslate](https://libretranslate.com/) (Default)
+- [DeepL](https://deepl.com/) (Recommended)
 - [Lingva Translate](https://lingva.ml/)
 - [Mozhi](https://codeberg.org/aryak/mozhi)
-- [DeepL](https://deepl.com/)
 
 #### Build dtranslatebot
 
@@ -29,4 +29,5 @@ sudo cmake --install dtranslatebot-build
 ##### Optional CMake flags
 `-DWITH_BOOST=TRUE`  
 `-DWITH_DPP_STATIC_BUNDLE=TRUE`  
+`-DWITH_GUI=TRUE`  
 `-DWITH_SYSTEMD=TRUE`
