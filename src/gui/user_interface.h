@@ -31,8 +31,8 @@ namespace bot {
         class user_interface : public Gtk::Window {
         public:
             explicit user_interface();
-            std::vector<Glib::ustring> get_translator();
-            const char* get_translator_name(guint translator_id);
+            static const std::vector<Glib::ustring> get_translator();
+            static const char* get_translator_name(guint translator_id);
             void log_append(const std::string &message, const std::string &type = "Log", bool is_error = false);
             void log_scroll_down();
             void run();

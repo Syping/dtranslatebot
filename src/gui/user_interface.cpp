@@ -121,7 +121,7 @@ user_interface::user_interface()
     set_child(*vertical_box);
 }
 
-std::vector<Glib::ustring> user_interface::get_translator() {
+const std::vector<Glib::ustring> user_interface::get_translator() {
     return {"Stub", "DeepL", "Mozhi", "LibreTranslate", "Lingva Translate"};
 }
 
