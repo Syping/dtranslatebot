@@ -176,7 +176,7 @@ void user_config::set_translator_settings(const std::string &group, const dpp::j
         m_key_file->set_integer(group, "Port", *json_port);
     auto json_url = json.find("url");
     if (json_url != json.end())
-        m_key_file->set_string(group, "URL", static_cast<const std::string>(*json_hostname));
+        m_key_file->set_string(group, "URL", static_cast<const std::string>(*json_url));
     auto json_apiKey = json.find("apiKey");
     if (json_url != json.end())
         m_key_file->set_string(group, "ApiKey", static_cast<const std::string>(*json_apiKey));
