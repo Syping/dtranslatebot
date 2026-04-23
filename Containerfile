@@ -4,12 +4,12 @@ RUN apk add --no-cache \
     clang \
     cmake \
     curl-dev \
-    git \
     jq \
     libc++-dev \
     llvm-libunwind-dev \
     ninja-build \
     openssl-dev \
+    wget \
     zlib-dev
 WORKDIR /build
 COPY CMakeLists.txt dtranslatebot/
@@ -17,7 +17,10 @@ COPY cmake/ dtranslatebot/cmake/
 COPY src/ dtranslatebot/src/
 ENV CC=clang CXX=clang++
 ENV DPP_VERSION=10.1.4
-RUN git clone https://github.com/brainboxdotcc/DPP.git --branch "v$DPP_VERSION" --depth=1 --single-branch
+RUN wget -q \
+    "https://github.com/brainboxdotcc/DPP/releases/download/v$DPP_VERSION/DPP-$DPP_VERSION.tar.gz" \
+    -O "DPP-$DPP_VERSION.tar.gz"
+RUN tar xfz "DPP-$DPP_VERSION.tar.gz"
 RUN cmake \
     -DAVX_TYPE=AVX0 \
     -DBUILD_VOICE_SUPPORT=OFF \
@@ -31,7 +34,7 @@ RUN cmake \
     -DCMAKE_MAKE_PROGRAM=/usr/lib/ninja-build/bin/ninja \
     -G Ninja \
     -B DPP-build \
-    DPP
+    "DPP-$DPP_VERSION"
 RUN cmake --build DPP-build
 RUN cmake --install DPP-build --strip
 RUN cmake \
