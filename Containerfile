@@ -62,5 +62,6 @@ COPY --from=build /opt/dtranslatebot/lib/*.so.* /opt/dtranslatebot/lib/
 RUN adduser -D dtranslatebot
 USER dtranslatebot
 WORKDIR /home/dtranslatebot
+VOLUME /home/dtranslatebot
 COPY --from=build /build/dtranslatebot.json .
 ENTRYPOINT ["/opt/dtranslatebot/bin/dtranslatebot", "--wait-for-translator", "dtranslatebot.json"]
