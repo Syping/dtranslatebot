@@ -92,7 +92,7 @@ endif()
 option(WITH_GUI "Build with dtranslatebot GUI" OFF)
 if (WITH_GUI)
     find_package(PkgConfig REQUIRED)
-    pkg_check_modules(GTKMM REQUIRED gtkmm-4.0)
+    pkg_check_modules(gtkmm-4.0 REQUIRED IMPORTED_TARGET gtkmm-4.0)
     list(APPEND DTRANSLATEBOT_HEADERS
         src/gui/translator_dialog.h
         src/gui/user_config.h
@@ -166,21 +166,16 @@ target_compile_definitions(dtranslatebot PRIVATE
 )
 target_compile_options(dtranslatebot PRIVATE
     $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<VERSION_GREATER_EQUAL:$<CXX_COMPILER_VERSION>,19.14>,$<COMPILE_LANGUAGE:CXX>>:/Zc:__cplusplus>
-    $<$<BOOL:${WITH_GUI}>:${GTKMM_CFLAGS}>
 )
 target_link_libraries(dtranslatebot PRIVATE
     ${DTRANSLATEBOT_LIBRARIES}
     ${DPP_LIBRARIES}
     CURL::libcurl
-    $<$<BOOL:${WITH_GUI}>:${GTKMM_LIBRARIES}>
     Threads::Threads
-)
-target_link_directories(dtranslatebot PRIVATE
-    $<$<BOOL:${WITH_GUI}>:${GTKMM_LIBRARY_DIRS}>
+    $<$<BOOL:${WITH_GUI}>:PkgConfig::gtkmm-4.0>
 )
 target_include_directories(dtranslatebot PRIVATE
     ${DPP_INCLUDE_DIR}
-    $<$<BOOL:${WITH_GUI}>:${GTKMM_INCLUDE_DIRS}>
 )
 set_target_properties(dtranslatebot PROPERTIES
     CXX_STANDARD 17
