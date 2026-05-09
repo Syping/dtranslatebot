@@ -1,0 +1,17 @@
+name: Linux Flatpak
+jobs:
+  Release:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-50
+      options: --privileged
+    steps:
+    - name: Cloning
+      uses: actions/checkout@v6
+    - name: Building Flatpak
+      uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+      with:
+        bundle: dtranslatebot.flatpak
+        manifest-path: .flatpak/de.syping.dtranslatebot.yaml
+        cache-key: flatpak-builder-${{ github.sha }}
+on: push
