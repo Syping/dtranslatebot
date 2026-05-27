@@ -16,7 +16,7 @@ COPY CMakeLists.txt dtranslatebot/
 COPY cmake/ dtranslatebot/cmake/
 COPY src/ dtranslatebot/src/
 ENV CC=clang CXX=clang++
-ENV DPP_VERSION=10.1.4
+ENV DPP_VERSION=10.1.5
 RUN wget -q \
     "https://github.com/brainboxdotcc/DPP/releases/download/v$DPP_VERSION/DPP-$DPP_VERSION.tar.gz" \
     -O "DPP-$DPP_VERSION.tar.gz"
