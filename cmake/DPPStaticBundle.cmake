@@ -55,8 +55,8 @@ set(ZLIB_INSTALL_DIR "${INSTALL_DIR}")
 
 set(OPENSSL_PLATFORM_ARG $<$<BOOL:$ENV{MSYSTEM}>:mingw64>)
 ExternalProject_Add(OpenSSL
-    URL https://github.com/openssl/openssl/releases/download/openssl-3.0.20/openssl-3.0.20.tar.gz
-    URL_HASH SHA256=c80a01dfc70ece4dc21168932c37739042d404d46ccc81a5986dd75314ecda6f
+    URL https://github.com/openssl/openssl/releases/download/openssl-3.0.22/openssl-3.0.22.tar.gz
+    URL_HASH SHA256=67ebca7e50d17383028045486653492195b83db95f8558709701bb47b5c1ef81
     CONFIGURE_COMMAND
         ${CMAKE_PASSTHROUGH_ENV}
         "${PERL_EXECUTABLE}"
@@ -77,8 +77,8 @@ ExternalProject_Get_Property(OpenSSL INSTALL_DIR)
 set(OpenSSL_INSTALL_DIR "${INSTALL_DIR}")
 
 ExternalProject_Add(DPP
-    URL https://github.com/brainboxdotcc/DPP/releases/download/v10.1.5/DPP-10.1.5.tar.gz
-    URL_HASH SHA256=0446993c2bca5fc40882386804598b33652fc7ee466fa237f7846f2be0cb8a1e
+    URL https://github.com/brainboxdotcc/DPP/releases/download/v10.1.6/DPP-10.1.6.tar.gz
+    URL_HASH SHA256=65cf9e5fbc7b40e3fadaf742fa87da9cdede46651e35007c7b45cb765bfc17ba
     CMAKE_ARGS
         -DAVX_TYPE=AVX0
         -DBUILD_SHARED_LIBS=OFF

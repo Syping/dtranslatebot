@@ -21,8 +21,8 @@ modules:
       - -DRUN_LDCONFIG=OFF
     sources:
       - type: archive
-        url: https://github.com/brainboxdotcc/DPP/releases/download/v10.1.5/DPP-10.1.5.tar.gz
-        sha256: 0446993c2bca5fc40882386804598b33652fc7ee466fa237f7846f2be0cb8a1e
+        url: https://github.com/brainboxdotcc/DPP/releases/download/v10.1.6/DPP-10.1.6.tar.gz
+        sha256: 65cf9e5fbc7b40e3fadaf742fa87da9cdede46651e35007c7b45cb765bfc17ba
     cleanup:
       - /include
       - /lib/cmake
@@ -34,8 +34,8 @@ modules:
       - -Dbuild-tests=false
     sources:
       - type: archive
-        url: https://github.com/libsigcplusplus/libsigcplusplus/releases/download/3.8.0/libsigc++-3.8.0.tar.xz
-        sha256: 502a743bb07ed7627dd41bd85ec4b93b4954f06b531adc45818d24a959f54e36
+        url: https://github.com/libsigcplusplus/libsigcplusplus/releases/download/3.8.1/libsigc++-3.8.1.tar.xz
+        sha256: 4ff41d1474e501d3baeced4c989d154338206ac16471e614376496b63fe252d1
     cleanup:
       - /include
       - /lib/pkgconfig
@@ -46,8 +46,8 @@ modules:
       - -Dbuild-examples=false
     sources:
       - type: archive
-        url: https://download.gnome.org/sources/glibmm/2.86/glibmm-2.86.0.tar.xz
-        sha256: 39c0e9f6da046d679390774efdb9ad564436236736dc2f7825e614b2d4087826
+        url: https://download.gnome.org/sources/glibmm/2.88/glibmm-2.88.1.tar.xz
+        sha256: c139f962b1575c8827cd39d1ac21b7a367be3bda1409c0c7e21a29090f371506
     cleanup:
       - /include
       - /lib/giomm-2.68
@@ -60,8 +60,8 @@ modules:
       - -Dbuild-tests=false
     sources:
       - type: archive
-        url: https://www.cairographics.org/releases/cairomm-1.18.0.tar.xz
-        sha256: b81255394e3ea8e8aa887276d22afa8985fc8daef60692eb2407d23049f03cfb
+        url: https://www.cairographics.org/releases/cairomm-1.18.1.tar.xz
+        sha256: e0e996a979ee52c840dca3ee74f5d005e3259b94ddce58f255d3b6f47c8cb41d
     cleanup:
       - /include
       - /lib/cairomm-1.16
@@ -70,8 +70,8 @@ modules:
     buildsystem: meson
     sources:
       - type: archive
-        url: https://download.gnome.org/sources/pangomm/2.56/pangomm-2.56.1.tar.xz
-        sha256: 539f5aa60e9bdc6b955bb448e2a62cc14562744df690258040fbb74bf885755d
+        url: https://download.gnome.org/sources/pangomm/2.56/pangomm-2.56.2.tar.xz
+        sha256: f1e984c85a85b6a0e61616366521f51dd8282a072bb45d15b5084762b62f4c0e
     cleanup:
       - /include
       - /lib/pangomm-2.48
